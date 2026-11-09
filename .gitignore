@@ -1,0 +1,32 @@
+# Variables de entorno locales: nunca se versionan
+.env
+.env.local
+!.env.example
+
+# Datos locales de la ejecución directa
+.data/
+infra/certificates/*
+!infra/certificates/.gitkeep
+
+# Dependencias
+node_modules/
+vendor/
+.venv/
+__pycache__/
+*.pyc
+
+# Artefactos de construcción
+dist/
+build/
+target/
+.next/
+next-env.d.ts
+.angular/
+*.egg-info/
+
+# Registros y herramientas
+*.log
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json

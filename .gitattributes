@@ -1,0 +1,11 @@
+* text=auto
+
+# Scripts que se ejecutan dentro de contenedores Linux
+*.sh text eol=lf
+mvnw text eol=lf
+infra/** text eol=lf
+Dockerfile text eol=lf
+
+# Scripts de Windows
+*.cmd text eol=crlf
+*.bat text eol=crlf
