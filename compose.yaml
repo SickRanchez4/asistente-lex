@@ -1,0 +1,151 @@
+name: asistente-lex
+
+# PostgreSQL y MongoDB son externos; Docker solo emula DynamoDB.
+# Componentes: se inician con `docker compose --profile app up`.
+
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:3.3.2
+    # La imagen se ejecuta con un usuario sin permisos sobre volúmenes nuevos.
+    user: root
+    working_dir: /home/dynamodblocal
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "./data"]
+    ports:
+      - "127.0.0.1:${DYNAMODB_PORT:-8000}:8000"
+    volumes:
+      - dynamodb-data:/home/dynamodblocal/data
+
+  # --- Componentes (perfil app) ---
+  # No esperan a que sus dependencias estén disponibles: informan su estado en GET /health.
+
+  ms-01-juridico:
+    profiles: [app]
+    build: ./src/services/ms-01-juridico
+    image: asistente-lex/ms-01-juridico:dev
+    environment:
+      DB_HOST: ${POSTGRES_HOST:?Configura POSTGRES_HOST en .env}
+      DB_PORT: ${POSTGRES_PORT:-5432}
+      DB_NAME: ${POSTGRES_DB:?}
+      DB_USER: ${POSTGRES_USER:?}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?}
+      DB_SCHEMA: juridico
+      DB_SSLMODE: ${POSTGRES_SSLMODE:-verify-full}
+      DB_SSLROOTCERT: ${POSTGRES_SSLROOTCERT:-/certs/postgresql-ca.crt}
+      DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+      DYNAMODB_REGION: ${DYNAMODB_REGION}
+      DYNAMODB_ACCESS_KEY_ID: ${MS01_DYNAMODB_ACCESS_KEY_ID}
+      DYNAMODB_SECRET_ACCESS_KEY: ${MS01_DYNAMODB_SECRET_ACCESS_KEY}
+      HEALTH_CHECK_TIMEOUT_MS: ${HEALTH_CHECK_TIMEOUT_MS}
+    ports:
+      - "127.0.0.1:${MS01_PORT:-8081}:8081"
+    volumes:
+      - ./infra/certificates:/certs:ro
+
+  ms-02-documental:
+    profiles: [app]
+    build: ./src/services/ms-02-documental
+    image: asistente-lex/ms-02-documental:dev
+    environment:
+      DB_HOST: ${POSTGRES_HOST:?}
+      DB_PORT: ${POSTGRES_PORT:-5432}
+      DB_NAME: ${POSTGRES_DB:?}
+      DB_USER: ${POSTGRES_USER:?}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?}
+      DB_SCHEMA: documental
+      DB_SSLMODE: ${POSTGRES_SSLMODE:-verify-full}
+      DB_SSLROOTCERT: ${POSTGRES_SSLROOTCERT:-/certs/postgresql-ca.crt}
+      FILE_STORAGE_PATH: /data/files
+      HEALTH_CHECK_TIMEOUT_MS: ${HEALTH_CHECK_TIMEOUT_MS}
+    ports:
+      - "127.0.0.1:${MS02_PORT:-8082}:8082"
+    volumes:
+      - ./infra/certificates:/certs:ro
+      # Único servicio que monta el almacenamiento de archivos.
+      - ms02-files:/data/files
+
+  ms-03-erp:
+    profiles: [app]
+    build: ./src/services/ms-03-erp
+    image: asistente-lex/ms-03-erp:dev
+    environment:
+      DB_HOST: ${POSTGRES_HOST:?}
+      DB_PORT: ${POSTGRES_PORT:-5432}
+      DB_NAME: ${POSTGRES_DB:?}
+      DB_USER: ${POSTGRES_USER:?}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?}
+      DB_SCHEMA: erp
+      DB_SSLMODE: ${POSTGRES_SSLMODE:-verify-full}
+      DB_SSLROOTCERT: ${POSTGRES_SSLROOTCERT:-/certs/postgresql-ca.crt}
+      HEALTH_CHECK_TIMEOUT_MS: ${HEALTH_CHECK_TIMEOUT_MS}
+    ports:
+      - "127.0.0.1:${MS03_PORT:-8083}:8083"
+    volumes:
+      - ./infra/certificates:/certs:ro
+
+  ms-04-ia:
+    profiles: [app]
+    build: ./src/services/ms-04-ia
+    image: asistente-lex/ms-04-ia:dev
+    environment:
+      MONGO_URI: ${MONGO_URI:?Configura MONGO_URI en .env}
+      MONGO_DB: ${MONGO_DB:-ia}
+      HEALTH_CHECK_TIMEOUT_MS: ${HEALTH_CHECK_TIMEOUT_MS}
+    ports:
+      - "127.0.0.1:${MS04_PORT:-8084}:8084"
+    volumes:
+      - ./infra/certificates:/certs:ro
+
+  gateway:
+    profiles: [app]
+    build: ./src/gateway
+    image: asistente-lex/gateway:dev
+    environment:
+      PORT: 4000
+      MS01_URL: ${GATEWAY_MS01_URL}
+      MS02_URL: ${GATEWAY_MS02_URL}
+      MS03_URL: ${GATEWAY_MS03_URL}
+      MS04_URL: ${GATEWAY_MS04_URL}
+      SERVICE_TIMEOUT_MS: ${GATEWAY_SERVICE_TIMEOUT_MS}
+      CORS_ORIGINS: ${GATEWAY_CORS_ORIGINS}
+    # Permite apuntar a un servicio ejecutado directamente en la máquina del desarrollador.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-4000}:4000"
+
+  abogado:
+    profiles: [app]
+    build:
+      context: ./src/frontend
+      dockerfile: abogado/Dockerfile
+    image: asistente-lex/abogado:dev
+    ports:
+      - "127.0.0.1:${ABOGADO_PORT:-9100}:80"
+
+  admin:
+    profiles: [app]
+    build:
+      context: ./src/frontend
+      dockerfile: admin/Dockerfile
+    image: asistente-lex/admin:dev
+    ports:
+      - "127.0.0.1:${ADMIN_PORT:-9200}:80"
+
+  shell:
+    profiles: [app]
+    build:
+      context: ./src/frontend
+      dockerfile: shell/Dockerfile
+      # El navegador carga los microfrontends desde los puertos publicados en la máquina local.
+      args:
+        ABOGADO_URL: http://localhost:${ABOGADO_PORT:-9100}/asistente-lex-abogado.js
+        ADMIN_URL: http://localhost:${ADMIN_PORT:-9200}/main.js
+    image: asistente-lex/shell:dev
+    ports:
+      - "127.0.0.1:${SHELL_PORT:-9000}:80"
+
+volumes:
+  dynamodb-data:
+  # Emulación local del almacenamiento de archivos de MS-02.
+  # Solo debe montarse en el servicio ms-02-documental.
+  ms02-files:

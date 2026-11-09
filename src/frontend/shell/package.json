@@ -1,0 +1,24 @@
+{
+  "name": "asistente-lex-shell",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env node_modules/webpack-cli/bin/cli.js serve --mode development",
+    "build": "node --env-file-if-exists=.env node_modules/webpack-cli/bin/cli.js --mode production",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "single-spa": "6.0.3",
+    "systemjs": "6.15.1"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "14.0.0",
+    "esbuild-loader": "4.5.0",
+    "html-webpack-plugin": "5.6.8",
+    "typescript": "6.0.3",
+    "webpack": "5.112.2",
+    "webpack-cli": "7.3.1",
+    "webpack-dev-server": "6.1.0"
+  }
+}

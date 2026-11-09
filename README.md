@@ -180,7 +180,34 @@ Abre http://localhost:9000:
 
 - `/abogado` monta el microfrontend React.
 - `/admin` monta el microfrontend Angular.
-- `/` muestra una página provisional con enlaces a ambas rutas.
+- `/` muestra el inicio de plataforma con identidad visual compartida y enlaces técnicos a ambas rutas.
+
+Estos accesos siguen sin autenticar al usuario y no conceden un rol. La navegación funcional de la spec 001 se conectará con la sesión de 003 y los destinos de cada funcionalidad.
+
+### Patrones UI compartidos
+
+- El Shell carga una sola vez [ui.css](./src/frontend/shared/ui.css) y sirve el logotipo desde sus propios archivos estáticos, sin CDN o fuentes externas.
+- React reutiliza [ui.tsx](./src/frontend/abogado/src/ui.tsx); Angular reutiliza [ui.components.ts](./src/frontend/admin/src/app/ui.components.ts). Incluyen estados, campos, acciones no disponibles, selector de agentes y confirmación modal con cancelación y retorno de foco.
+- En Angular usa `controlId` para identificar el control interno; no reutilices el `id` del elemento host como identificador del campo. En React se usa `id`.
+- [formats.ts](./src/frontend/shared/formats.ts) recibe fechas civiles ISO, instantes con zona e importes como cadenas decimales exactas. Presenta `08/11/2026`, hora de Bolivia y `BOB 1.234,56`; ausencias permitidas son «Sin dato» e inválidos producen error, no cero o fecha actual.
+- [presentation.ts](./src/frontend/shared/presentation.ts) define estados de presentación, no contratos GraphQL. El consumidor traduce las categorías seguras de 002, conserva sus valores de formulario y activa `pending` antes de enviar una operación. Solo un resultado confirmado puede producir éxito; parcial o incierto no autoriza reintentar una escritura automáticamente.
+- [navigation.ts](./src/frontend/shared/navigation.ts) prepara el contexto UI de sesión y destinos por rol. No autentica, almacena credenciales ni define subrutas funcionales. Sus componentes no se conectan aún a una sesión ficticia.
+
+Con `npm start` en los tres frontends, las rutas `/abogado` y `/admin` muestran un desplegable **Patrones compartidos · solo desarrollo**. Son ejemplos locales sin acciones de negocio, datos privados o catálogo real. La galería no se renderiza en los builds de producción.
+
+Para probar solo esta base visual no hacen falta bases ni microservicios: inicia los tres frontends con Node.js 26 y abre el Shell. Si el Node global es anterior, Angular debe ejecutarse con un runtime compatible; por ejemplo, desde su carpeta:
+
+```powershell
+npm exec --yes --package=node@26.13.0 -- node node_modules\@angular\cli\bin\ng.js serve
+```
+
+Cada frontend conserva sus dependencias independientes. El contexto Docker de los tres es ahora `src/frontend`, para incluir los recursos fuente compartidos; Compose ya selecciona el Dockerfile correspondiente. Para construir individualmente desde la raíz en Windows:
+
+```powershell
+docker build -f .\src\frontend\shell\Dockerfile -t asistente-lex/shell:dev .\src\frontend
+docker build -f .\src\frontend\abogado\Dockerfile -t asistente-lex/abogado:dev .\src\frontend
+docker build -f .\src\frontend\admin\Dockerfile -t asistente-lex/admin:dev .\src\frontend
+```
 
 ## Ejecución directa de un componente
 
@@ -198,9 +225,9 @@ Durante el desarrollo puedes ejecutar un componente con su herramienta habitual,
 | MS-03 | `src/services/ms-03-erp` | `composer install` y `php artisan serve --port=8083` |
 | MS-04 | `src/services/ms-04-ia` | `python -m venv .venv`, activar el entorno, `pip install -e .` y `uvicorn app.infrastructure.main:app --port 8084` |
 | Gateway | `src/gateway` | `npm install` y `npm start` |
-| Shell | `src/frontend/shell` | `npm install` y `npm start` |
-| Abogado | `src/frontend/abogado` | `npm install` y `npm start` |
-| Admin | `src/frontend/admin` | `npm install` y `npm start` |
+| Shell | `src/frontend/shell` | `npm ci` y `npm start` |
+| Abogado | `src/frontend/abogado` | `npm ci` y `npm start` |
+| Admin | `src/frontend/admin` | `npm ci` y `npm start` |
 
 Para que el gateway en Docker encuentre un servicio ejecutado directamente:
 
