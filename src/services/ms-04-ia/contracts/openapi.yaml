@@ -1,0 +1,29 @@
+openapi: 3.1.1
+info:
+  title: MS-04 IA
+  version: 1.0.0
+  description: |
+    Contrato REST vigente de MS-04. Cada spec funcional añade aquí sus operaciones
+    antes de integrarlas. Convenciones y errores en ../../contracts/common.yaml.
+    Las operaciones de IA respetan X-Lex-Deadline-Ms como presupuesto total.
+servers:
+  - url: http://localhost:8084
+security:
+  - serviceToken: []
+    userContext: []
+paths:
+  /health:
+    get:
+      summary: Comprobación técnica de MongoDB.
+      security: []
+      responses:
+        '200':
+          $ref: '../../contracts/common.yaml#/components/responses/Health'
+        '503':
+          $ref: '../../contracts/common.yaml#/components/responses/Health'
+components:
+  securitySchemes:
+    serviceToken:
+      $ref: '../../contracts/common.yaml#/components/securitySchemes/serviceToken'
+    userContext:
+      $ref: '../../contracts/common.yaml#/components/securitySchemes/userContext'

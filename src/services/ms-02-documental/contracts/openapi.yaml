@@ -1,0 +1,28 @@
+openapi: 3.1.1
+info:
+  title: MS-02 Documental
+  version: 1.0.0
+  description: |
+    Contrato REST vigente de MS-02. Cada spec funcional añade aquí sus operaciones
+    antes de integrarlas. Convenciones y errores en ../../contracts/common.yaml.
+servers:
+  - url: http://localhost:8082
+security:
+  - serviceToken: []
+    userContext: []
+paths:
+  /health:
+    get:
+      summary: Comprobación técnica de PostgreSQL y del almacenamiento de archivos.
+      security: []
+      responses:
+        '200':
+          $ref: '../../contracts/common.yaml#/components/responses/Health'
+        '503':
+          $ref: '../../contracts/common.yaml#/components/responses/Health'
+components:
+  securitySchemes:
+    serviceToken:
+      $ref: '../../contracts/common.yaml#/components/securitySchemes/serviceToken'
+    userContext:
+      $ref: '../../contracts/common.yaml#/components/securitySchemes/userContext'

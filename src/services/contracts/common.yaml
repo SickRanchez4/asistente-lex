@@ -1,0 +1,147 @@
+openapi: 3.1.1
+info:
+  title: Asistente Lex - componentes REST comunes
+  version: 1.0.0
+  description: |
+    Convenciones comunes de las APIs REST internas (spec 002). Cada servicio
+    referencia estos componentes desde su `contracts/openapi.yaml`.
+
+    - Rutas en kebab-case y en plural para colecciones; identificadores opacos.
+    - JSON en UTF-8. Fechas civiles `YYYY-MM-DD`; instantes ISO 8601 con offset.
+    - Importes BOB como cadena decimal exacta con máximo dos decimales (`"1250.50"`).
+    - Listados con filtros explícitos y paginación limitada definida por operación.
+    - La cuenta efectiva sale de `X-Lex-User-Context`, nunca de parámetros.
+    - Un único contrato vigente: un cambio incompatible se coordina en servicios,
+      Gateway, consumidores y specs, sin versiones paralelas.
+    - Sin reintentos automáticos de escrituras.
+components:
+  securitySchemes:
+    serviceToken:
+      type: http
+      scheme: bearer
+      description: Credencial propia del servicio receptor (`INTERNAL_API_TOKEN`), fuera del código.
+    userContext:
+      type: apiKey
+      in: header
+      name: X-Lex-User-Context
+      description: |
+        Contexto de usuario `base64url(json).base64url(HMAC-SHA256)` firmado con
+        `USER_CONTEXT_SIGNING_KEY`. JSON: `userId`, `role` (`ABOGADO` | `ADMINISTRADOR`),
+        `accountId` y `exp` (segundos Unix). El receptor verifica firma y vencimiento;
+        un contexto ausente solo es válido en operaciones sin usuario.
+  parameters:
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: Referencia de correlación del Gateway, sin datos personales. Se propaga en llamadas encadenadas.
+      schema:
+        type: string
+    DeadlineMs:
+      name: X-Lex-Deadline-Ms
+      in: header
+      required: false
+      description: |
+        Milisegundos disponibles para responder. Un servicio que llama a otro propaga
+        el presupuesto restante, no un plazo nuevo.
+      schema:
+        type: integer
+        minimum: 1
+  schemas:
+    ErrorCategory:
+      type: string
+      enum:
+        - VALIDATION
+        - UNAUTHENTICATED
+        - FORBIDDEN
+        - NOT_FOUND
+        - CONFLICT
+        - SERVICE_UNAVAILABLE
+        - PARTIAL_FAILURE
+    Error:
+      type: object
+      required: [category, message]
+      additionalProperties: false
+      description: |
+        Mensaje comprensible y seguro: sin trazas, consultas, credenciales ni datos de otras cuentas.
+        El Gateway trata cualquier error sin categoría válida como SERVICE_UNAVAILABLE.
+      properties:
+        category:
+          $ref: '#/components/schemas/ErrorCategory'
+        message:
+          type: string
+          maxLength: 500
+        fields:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            additionalProperties: false
+            properties:
+              field:
+                type: string
+                maxLength: 200
+              message:
+                type: string
+                maxLength: 500
+  responses:
+    Validation:
+      description: Datos no válidos (400 o 422).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthenticated:
+      description: Credencial de servicio o contexto de usuario ausente o inválido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: El solicitante no está autorizado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Recurso inexistente o ajeno a la cuenta del solicitante.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflicto con una regla de negocio.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: Dependencia no disponible o plazo agotado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    PartialFailure:
+      description: Operación entre servicios aplicada solo parcialmente (categoría PARTIAL_FAILURE).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Health:
+      description: Estado técnico del servicio (spec 000). Público en local, sin datos de negocio.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [service, status, dependencies]
+            properties:
+              service:
+                type: string
+              status:
+                type: string
+                enum: [UP, DOWN]
+              dependencies:
+                type: object
+                additionalProperties:
+                  type: string
+                  enum: [UP, DOWN]

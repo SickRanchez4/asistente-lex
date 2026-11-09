@@ -10,3 +10,6 @@ class Settings(BaseSettings):
     mongo_uri: SecretStr
     mongo_db: str = "ia"
     health_check_timeout_ms: int = 2000
+    # Vacíos: el servicio rechaza toda llamada interna.
+    internal_api_token: SecretStr = SecretStr("")
+    user_context_signing_key: SecretStr = SecretStr("")

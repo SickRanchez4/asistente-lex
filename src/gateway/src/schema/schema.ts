@@ -1,24 +1,11 @@
-// Contrato técnico de la spec 000. La spec 002 definirá las convenciones generales.
-export const typeDefs = `#graphql
-  enum ServiceStatus {
-    "El servicio y sus almacenes están disponibles."
-    UP
-    "El servicio responde, pero algún almacén no está disponible."
-    DOWN
-    "El servicio no responde o excede el tiempo de espera."
-    UNAVAILABLE
-  }
+import { readdirSync, readFileSync } from 'node:fs';
 
-  type ServiceHealth {
-    name: String!
-    status: ServiceStatus!
-  }
+// Los archivos .graphql son el contrato ejecutable: base.graphql declara las raíces
+// y cada capacidad las extiende en su propio archivo.
+const schemaDir = new URL('./', import.meta.url);
 
-  type PlatformStatus {
-    services: [ServiceHealth!]!
-  }
+const capabilityFiles = readdirSync(schemaDir)
+  .filter((file) => file.endsWith('.graphql') && file !== 'base.graphql')
+  .sort();
 
-  type Query {
-    platformStatus: PlatformStatus!
-  }
-`;
+export const typeDefs = ['base.graphql', ...capabilityFiles].map((file) => readFileSync(new URL(file, schemaDir), 'utf8'));

@@ -1,0 +1,17 @@
+# Esquema GraphQL único de Asistente Lex (spec 002).
+#
+# Convenciones:
+# - Un archivo .graphql por capacidad; cada uno extiende Query o Mutation.
+# - Consultas para lectura y mutaciones para cambios. Tipos en PascalCase,
+#   campos y operaciones en camelCase.
+# - Identificadores opacos (ID). La cuenta del solicitante nunca es un
+#   argumento: procede de la identidad verificada.
+# - Fechas civiles como String "YYYY-MM-DD"; instantes como String ISO 8601
+#   con offset.
+# - Importes BOB como String decimal exacto con máximo dos decimales ("1250.50").
+# - Binarios como String Base64, un archivo por operación.
+# - Listados con filtros tipados y paginación limitada definida en su contrato.
+# - Errores en errors[].extensions.code: VALIDATION, UNAUTHENTICATED, FORBIDDEN,
+#   NOT_FOUND, CONFLICT, SERVICE_UNAVAILABLE o PARTIAL_FAILURE; opcionalmente
+#   extensions.fields y extensions.correlationId.
+type Query

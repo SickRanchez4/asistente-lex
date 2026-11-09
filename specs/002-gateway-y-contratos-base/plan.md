@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado por el responsable el 2026-11-08; implementación de base el 2026-11-09, verificación pendiente.
 
 ## Resumen técnico
 
@@ -43,7 +43,22 @@ Antes de integrar, concretar:
 | Cambios incompatibles | Un contrato vigente; actualizar servicios, Gateway, consumidores y specs coordinadamente, sin versiones paralelas en el MVP. |
 | Respuestas | Un resultado por solicitud, sin streaming ni suscripciones. Un resultado parcial de negocio se informa como tal, no como resultado completo satisfactorio. |
 
-El contrato común debe distinguir validación, no autenticado, no autorizado, recurso inexistente, conflicto de negocio, servicio no disponible/timeout y fallo parcial. Propuesta: categoría y mensaje seguro en errores REST y `extensions` GraphQL; errores de campo cuando el servicio los identifique y referencia de correlación cuando exista. Los nombres y tipos definitivos quedan pendientes.
+El contrato común debe distinguir validación, no autenticado, no autorizado, recurso inexistente, conflicto de negocio, servicio no disponible/timeout y fallo parcial. Propuesta: categoría y mensaje seguro en errores REST y `extensions` GraphQL; errores de campo cuando el servicio los identifique y referencia de correlación cuando exista.
+
+**Contrato común concretado en 002-T01/T02:**
+
+| Elemento | Definición |
+|---|---|
+| SDL | `src/gateway/src/schema/base.graphql` declara las raíces y las convenciones; un `.graphql` por capacidad extiende `Query`/`Mutation`. |
+| OpenAPI | `src/services/<servicio>/contracts/openapi.yaml`; componentes comunes (seguridad, encabezados, `Error`) en `src/services/contracts/common.yaml`. |
+| Categorías | `VALIDATION`, `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `SERVICE_UNAVAILABLE`, `PARTIAL_FAILURE` en `extensions.code` GraphQL y `category` REST. Un error no clasificado del Gateway sale como `INTERNAL_ERROR` con mensaje genérico. |
+| Error REST | `{ category, message, fields?: [{ field, message }] }`. El Gateway trata un error sin categoría válida, respuesta no JSON, fuera de contrato, timeout o fallo de conexión como `SERVICE_UNAVAILABLE`. |
+| 401 de un servicio | Credencial interna o contexto firmado rechazados: fallo de integración, se informa `SERVICE_UNAVAILABLE`. La verificación de sesión de 003 debe devolver su resultado explícito, no un 401. |
+| Autenticación interna | `Authorization: Bearer <INTERNAL_API_TOKEN del receptor>`; sin valor configurado el receptor rechaza todo salvo `GET /health`. |
+| Contexto de usuario | `X-Lex-User-Context: base64url(json).base64url(HMAC-SHA256)` con `userId`, `role` (`ABOGADO`/`ADMINISTRADOR`), `accountId` y `exp` (120 s), clave `USER_CONTEXT_SIGNING_KEY` (≥ 32 caracteres). Un contexto presente e inválido se rechaza. |
+| Correlación y plazo | `X-Correlation-Id` (UUID por solicitud GraphQL) y `X-Lex-Deadline-Ms` (milisegundos restantes, a propagar en llamadas encadenadas). |
+| Plazos | `REST_TIMEOUT_MS` 10 000, `AI_BUDGET_MS` 60 000 como presupuesto total (`startDeadline`), `FILE_TRANSFER_TIMEOUT_MS` 60 000; un plazo agotado no invoca al servicio. |
+| Cuerpo GraphQL | `MAX_REQUEST_BODY_BYTES` 14 680 064 (Base64 de 10 MiB más margen); exceso → 413 `VALIDATION`. `decodeBase64` valida formato y tamaño antes de decodificar. |
 
 No asumir que HTTP 200 significa éxito GraphQL. Un fallo de transporte, categoría desconocida o respuesta inválida produce un error explícito seguro. Las APIs no exponen trazas, SQL, credenciales ni detalles de otros usuarios.
 

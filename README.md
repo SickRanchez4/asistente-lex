@@ -69,6 +69,10 @@ Para ejecutar un componente directamente, fuera de Docker, se necesitan además 
    | `POSTGRES_SSLROOTCERT` | Ruta dentro del contenedor: `/certs/postgresql-ca.crt`. Copia la CA del proveedor a `infra/certificates/postgresql-ca.crt`. |
    | `MONGO_URI` | URI completa del proveedor, `mongodb://` o `mongodb+srv://`, con credenciales y opciones de autenticación/TLS. |
    | `MONGO_DB` | Base de MS-04; por defecto `ia`. |
+   | `USER_CONTEXT_SIGNING_KEY` | Clave local (mínimo 32 caracteres) con la que el gateway firma el contexto de usuario y los servicios lo verifican. |
+   | `MS01_INTERNAL_API_TOKEN` … `MS04_INTERNAL_API_TOKEN` | Credencial propia de cada servicio para llamadas REST internas. Sin ella, el servicio rechaza todo salvo `GET /health`. |
+
+   Genera cada clave/credencial con `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`. Son valores del entorno local, no secretos de producción.
 
    No incluyas usuarios administradores. Para MongoDB crea un usuario limitado a `MONGO_DB`; el script PostgreSQL no aprovisiona MongoDB. Codifica los caracteres especiales de las credenciales en la URI y usa comillas simples en `.env` si contiene `$`. Si MongoDB necesita una CA propia, colócala en `infra/certificates` y usa su ruta `/certs/...` en la opción `tlsCAFile` de la URI. Los certificados de esa carpeta no se versionan.
 
@@ -215,7 +219,7 @@ Durante el desarrollo puedes ejecutar un componente con su herramienta habitual,
 
 1. Levanta el entorno: `docker compose --profile app up -d`.
 2. Detén el contenedor del componente, por ejemplo `docker compose stop ms-04-ia`, para liberar su puerto.
-3. En la carpeta del componente, copia `.env.example` como `.env`. Usa las mismas bases externas. Para PostgreSQL mapea `POSTGRES_*` de la raíz a `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSLMODE` y `DB_SSLROOTCERT`; conserva `DB_SCHEMA` propio del servicio. Usa rutas de certificados de Windows, no `/certs`. Para MS-04 usa `MONGO_URI` y `MONGO_DB`; ajusta también cualquier ruta `tlsCAFile` al host.
+3. En la carpeta del componente, copia `.env.example` como `.env`. Usa las mismas bases externas. Para PostgreSQL mapea `POSTGRES_*` de la raíz a `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSLMODE` y `DB_SSLROOTCERT`; conserva `DB_SCHEMA` propio del servicio. Usa rutas de certificados de Windows, no `/certs`. Para MS-04 usa `MONGO_URI` y `MONGO_DB`; ajusta también cualquier ruta `tlsCAFile` al host. Copia `USER_CONTEXT_SIGNING_KEY` y la credencial interna del servicio (`INTERNAL_API_TOKEN` en servicios, `MS0X_API_TOKEN` en el gateway) desde el `.env` de la raíz.
 4. Instala las dependencias y ejecuta el componente:
 
 | Componente | Carpeta | Comandos |
@@ -260,6 +264,6 @@ Los tres consumidores PostgreSQL usan un único usuario propietario de los tres 
 
 - **DynamoDB Local no valida credenciales ni permisos.** El aislamiento depende de que solo MS-01 tenga su configuración.
 - **El almacenamiento de archivos de MS-02 se emula con un volumen de Docker**, porque MinIO dejó de publicar imágenes públicas ([ADR 0002](docs/decisions/0002-monorepo-y-entorno-local.md)). No emula la API de S3.
-- **`GET /health` y `platformStatus` no requieren autenticación.** La autenticación llega con la spec 003; no expongas estos puertos fuera de tu máquina.
+- **`GET /health` y `platformStatus` no requieren autenticación.** El resto de rutas REST exige la credencial interna del servicio. La sesión de usuario llega con la spec 003; no expongas estos puertos fuera de tu máquina.
 - **El microfrontend Angular usa el constructor webpack de Angular**, que Angular marca como obsoleto, porque `single-spa-angular` 22 depende de él.
 - **En Windows**, los scripts de `infra/` deben conservar finales de línea LF; `.gitattributes` lo garantiza al trabajar con git.

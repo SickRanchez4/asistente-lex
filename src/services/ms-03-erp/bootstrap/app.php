@@ -1,5 +1,6 @@
 <?php
 
+use AsistenteLex\Erp\Infrastructure\Security\AuthenticateInternalRequest;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: '',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Global: también cubre rutas inexistentes, para no revelar el contrato sin autenticación.
+        $middleware->prepend(AuthenticateInternalRequest::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(fn () => true);

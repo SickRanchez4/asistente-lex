@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08; implementación de base el 2026-11-09, verificación pendiente (ver [tareas](./tasks.md)).
 
 ## Fuente y trazabilidad
 

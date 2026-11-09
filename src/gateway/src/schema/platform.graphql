@@ -1,0 +1,23 @@
+# Comprobación técnica de la spec 000. Pública en local: no expone datos de negocio.
+
+enum ServiceStatus {
+  "El servicio y sus almacenes están disponibles."
+  UP
+  "El servicio responde, pero algún almacén no está disponible."
+  DOWN
+  "El servicio no responde o excede el tiempo de espera."
+  UNAVAILABLE
+}
+
+type ServiceHealth {
+  name: String!
+  status: ServiceStatus!
+}
+
+type PlatformStatus {
+  services: [ServiceHealth!]!
+}
+
+extend type Query {
+  platformStatus: PlatformStatus!
+}

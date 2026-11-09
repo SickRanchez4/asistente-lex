@@ -11,6 +11,8 @@ export interface ServiceConfig {
     sslRootCert: string;
   };
   fileStoragePath: string;
+  internalApiToken: string;
+  userContextSigningKey: string;
 }
 
 export function loadConfig(): ServiceConfig {
@@ -32,5 +34,7 @@ export function loadConfig(): ServiceConfig {
       sslRootCert: env.DB_SSLROOTCERT ?? '/certs/postgresql-ca.crt',
     },
     fileStoragePath: env.FILE_STORAGE_PATH ?? '',
+    internalApiToken: env.INTERNAL_API_TOKEN ?? '',
+    userContextSigningKey: env.USER_CONTEXT_SIGNING_KEY ?? '',
   };
 }
