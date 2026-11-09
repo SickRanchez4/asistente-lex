@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado por el responsable el 2026-11-08; base visual y patrones implementados. Integración de sesión/destinos y verificación de aceptación pendientes.
 
 ## Resumen técnico
 
@@ -15,6 +15,16 @@ Este plan es la referencia de navegación, estados, formularios, confirmaciones 
 Se aplican los principios I, V, VI, IX, X, XI y XII de la [constitución](../../docs/constitution.md): desarrollo desde una spec aprobada, integración mediante GraphQL, autoridad del backend, privacidad y comunicación explícita de fallos.
 
 ## Diseño y componentes
+
+### Implementación actual y límites
+
+- Recursos comunes en [shared](../../src/frontend/shared/): CSS, formatos exactos, estados y contrato de navegación de presentación. Los componentes nativos están en [React](../../src/frontend/abogado/src/ui.tsx) y [Angular](../../src/frontend/admin/src/app/ui.components.ts).
+- El Shell distribuye CSS/logotipo una vez, mantiene accesos explícitamente técnicos y muestra fallos de carga o dirección desconocida sin detalles internos. Se conservan `/abogado` y `/admin`, sin añadir pantallas funcionales ficticias.
+- La galería de React usa un flag de compilación de desarrollo; Angular usa `isDevMode()`. Ninguna se renderiza en producción ni ejecuta operaciones reales.
+- Angular utiliza el input `controlId` para controles/diálogos, evitando duplicar el `id` del host y romper etiquetas o referencias ARIA.
+- Los formularios son controlados por sus consumidores; el kit no limpia valores ni ejecuta backend. `OperationOutcome` es un contrato UI, no el resultado GraphQL definitivo de 002; éxito exige confirmación del consumidor y fallo parcial/incierto se mantiene explícito.
+- Los componentes de navegación aceptan `SessionPresentation` y destinos reales aportados por las funcionalidades. No hay adaptador de autenticación o rutas de negocio hasta 003/004–016: 001-T03 permanece bloqueada conforme a la decisión del responsable.
+- Docker usa contexto común `src/frontend` con un Dockerfile por componente para copiar los recursos fuente. No se comparten instalaciones npm ni se cambia el despliegue de los servicios.
 
 ### Responsabilidades y reutilización
 

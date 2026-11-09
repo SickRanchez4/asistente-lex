@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Asistente Lex</title>
+    <link rel="stylesheet" href="/styles/ui.css" />
+    <script type="systemjs-importmap">
+      {
+        "imports": {
+          "@asistente-lex/abogado": "<%= abogadoUrl %>",
+          "@asistente-lex/admin": "<%= adminUrl %>"
+        }
+      }
+    </script>
+    <script src="/libs/system.min.js"></script>
+    <script src="/libs/amd.min.js"></script>
+  </head>
+  <body>
+    <a id="al-skip-link" class="al-skip-link" href="#al-inicio">Saltar al contenido</a>
+    <header class="al-header">
+      <div class="al-header-inner">
+        <a class="al-brand" href="/" data-al-navigation>
+          <img src="/static/lex-ai-logo.png" alt="Lex AI" width="80" height="80" />
+          <span>Asistente Lex</span>
+        </a>
+        <nav class="al-nav" aria-label="Vistas técnicas de plataforma">
+          <a href="/" data-al-navigation>Inicio</a>
+          <a href="/abogado" data-al-navigation>Abogado</a>
+          <a href="/admin" data-al-navigation>Administración</a>
+        </nav>
+      </div>
+    </header>
+    <main id="al-inicio" class="al-page" tabindex="-1">
+      <p class="al-eyebrow">Plataforma de trabajo jurídico</p>
+      <h1>Asistente Lex</h1>
+      <p>Una base compartida para organizar el trabajo jurídico, documental y económico.</p>
+      <p class="al-notice">Accesos técnicos del entorno local, sin autenticación. Las secciones funcionales se incorporarán con sus specs; elegir una vista no concede un rol.</p>
+      <div class="al-grid">
+        <section class="al-card">
+          <h2>Espacio del Abogado</h2>
+          <p>Interfaz React preparada para incorporar las funcionalidades jurídicas y económicas.</p>
+          <a class="al-button" href="/abogado" data-al-navigation>Abrir vista técnica</a>
+        </section>
+        <section class="al-card">
+          <h2>Administración</h2>
+          <p>Interfaz Angular preparada para la gestión de cuentas, parámetros y agentes.</p>
+          <a class="al-button" href="/admin" data-al-navigation>Abrir vista técnica</a>
+        </section>
+      </div>
+    </main>
+    <section id="al-route-error" class="al-page" role="alert" tabindex="-1" hidden>
+      <div class="al-status" data-kind="not-found">
+        <h2>Página no disponible</h2>
+        <p>La dirección no corresponde a una vista de la plataforma.</p>
+        <a href="/" data-al-navigation>Volver al inicio</a>
+      </div>
+    </section>
+    <section id="al-mount-error" class="al-page" role="alert" tabindex="-1" hidden>
+      <div class="al-status" data-kind="unavailable">
+        <h2>No se pudo mostrar la aplicación</h2>
+        <p>La vista no está disponible. Vuelve al inicio o recarga para intentarlo nuevamente.</p>
+        <a href="/" data-al-navigation>Volver al inicio</a>
+      </div>
+    </section>
+  </body>
+</html>

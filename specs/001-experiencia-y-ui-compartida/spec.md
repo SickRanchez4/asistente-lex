@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08; base visual y patrones implementados. Integración funcional y verificación de aceptación pendientes.
 
 ## Fuente y trazabilidad
 

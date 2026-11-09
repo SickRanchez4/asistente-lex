@@ -3,7 +3,7 @@
 | ID | Funcionalidad | Estado | Especificación | Plan | Tareas |
 |---|---|---|---|---|---|
 | 000 | Plataforma base | En progreso | [spec](./000-plataforma-base/spec.md) | [plan](./000-plataforma-base/plan.md) | [tasks](./000-plataforma-base/tasks.md) |
-| 001 | Experiencia y UI compartida | Lista | [spec](./001-experiencia-y-ui-compartida/spec.md) | [plan](./001-experiencia-y-ui-compartida/plan.md) | [tasks](./001-experiencia-y-ui-compartida/tasks.md) |
+| 001 | Experiencia y UI compartida | En progreso | [spec](./001-experiencia-y-ui-compartida/spec.md) | [plan](./001-experiencia-y-ui-compartida/plan.md) | [tasks](./001-experiencia-y-ui-compartida/tasks.md) |
 | 002 | Gateway y contratos base | Lista | [spec](./002-gateway-y-contratos-base/spec.md) | [plan](./002-gateway-y-contratos-base/plan.md) | [tasks](./002-gateway-y-contratos-base/tasks.md) |
 | 003 | Autenticación y acceso | Lista | [spec](./003-autenticacion-y-acceso/spec.md) | [plan](./003-autenticacion-y-acceso/plan.md) | [tasks](./003-autenticacion-y-acceso/tasks.md) |
 | 004 | Administración y auditoría | Lista | [spec](./004-administracion-y-auditoria/spec.md) | [plan](./004-administracion-y-auditoria/plan.md) | [tasks](./004-administracion-y-auditoria/tasks.md) |
