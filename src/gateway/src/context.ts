@@ -60,7 +60,10 @@ export function createContextFactory(config: GatewayConfig) {
 
 /** Usar al inicio de cada resolver protegido, antes de invocar cualquier servicio. */
 export async function requireIdentity(context: GatewayContext): Promise<VerifiedIdentity> {
-  await context.authenticate?.(true);
+  if (context.authenticate) {
+    const result = await context.authenticate(true);
+    context.identity = result.success ? result.user : null;
+  }
   if (!context.identity) {
     throw lexError('UNAUTHENTICATED', { correlationId: context.correlationId });
   }

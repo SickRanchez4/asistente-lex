@@ -94,6 +94,18 @@ body { margin: 0; }
 .al-agent-tools label, .al-agent-switch { display: flex; align-items: center; gap: 0.65rem; min-height: 44px; }
 .al-agent-tools input, .al-agent-switch input { flex: 0 0 20px; width: 20px; height: 20px; accent-color: var(--al-ink); }
 .al-agent-instructions { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; max-width: 100%; }
+.al-people-heading { justify-content: space-between; }
+.al-people-heading h1 { margin: 0; font-size: 2rem; }
+.al-people-filters { padding-block: 0.5rem 1.5rem; border-bottom: 1px solid var(--al-border); }
+.al-person-form { max-width: 900px; }
+.al-person-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.al-person-legend { font-size: 1.25rem; font-weight: 600; }
+.al-person-detail { max-width: 800px; }
+.al-person-fact { display: contents; }
+.al-person-detail dt { font-weight: 600; }
+.al-person-detail dd { min-width: 0; overflow-wrap: anywhere; }
+.al-person-form .al-grid { column-gap: 1.5rem; row-gap: 0; }
+.al-person-form .al-grid > * { min-width: 0; }
 
 @media (max-width: 900px) {
   .al-admin-layout { grid-template-columns: minmax(0, 1fr); }

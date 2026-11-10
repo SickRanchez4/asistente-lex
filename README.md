@@ -31,7 +31,7 @@ src/
     └── ms-04-ia/          Python / FastAPI
 ```
 
-Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones y auditoría; las operaciones jurídicas, administrativas y económicas continúan pendientes de sus specs.
+Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría y fichas de personas; expedientes, participantes y operaciones económicas continúan pendientes de sus specs.
 
 ## Requisitos previos
 
@@ -129,7 +129,7 @@ docker compose --profile app run --rm --no-deps -e AUTH_PREPARE=true -e AUTH_DEM
 
 El proceso aplica las migraciones Flyway sobre `juridico`, aprovisiona `lex-access-events-v1` y sus índices y termina. V2 corrige la ubicación de las tablas de V1 si el pooler las creó en `public`, conservando los datos y el historial. Repetirlo conserva las cuentas y contraseñas existentes. El arranque ordinario no migra ni crea tablas o cuentas. Para preparar sin demo, omite `-e AUTH_DEMO=true`.
 
-La demo pública `admi@demo.com` / `password` solo se permite con `APP_ENV=local` y preparación explícita. Si cambias su contraseña, repetir la preparación no la restablece. No existe registro público: las cuentas Abogado se incorporarán con 004.
+Las demos públicas son `admin@demo.com` / `password` (Administrador) y `abogado@demo.com` / `password` (Abogado). Solo se preparan con `APP_ENV=local`, `AUTH_PREPARE=true` y `AUTH_DEMO=true`. Si ya existe el administrador anterior `admi@demo.com`, la preparación cambia únicamente su correo a `admin@demo.com`, conservando identificador, nombre, contraseña, estado e historial. Un conflicto de correo o rol se rechaza sin sobrescribir cuentas. Repetir la preparación no duplica cuentas ni restablece contraseñas o estados existentes. No existe registro público; el Administrador puede crear otras cuentas Abogado desde 004.
 
 Las sesiones duran como máximo 8 horas, con 30 minutos de inactividad. Son opacas, persisten como digest en PostgreSQL y el navegador recibe únicamente una cookie HttpOnly, SameSite=Strict, limitada a `/graphql`. Configura `COOKIE_SECURE=true` al servir por HTTPS. El Shell usa `/graphql` del mismo origen, mediante nginx en Docker o proxy de desarrollo. Las solicitudes GraphQL exigen POST JSON y `X-Lex-Request: 1`; CORS por sí solo no protege frente a CSRF.
 
@@ -172,6 +172,27 @@ MS-04 expone `GET /agents` como proyección mínima y `GET /agents/{id}/availabi
 Las revisiones MongoDB son inmutables por API. Primero se inserta la revisión y después se publica el puntero mediante compare-and-set; una revisión no publicada no cuenta como historia aplicada. El historial recorre la cadena en páginas de hasta 100 con cursor firmado ligado al agente, sin truncarla ni exigir transacciones MongoDB. Un conflicto exige recargar antes de confirmar otra edición.
 
 Tras publicar, MS-04 intenta una sola entrega de `AGENT_ACTION` a MS-01, usando la revisión como ID estable y sin enviar instrucciones ni modelo. `MS04_AUDIT_API_TOKEN` debe tener el mismo valor dedicado en ambos servicios; después de configurarla en la raíz, recrea ambos con `docker compose --profile app up -d --no-deps ms-01-juridico ms-04-ia`. No reutilices la credencial del Gateway. Sin confirmación se informa `applied=true`, `auditRecorded=false`, `PARTIAL_FAILURE`; no hay cola, rollback ficticio ni reintento del cambio.
+
+### Personas
+
+Con una cuenta Abogado activa, `/abogado/personas` ofrece listado paginado, búsqueda combinada por nombre/razón social, tipo y número de documento, ficha, registro y edición. Natural requiere nombres/apellidos; jurídica requiere razón social. La identificación puede omitirse o completarse después, siempre con tipo libre, número y país juntos. Contacto y domicilio son opcionales; no se eliminan personas.
+
+La búsqueda usa subcadenas literales sin distinguir mayúsculas/minúsculas; no interpreta `%` o `_` como comodines. La comparación de duplicados recorta espacios exteriores y aplica `lower` en PostgreSQL, conserva ceros iniciales y exige unicidad de la terna dentro de la cuenta, también con escrituras concurrentes. Otra cuenta puede registrar la misma identificación. El Administrador no consulta fichas ni el cliente elige la cuenta de autoridad.
+
+Para actualizar un entorno existente, aplica expresamente V4 con el mecanismo de preparación, sin demo:
+
+```sh
+docker compose build ms-01-juridico gateway abogado shell
+docker compose run --rm --no-deps -e AUTH_PREPARE=true ms-01-juridico
+docker compose --profile app up -d --no-deps ms-01-juridico gateway abogado shell
+docker compose restart shell
+```
+
+V4 crea `juridico.people` y sus restricciones/índices; el arranque normal no migra ni crea personas. Reiniciar Shell refresca la dirección interna de Gateway que nginx resolvió al arrancar cuando se recreó ese contenedor.
+
+REST propietario ofrece `/people`, `/people/{id}`, `/people/selections` y `/people/{id}/selection`; las dos últimas proyecciones contienen solo ID, tipo y nombre para participantes/contratantes, sin documento ni contacto. Exigen token interno y contexto firmado del propietario vigente. GraphQL expone altas, actualización y consultas equivalentes, sin operación de eliminación ni argumento de cuenta.
+
+Las consultas distinguen vacío de indisponibilidad. El formulario conserva datos rechazados y errores por campo. Si una escritura no recibe confirmación, bloquea su reenvío inmediato y exige consultar el estado. Editar la ficha no consulta ni altera expedientes/participaciones; la prueba con vínculos reales Cerrados/Archivados y su selección en 008/014 siguen pendientes según [tareas de 006](specs/006-personas/tasks.md).
 
 ### Puertos
 

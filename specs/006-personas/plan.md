@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado por el responsable el 2026-11-08. Implementación propia verificada; aceptación integrada C12 pendiente de 007/008. Evidencia en [tareas](./tasks.md).
 
 ## Resumen técnico
 
@@ -28,7 +28,7 @@ La UI conserva valores ante rechazo y muestra errores en campos identificados. P
 
 GraphQL y REST propietario para registro, detalle, búsqueda y actualización conforme a [002](../002-gateway-y-contratos-base/plan.md). La cuenta no es argumento de autoridad.
 
-La búsqueda es paginada y combina filtros aprobados; definir si el documento se busca exacto o parcialmente antes de implementar. No exponer operaciones de eliminar.
+La búsqueda es paginada y combina filtros aprobados. Nombre/razón social y número de documento se buscan por subcadena literal sin distinguir mayúsculas/minúsculas; `%` y `_` no son comodines. El documento se conserva como texto. Orden estable por UUID con cursor ligado a cuenta y filtros; página de 1 a 100 fichas (25 por defecto). No exponer operaciones de eliminar.
 
 Contrato de consulta/validación para MS-03 en 014: permite comprobar existencia y pertenencia de contratante sin acceso directo al esquema `juridico`. Los errores de duplicado se limitan a la cuenta solicitante.
 
@@ -73,11 +73,15 @@ El desarrollador verifica sin crear archivos de testing; compilar componentes af
 | 11. Grupo de identificación | Parcial rechazada; teléfono, correo y domicilio omitidos siguen válidos. |
 | 12. Edición independiente | Persona solo en expedientes Cerrados/Archivados sigue editable sin cambiar participaciones. |
 
-La edición de Persona es independiente del estado de expedientes y muestra ficha vigente, sin snapshots por participación. El desarrollador registrará verificaciones en tareas; este ajuste documental no las completa.
+La edición de Persona es independiente del estado de expedientes y muestra ficha vigente, sin snapshots por participación. La implementación actualiza exclusivamente `juridico.people`, sin consultas ni modificaciones de expedientes o participaciones. Esa separación no acredita por sí sola C12: se mantiene pendiente la comprobación con vínculos reales de 007/008. Las verificaciones ejecutadas y sus límites están en tareas.
 
 ## Decisiones
 
 - Reutilizar MS-01, migraciones y patrones existentes. La unicidad incluye cuenta y terna, no un documento global.
+- Conservar grafía del documento y recortar espacios exteriores en aplicación. La comparación autoritativa y el índice usan las mismas expresiones PostgreSQL `lower(btrim(campo))`; no convertir números, eliminar ceros ni equiparar abreviaturas.
+- `/people/selections` y `/people/{id}/selection` devuelven solo `id`, `type` y `displayName`; la segunda permite validar una selección concreta sin documentos ni contacto. Detalle y actualización verifican pertenencia sin aceptar cuenta como argumento. MS-03 podrá consumir estos contratos con contexto firmado en 014.
+- V4 crea `juridico.people`, restricciones por tipo/identificación, índice único por cuenta/terna y páginas por cuenta/tipo/UUID. Se aplica con preparación explícita existente, no al arrancar. Las escrituras concurrentes se resuelven con la restricción y error `CONFLICT`, sin reintentos automáticos.
+- Errores `VALIDATION`/`CONFLICT` incluyen campos seguros. React conserva valores y bloquea reenvío tras resultado incierto hasta consultar el estado; un fallo de lectura nunca se presenta como vacío. No se añadieron dependencias ni archivos de testing al repositorio.
 - No crear ADR por CRUD simple; registrar aquí las respuestas funcionales y actualizar la spec tras aprobación si cambian sus reglas.
 
 ## Riesgos y preguntas abiertas

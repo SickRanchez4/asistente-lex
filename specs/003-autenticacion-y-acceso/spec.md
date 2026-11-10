@@ -67,14 +67,14 @@ Separar las interfaces React y Angular no basta para proteger esa información. 
   - Cierres de sesión.
   - Denegaciones de acceso.
 - Si falla registrar auditoría, se comunica el fallo sin impedir un login válido ni deshacer un logout efectivo. Los rechazos de identidad, suspensión y permisos se mantienen aunque falle registrar su evento; no hay cola de recuperación garantizada.
-- El Administrador inicial de demostración se crea solo en local, mediante una opción explícita del proceso de preparación de base y después de crear las tablas de identidad. Las variables del modo demo contienen `admi@demo.com` y la contraseña pública de demostración `password`; se persiste solo su hash. Repetir el proceso no sobrescribe cuentas existentes.
+- Las cuentas iniciales de demostración se crean solo en local, mediante una opción explícita del proceso de preparación de base y después de crear las tablas de identidad: Administrador `admin@demo.com` y Abogado `abogado@demo.com`, ambas con contraseña pública inicial `password`; se persiste solo su hash. Por solicitud del responsable, el administrador demo anterior `admi@demo.com` se renombra conservando identificador, contraseña, estado e historial. Repetir el proceso no sobrescribe cuentas existentes; conflictos de correo o rol se rechazan sin cambios parciales.
 
 ### No funcionales
 
 - Seguridad: credenciales y tokens no aparecen en registros, mensajes de error ni URL.
 - Privacidad: los eventos registrados no contienen contraseñas, tokens ni contenido privado.
 - Defensa en profundidad: la autorización no depende de ocultar opciones en la interfaz.
-- Alcance local: la cuenta demo y la ausencia de bloqueo temporal no son condiciones de producción. No habilitar la cuenta demo automáticamente fuera de local ni registrar contraseñas en eventos.
+- Alcance local: las cuentas demo y la ausencia de bloqueo temporal no son condiciones de producción. No habilitar las cuentas demo automáticamente fuera de local ni registrar contraseñas en eventos.
 
 ## Criterios de aceptación
 

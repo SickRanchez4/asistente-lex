@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08. Capacidades propias implementadas; C01–C11 verificados. C12 pendiente de expedientes y participantes reales de 007/008.
 
 ## Fuente y trazabilidad
 
@@ -64,17 +64,17 @@ Se necesita un registro de personas por cuenta, reutilizable entre expedientes y
 
 ## Criterios de aceptación
 
-- [ ] Dada una persona natural sin nombres o sin apellidos, cuando se intenta registrar, entonces se rechaza indicando los campos faltantes.
-- [ ] Dada una persona jurídica sin razón social, cuando se intenta registrar, entonces se rechaza indicando el campo faltante.
-- [ ] Dada una persona sin identificación, cuando se registra con los datos obligatorios, entonces queda disponible.
-- [ ] Dada una persona con un tipo, número y país emisor ya registrados en la misma cuenta, cuando se intenta registrar o actualizar, entonces MS-01 la rechaza indicando el duplicado, también si la solicitud no pasa por la interfaz.
-- [ ] Dado un número ya registrado con otro país emisor o tipo de documento, cuando se registra, entonces se acepta.
-- [ ] Dada una identificación registrada en la cuenta de otro abogado, cuando se registra en la propia cuenta, entonces se acepta.
-- [ ] Dada una persona registrada sin identificación, cuando el abogado la completa posteriormente, entonces la ficha se actualiza.
-- [ ] Dadas varias personas registradas, cuando el abogado busca por nombre, razón social o documento, entonces obtiene las coincidencias de su cuenta.
-- [ ] Dados dos abogados A y B, cuando A consulta o busca personas, entonces no obtiene personas de B.
-- [ ] Dado un administrador, cuando intenta consultar personas de un abogado, entonces recibe "no autorizado".
-- [ ] Dada identificación parcial, cuando se registra o actualiza, entonces se rechaza; teléfono, correo y domicilio pueden omitirse.
+- [x] Dada una persona natural sin nombres o sin apellidos, cuando se intenta registrar, entonces se rechaza indicando los campos faltantes.
+- [x] Dada una persona jurídica sin razón social, cuando se intenta registrar, entonces se rechaza indicando el campo faltante.
+- [x] Dada una persona sin identificación, cuando se registra con los datos obligatorios, entonces queda disponible.
+- [x] Dada una persona con un tipo, número y país emisor ya registrados en la misma cuenta, cuando se intenta registrar o actualizar, entonces MS-01 la rechaza indicando el duplicado, también si la solicitud no pasa por la interfaz.
+- [x] Dado un número ya registrado con otro país emisor o tipo de documento, cuando se registra, entonces se acepta.
+- [x] Dada una identificación registrada en la cuenta de otro abogado, cuando se registra en la propia cuenta, entonces se acepta.
+- [x] Dada una persona registrada sin identificación, cuando el abogado la completa posteriormente, entonces la ficha se actualiza.
+- [x] Dadas varias personas registradas, cuando el abogado busca por nombre, razón social o documento, entonces obtiene las coincidencias de su cuenta.
+- [x] Dados dos abogados A y B, cuando A consulta o busca personas, entonces no obtiene personas de B.
+- [x] Dado un administrador, cuando intenta consultar personas de un abogado, entonces recibe "no autorizado".
+- [x] Dada identificación parcial, cuando se registra o actualiza, entonces se rechaza; teléfono, correo y domicilio pueden omitirse.
 - [ ] Dada una persona que solo participa en expedientes Cerrados o Archivados, cuando el propietario edita su ficha, entonces se acepta sin alterar sus participaciones.
 
 ## Dependencias

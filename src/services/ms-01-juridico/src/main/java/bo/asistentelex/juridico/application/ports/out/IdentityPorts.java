@@ -12,7 +12,7 @@ public final class IdentityPorts {
 		Optional<Account> byEmail(String email);
 		Optional<Account> byId(String id);
 		boolean updatePassword(String id, String previousHash, String hash);
-		void insertDemo(Account account);
+		void prepareDemo(Account administrator, Account lawyer);
 	}
 
 	public interface Sessions {

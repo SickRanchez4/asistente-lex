@@ -40,11 +40,13 @@ public class PrepareIdentity implements ApplicationRunner {
 				.locations("classpath:db/migration").load().migrate();
 		audit.provision();
 		if (demo) {
-			if (!"admi@demo.com".equals(demoEmail) || !"password".equals(demoPassword)) {
+			if (!"admin@demo.com".equals(demoEmail) || !"password".equals(demoPassword)) {
 				throw new IllegalStateException("La opcion demo solo admite las credenciales publicas documentadas.");
 			}
-			accounts.insertDemo(new Account(UUID.randomUUID().toString(), "Administrador demo", demoEmail,
-					passwords.hash(demoPassword), Role.ADMINISTRADOR, true));
+			accounts.prepareDemo(new Account(UUID.randomUUID().toString(), "Administrador demo", demoEmail,
+					passwords.hash(demoPassword), Role.ADMINISTRADOR, true),
+					new Account(UUID.randomUUID().toString(), "Abogado demo", "abogado@demo.com",
+							passwords.hash(demoPassword), Role.ABOGADO, true));
 		}
 		System.out.println("[ms-01] Preparacion de identidad y auditoria completada.");
 		context.close();

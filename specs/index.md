@@ -8,7 +8,7 @@
 | 003 | Autenticación y acceso | En progreso | [spec](./003-autenticacion-y-acceso/spec.md) | [plan](./003-autenticacion-y-acceso/plan.md) | [tasks](./003-autenticacion-y-acceso/tasks.md) |
 | 004 | Administración y auditoría | En progreso | [spec](./004-administracion-y-auditoria/spec.md) | [plan](./004-administracion-y-auditoria/plan.md) | [tasks](./004-administracion-y-auditoria/tasks.md) |
 | 005 | Configuración de agentes | En progreso | [spec](./005-configuracion-de-agentes/spec.md) | [plan](./005-configuracion-de-agentes/plan.md) | [tasks](./005-configuracion-de-agentes/tasks.md) |
-| 006 | Personas | Lista | [spec](./006-personas/spec.md) | [plan](./006-personas/plan.md) | [tasks](./006-personas/tasks.md) |
+| 006 | Personas | En progreso | [spec](./006-personas/spec.md) | [plan](./006-personas/plan.md) | [tasks](./006-personas/tasks.md) |
 | 007 | Expedientes y ciclo de vida | Lista | [spec](./007-expedientes-y-ciclo-de-vida/spec.md) | [plan](./007-expedientes-y-ciclo-de-vida/plan.md) | [tasks](./007-expedientes-y-ciclo-de-vida/tasks.md) |
 | 008 | Participantes | Lista | [spec](./008-participantes/spec.md) | [plan](./008-participantes/plan.md) | [tasks](./008-participantes/tasks.md) |
 | 009 | Actuaciones y notas | Lista | [spec](./009-actuaciones-y-notas/spec.md) | [plan](./009-actuaciones-y-notas/plan.md) | [tasks](./009-actuaciones-y-notas/tasks.md) |

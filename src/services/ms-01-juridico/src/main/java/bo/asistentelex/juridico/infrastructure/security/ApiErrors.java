@@ -9,6 +9,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiErrors {
+	@ExceptionHandler(bo.asistentelex.juridico.domain.People.Failure.class)
+	ResponseEntity<?> people(bo.asistentelex.juridico.domain.People.Failure failure) {
+		int status = switch (failure.category()) {
+			case "VALIDATION" -> 400;
+			case "UNAUTHENTICATED" -> 401;
+			case "FORBIDDEN" -> 403;
+			case "NOT_FOUND" -> 404;
+			case "CONFLICT" -> 409;
+			default -> 503;
+		};
+		return ResponseEntity.status(status).body(Map.of("category", failure.category(), "message", failure.getMessage(),
+				"fields", failure.fields().entrySet().stream().map(field -> Map.of("field", field.getKey(), "message", field.getValue())).toList()));
+	}
 	@ExceptionHandler(bo.asistentelex.juridico.domain.Administration.Failure.class)
 	ResponseEntity<?> administration(bo.asistentelex.juridico.domain.Administration.Failure failure) {
 		int status = switch (failure.category()) {

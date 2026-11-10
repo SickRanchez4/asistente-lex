@@ -49,7 +49,7 @@ La identidad propagada incluye usuario, rol y cuenta verificados. Un solo rol po
 
 Sin TTL de eventos en esta fase: conservar mientras exista el entorno. Sesiones expiradas no autorizan aunque su limpieza física se ejecute después.
 
-El proceso de preparación de base ofrece una opción demo solo local tras migraciones: variables públicas de demostración `admi@demo.com` / `password`, hash generado por el mismo mecanismo de aplicación y creación idempotente sin sobrescribir cuentas. No colocar esta semilla antes de las tablas ni habilitarla automáticamente en otros entornos; ajustar el límite de 000 sin crear scripts durante esta fase documental.
+El proceso de preparación de base ofrece una opción demo solo local tras migraciones: Administrador `admin@demo.com` y Abogado `abogado@demo.com`, ambas con contraseña pública inicial `password`, hash generado por el mismo mecanismo de aplicación y creación idempotente sin sobrescribir cuentas. `AUTH_DEMO_EMAIL` identifica al administrador y solo admite el correo público documentado; `AUTH_DEMO_PASSWORD=password` se usa para ambas altas. Por solicitud del responsable, el antiguo `admi@demo.com` se renombra conservando ID y datos, sin restablecer contraseña ni estado. La preparación de ambas cuentas y el renombrado forman una transacción con bloqueo asesor para serializar preparaciones concurrentes; si los correos están ocupados con roles incompatibles o existen ambos administradores, se rechaza sin sobrescribirlos. No colocar esta semilla antes de las tablas ni habilitarla automáticamente en otros entornos.
 
 ## Seguridad y privacidad
 

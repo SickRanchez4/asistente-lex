@@ -64,6 +64,7 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C13 siguen el orde
 
 ## Registro de verificación
 
+- **Actualización demo solicitada por el responsable:** preparación local explícita ejecutada y repetida con Administrador `admin@demo.com` y Abogado `abogado@demo.com`, contraseña inicial pública `password` en ambas. Login real por Shell/GraphQL verificó roles, conservación del ID del administrador anterior, IDs estables al repetir y rechazo del correo antiguo `admi@demo.com`. El Abogado accede a Personas y el Administrador recibe `FORBIDDEN`. Compilación JDK 25 satisfactoria, MS-01 actualizado desplegado y sesiones de comprobación cerradas. No se restablecieron contraseñas ni se marcaron otros criterios de aceptación por esta intervención.
 - **Compilación:** imágenes MS-01, Gateway, Shell, Angular y React construidas; typecheck de los cuatro proyectos TypeScript en Node 26. No se usó el Node 22 del host para acreditar el runtime aprobado.
 - **Núcleo:** 35 comprobaciones temporales sobre AuthService/AuthConfig compilados y BCrypt real, con almacenes en memoria y reloj controlado. Cubren credenciales, digest, vigencia, actividad, roles, cuenta, contraseña, logout, suspensión y fallos de auditoría/borrado. No acreditan recursos o cuentas reales de 004.
 - **HTTP:** 8 comprobaciones contra servicios levantados: sesión anónima, cabeceras de identidad ignoradas, cookie falsificada rechazada, credenciales inválidas auditadas, contraseña sin sesión, CSRF, origen no permitido y REST sin autenticación. Repetidas satisfactoriamente después de V2.
@@ -72,3 +73,10 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C13 siguen el orde
 - **Navegador:** rutas privadas bloqueadas sin sesión; a 390 x 844 no existe desbordamiento horizontal en la pantalla de acceso. No se verificó un navegador autenticado en esta ejecución.
 - **Estado tras la corrección:** MS-01, MS-02, MS-03 y MS-04 responden HTTP 200 y `UP`, con sus dependencias disponibles. PostgreSQL y MongoDB son externos; no se añadieron contenedores para esas bases.
 - **Límite:** C03 verificado de extremo a extremo; el resto permanece pendiente de la evidencia indicada. No se declara la spec completa ni preparación para producción. No se añadieron archivos de testing al repositorio.
+
+### Corrección posterior: contexto de consultas protegidas
+
+- Reproducido con una cookie real a través del Shell: `session` válida, pero `adminAgents`, `adminAccounts` y `adminAuditEvents` devolvían `UNAUTHENTICATED`. La verificación actualizaba la identidad del contexto original capturado por el cierre, no necesariamente la copia que Apollo entrega al guard.
+- `requireIdentity` ahora asigna la identidad del resultado verificado al contexto actual antes de evaluar permisos. Un resultado fallido elimina cualquier identidad anterior; no se aceptan cabeceras del navegador ni se evita la validación autoritativa de MS-01.
+- Verificadas 10 comprobaciones del guard con contexto copiado, caché de verificación, ausencia de sesión, sesión inválida y rol incorrecto. Verificadas 8 comprobaciones reales Shell/GraphQL/REST: sesión, agentes, cuentas, auditoría, historial, consulta de varios campos, rechazo anónimo y rechazo tras logout. Sesión demo de comprobación cerrada. Typecheck Node 26 y diagnósticos satisfactorios; Gateway reconstruido y desplegado.
+- La demo local se aprovisionó explícitamente en una intervención posterior a la verificación inicial, conservando cuentas existentes. La clave OpenAI añadida por el responsable ya fue cargada al recrear MS-04 y se comprobó su coincidencia en memoria sin mostrarla. No se llamó a OpenAI: conversación y ejecución de herramientas siguen pendientes de 011; esto no modifica el estado de aceptación integrada de las specs.

@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import bo.asistentelex.juridico.application.ports.out.IdentityPorts.Accounts;
 import bo.asistentelex.juridico.application.ports.out.IdentityPorts.Sessions;
 import bo.asistentelex.juridico.domain.Identity.*;
@@ -32,7 +33,25 @@ public class JdbcIdentityStore implements Accounts, Sessions {
 				hash, UUID.fromString(id), previousHash) == 1;
 	}
 
-	public void insertDemo(Account account) {
+	@Transactional
+	public void prepareDemo(Account administrator, Account lawyer) {
+		jdbc.execute("SELECT pg_advisory_xact_lock(hashtext('lex-local-demo-v2'))");
+		var legacy = byEmail("admi@demo.com").orElse(null);
+		var current = byEmail(administrator.email()).orElse(null);
+		var existingLawyer = byEmail(lawyer.email()).orElse(null);
+		if ((legacy != null && (legacy.role() != Role.ADMINISTRADOR || current != null))
+				|| (current != null && current.role() != Role.ADMINISTRADOR)
+				|| (existingLawyer != null && existingLawyer.role() != Role.ABOGADO)) {
+			throw new IllegalStateException("La preparacion demo encontro un conflicto de cuentas; no se sobrescribieron datos.");
+		}
+		if (legacy != null) {
+			jdbc.update("UPDATE juridico.accounts SET email = ? WHERE id = ?", administrator.email(), UUID.fromString(legacy.id()));
+		}
+		insertDemo(administrator);
+		insertDemo(lawyer);
+	}
+
+	private void insertDemo(Account account) {
 		jdbc.update("INSERT INTO juridico.accounts(id, name, email, password_hash, role, enabled) VALUES (?, ?, ?, ?, ?, true) ON CONFLICT (email) DO NOTHING",
 				UUID.fromString(account.id()), account.name(), account.email(), account.passwordHash(), account.role().name());
 	}

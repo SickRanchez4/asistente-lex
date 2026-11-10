@@ -11,6 +11,113 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /people:
+    get:
+      summary: Lista personas de la cuenta del Abogado vigente; nunca acepta cuenta del cliente.
+      description: |
+        Filtros combinables. name y document son subcadenas literales sin distinguir
+        mayusculas/minusculas; document busca el numero, no la terna. Orden estable por UUID.
+        Cursor opaco ligado a cuenta y filtros. Errores de lectura nunca son paginas vacias.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - { name: name, in: query, schema: { type: string, maxLength: 300 } }
+        - { name: type, in: query, schema: { type: string, enum: [NATURAL, LEGAL] } }
+        - { name: document, in: query, schema: { type: string, maxLength: 100 } }
+      responses:
+        '200':
+          description: Pagina propia, hasta 100 fichas.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Person' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
+        '400': { $ref: '#/components/responses/PersonError' }
+        '403': { $ref: '#/components/responses/PersonError' }
+        '503': { $ref: '#/components/responses/PersonError' }
+    post:
+      summary: Registra persona propia; no recibe identificador, cuenta ni roles de participacion.
+      requestBody: { $ref: '#/components/requestBodies/PersonInput' }
+      responses:
+        '200':
+          description: Ficha persistida con identificador estable.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Person' }
+        '400': { $ref: '#/components/responses/PersonError' }
+        '403': { $ref: '#/components/responses/PersonError' }
+        '409': { $ref: '#/components/responses/PersonError' }
+        '503': { $ref: '#/components/responses/PersonError' }
+  /people/selections:
+    get:
+      summary: Proyeccion minima para 008 y 014, mismos filtros/cursor y autorizacion que GET /people.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - { name: name, in: query, schema: { type: string, maxLength: 300 } }
+        - { name: type, in: query, schema: { type: string, enum: [NATURAL, LEGAL] } }
+        - { name: document, in: query, schema: { type: string, maxLength: 100 } }
+      responses:
+        '200':
+          description: Solo id, type y displayName; sin documento ni contacto.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/PersonSelection' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
+        '400': { $ref: '#/components/responses/PersonError' }
+        '403': { $ref: '#/components/responses/PersonError' }
+        '503': { $ref: '#/components/responses/PersonError' }
+  /people/{id}/selection:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Valida existencia y pertenencia para 008/014 sin documentos ni contacto.
+      responses:
+        '200':
+          description: Proyeccion minima vigente, exige Abogado propietario.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PersonSelection' }
+        '400': { $ref: '#/components/responses/PersonError' }
+        '403': { $ref: '#/components/responses/PersonError' }
+        '404': { $ref: '#/components/responses/PersonError' }
+        '503': { $ref: '#/components/responses/PersonError' }
+  /people/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Ficha vigente propia; ajena e inexistente responden el mismo NOT_FOUND.
+      responses:
+        '200':
+          description: Ficha completa.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Person' }
+        '400': { $ref: '#/components/responses/PersonError' }
+        '403': { $ref: '#/components/responses/PersonError' }
+        '404': { $ref: '#/components/responses/PersonError' }
+        '503': { $ref: '#/components/responses/PersonError' }
+    put:
+      summary: Sustituye datos de ficha propia sin cambiar id ni consultar/modificar participaciones.
+      requestBody: { $ref: '#/components/requestBodies/PersonInput' }
+      responses:
+        '200':
+          description: Ficha vigente persistida; identificacion ausente se representa con null.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Person' }
+        '400': { $ref: '#/components/responses/PersonError' }
+        '403': { $ref: '#/components/responses/PersonError' }
+        '404': { $ref: '#/components/responses/PersonError' }
+        '409': { $ref: '#/components/responses/PersonError' }
+        '503': { $ref: '#/components/responses/PersonError' }
   /public/settings:
     get:
       summary: Proyección pública cerrada, solo mensaje global y correo de soporte.
@@ -289,6 +396,52 @@ components:
       in: query
       schema: { type: string, maxLength: 4096 }
   schemas:
+    PersonInput:
+      type: object
+      additionalProperties: false
+      required: [type]
+      description: |
+        NATURAL requiere firstNames/lastNames; LEGAL requiere businessName.
+        Campos del otro tipo se limpian. Identificacion vacia o terna completa.
+        Se quitan espacios exteriores, conservando ceros y grafia; la comparacion
+        autoritativa usa lower(btrim(campo)) en PostgreSQL, igual en consulta e indice.
+        Contacto opcional sin validacion externa. No se admiten caracteres de control.
+      properties:
+        type: { type: string, enum: [NATURAL, LEGAL] }
+        firstNames: { type: [string, 'null'], maxLength: 200 }
+        lastNames: { type: [string, 'null'], maxLength: 200 }
+        businessName: { type: [string, 'null'], maxLength: 300 }
+        documentType: { type: [string, 'null'], maxLength: 100 }
+        documentNumber: { type: [string, 'null'], maxLength: 100 }
+        issuingCountry: { type: [string, 'null'], maxLength: 100 }
+        phone: { type: [string, 'null'], maxLength: 100 }
+        email: { type: [string, 'null'], maxLength: 254 }
+        address: { type: [string, 'null'], maxLength: 1000 }
+    Person:
+      type: object
+      additionalProperties: false
+      required: [id, type, displayName, firstNames, lastNames, businessName, documentType, documentNumber, issuingCountry, phone, email, address]
+      properties:
+        type: { type: string, enum: [NATURAL, LEGAL] }
+        firstNames: { type: [string, 'null'], maxLength: 200 }
+        lastNames: { type: [string, 'null'], maxLength: 200 }
+        businessName: { type: [string, 'null'], maxLength: 300 }
+        documentType: { type: [string, 'null'], maxLength: 100 }
+        documentNumber: { type: [string, 'null'], maxLength: 100 }
+        issuingCountry: { type: [string, 'null'], maxLength: 100 }
+        phone: { type: [string, 'null'], maxLength: 100 }
+        email: { type: [string, 'null'], maxLength: 254 }
+        address: { type: [string, 'null'], maxLength: 1000 }
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+    PersonSelection:
+      type: object
+      additionalProperties: false
+      required: [id, type, displayName]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [NATURAL, LEGAL] }
+        displayName: { type: string }
     AdminAccount:
       type: object
       additionalProperties: false
@@ -327,6 +480,11 @@ components:
         newValue: { type: [string, 'null'] }
         agentId: { type: [string, 'null'] }
   requestBodies:
+    PersonInput:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PersonInput' }
     SessionToken:
       required: true
       content:
@@ -337,6 +495,27 @@ components:
             properties:
               token: { type: string }
   responses:
+    PersonError:
+      description: |
+        Categorias comunes; VALIDATION y CONFLICT incluyen fields (field/message).
+        CONFLICT no incluye documentos completos ni datos de fichas propias o ajenas.
+        UNAUTHENTICATED para contexto ausente, FORBIDDEN para rol no Abogado.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [category, message]
+            properties:
+              category: { type: string, enum: [VALIDATION, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, SERVICE_UNAVAILABLE] }
+              message: { type: string }
+              fields:
+                type: array
+                items:
+                  type: object
+                  required: [field, message]
+                  properties:
+                    field: { type: string }
+                    message: { type: string }
     AdminChange:
       description: |
         applied=true confirma el cambio. Si falla DynamoDB después del commit,
