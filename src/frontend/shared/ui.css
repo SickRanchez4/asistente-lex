@@ -1,3 +1,7 @@
+.al-chat-layout { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 24px; }
+.al-chat-conversation { min-width: 0; }
+.al-chat-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 760px) { .al-chat-layout { grid-template-columns: minmax(0, 1fr); } }
 .al-case-details { display: grid; grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr); gap: .75rem 1.5rem; padding-block: 1rem; }
 .al-case-details dt { font-weight: 600; }
 .al-case-details dd { margin: 0; overflow-wrap: anywhere; }

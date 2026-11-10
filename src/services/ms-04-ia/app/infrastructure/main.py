@@ -10,6 +10,8 @@ from pymongo import AsyncMongoClient
 from pymongo.errors import PyMongoError
 
 from app.adapters.inbound.agents import router as agents_router
+from app.adapters.inbound.conversations import router as conversations_router
+from app.application.conversations import ChatCoordination
 from app.domain.agents import AgentFailure
 from app.infrastructure.config import Settings
 from app.infrastructure.health import check_health
@@ -36,6 +38,7 @@ def create_app() -> FastAPI:
         app.state.mongo_client = client
         app.state.settings = settings
         app.state.http_client = httpx.AsyncClient(follow_redirects=False)
+        app.state.chat_coordination = ChatCoordination()
         try:
             yield
         finally:
@@ -72,13 +75,14 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(RequestValidationError)
     async def validation_failure(_request: Request, _error: RequestValidationError) -> JSONResponse:
-        return JSONResponse(status_code=400, content={"category": "VALIDATION", "message": "Datos de agente no validos."})
+        return JSONResponse(status_code=400, content={"category": "VALIDATION", "message": "Datos de solicitud no validos."})
 
     @app.exception_handler(PyMongoError)
     async def persistence_failure(_request: Request, _error: PyMongoError) -> JSONResponse:
-        return JSONResponse(status_code=503, content={"category": "SERVICE_UNAVAILABLE", "message": "No se pudo confirmar la operacion del agente. Consulta su estado antes de continuar."})
+        return JSONResponse(status_code=503, content={"category": "SERVICE_UNAVAILABLE", "message": "No se pudo confirmar la operacion. Consulta su estado antes de continuar."})
 
     app.include_router(agents_router)
+    app.include_router(conversations_router)
 
     @app.get("/health")
     async def health(request: Request) -> JSONResponse:

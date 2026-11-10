@@ -12,9 +12,101 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /cases/{caseId}/conversations:
+    parameters: [{ $ref: '#/components/parameters/ChatCaseId' }]
+    get:
+      summary: Conversaciones privadas paginadas; solo propietario vigente, OPEN/CLOSED sin archivo pendiente.
+      description: Orden createdAt DESC, id DESC. Cursor es ID de conversacion de esta cuenta/caso. No incluye intercambios.
+      parameters:
+        - { name: first, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: after, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Pagina privada no-store.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/ConversationSummary' } }
+                  pageInfo:
+                    type: object
+                    required: [hasNextPage, endCursor]
+                    properties:
+                      hasNextPage: { type: boolean }
+                      endCursor: { type: [string, 'null'] }
+        default: { $ref: '#/components/responses/ChatError' }
+    post:
+      summary: Iniciar con agente inicial vigente; alternativa habilitada solo si se elige explicitamente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                agentId: { type: [string, 'null'], enum: [penalista, civilista, null] }
+      responses:
+        '200': { description: Conversacion nueva sin intercambio, content: { application/json: { schema: { $ref: '#/components/schemas/Conversation' } } } }
+        default: { $ref: '#/components/responses/ChatError' }
+  /cases/{caseId}/conversations/{conversationId}:
+    parameters: [{ $ref: '#/components/parameters/ChatCaseId' }, { $ref: '#/components/parameters/ConversationId' }]
+    get:
+      summary: Conversacion propia con intercambios completos ordenados, nunca estados parciales.
+      responses:
+        '200': { description: Historial privado no-store, content: { application/json: { schema: { $ref: '#/components/schemas/Conversation' } } } }
+        default: { $ref: '#/components/responses/ChatError' }
+  /cases/{caseId}/conversations/{conversationId}/agent:
+    parameters: [{ $ref: '#/components/parameters/ChatCaseId' }, { $ref: '#/components/parameters/ConversationId' }]
+    put:
+      summary: Cambiar agente habilitado con version; no cambia expediente ni otras conversaciones.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [agentId, expectedVersion]
+              properties:
+                agentId: { type: string, enum: [penalista, civilista] }
+                expectedVersion: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Conversacion vigente, content: { application/json: { schema: { $ref: '#/components/schemas/Conversation' } } } }
+        default: { $ref: '#/components/responses/ChatError' }
+  /cases/{caseId}/conversations/{conversationId}/questions:
+    parameters: [{ $ref: '#/components/parameters/ChatCaseId' }, { $ref: '#/components/parameters/ConversationId' }]
+    post:
+      summary: Respuesta completa OpenAI sin streaming ni reintentos; intercambio atomico con fuentes verificadas.
+      description: |
+        Presupuesto total configurable 60000 ms, propagado a fuentes y proveedor. Pregunta de hasta
+        8000 caracteres, respuesta hasta 50000 y contexto/historial acotado sin truncamiento silencioso.
+        Captura configuracion habilitada al admitir; deshabilitar despues no cancela, archivar si.
+        Bloqueo local por expediente sin sostenerlo durante OpenAI. Fallo/timeout/referencia inventada
+        no persiste un intercambio. Documento especifico requiere CASE_PDF_TEXT y texto extraible.
+        Herramientas cerradas: datos juridicos sin notas, lista solo PDF, lectura texto PDF autorizado.
+        Sin OCR, imagenes, informes, ERP, normativa web, MCP o URLs escogidas por el modelo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [question, expectedVersion, scope]
+              properties:
+                question: { type: string, minLength: 1, maxLength: 8000 }
+                expectedVersion: { type: integer, minimum: 1 }
+                scope: { type: string, enum: [CASE, PDF] }
+                documentId: { type: [string, 'null'], format: uuid }
+      responses:
+        '200': { description: Intercambio completo persistido; agente y fuentes efectivamente usadas, content: { application/json: { schema: { $ref: '#/components/schemas/Conversation' } } } }
+        default: { $ref: '#/components/responses/ChatError' }
   /cases/{id}/conversations/delete:
     post:
-      summary: Contrato de borrado para 007; implementacion real y coordinacion de generacion pendientes de 011.
+      summary: Borrado completo idempotente para archivo de 007, con generacion y recibo durable por intento.
       description: |
         Solo solicitud interna de MS-01 con contexto firmado de Abogado propietario ya autorizado.
         No volver a consultar MS-01 dentro del borrado: evitar dependencia circular.
@@ -22,8 +114,8 @@ paths:
         avanzar generacion e impedir que respuestas previas vuelvan a persistir. Borrar todas
         las conversaciones, intercambios y estados. Repetir archiveAttemptId confirma el mismo
         borrado sin borrar chats nuevos despues de desarchivo; persistir recibo tecnico del intento.
-        Confirmar solo al terminar, no al aceptar. Respetar X-Lex-Deadline-Ms. Sin handler 011,
-        MS-01 interpreta 404/timeout como eliminacion no confirmada y conserva marca tecnica.
+        Confirmar solo al terminar, no al aceptar. Respetar X-Lex-Deadline-Ms. Ante error/timeout,
+        MS-01 conserva la marca tecnica y no informa archivo confirmado.
       parameters:
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
       requestBody:
@@ -218,6 +310,8 @@ components:
     userContext:
       $ref: '../../contracts/common.yaml#/components/securitySchemes/userContext'
   parameters:
+    ChatCaseId: { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+    ConversationId: { name: conversationId, in: path, required: true, schema: { type: string, format: uuid } }
     AgentId:
       name: id
       in: path
@@ -226,6 +320,53 @@ components:
         type: string
         enum: [penalista, civilista]
   schemas:
+    ChatAgent:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id: { type: string, enum: [penalista, civilista] }
+        name: { type: string }
+    ChatSource:
+      type: object
+      additionalProperties: false
+      required: [id, kind, label]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [CASE, PDF] }
+        label: { type: string }
+    ChatExchange:
+      type: object
+      additionalProperties: false
+      required: [id, question, answer, agent, occurredAt, sources]
+      properties:
+        id: { type: string, format: uuid }
+        question: { type: string, maxLength: 8000 }
+        answer: { type: string, maxLength: 50000 }
+        agent: { $ref: '#/components/schemas/ChatAgent' }
+        occurredAt: { type: string, format: date-time }
+        sources: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/ChatSource' } }
+    ConversationSummary:
+      type: object
+      additionalProperties: false
+      required: [id, caseId, createdAt, activeAgent, version]
+      properties:
+        id: { type: string, format: uuid }
+        caseId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        activeAgent: { $ref: '#/components/schemas/ChatAgent' }
+        version: { type: integer, minimum: 1 }
+    Conversation:
+      type: object
+      additionalProperties: false
+      required: [id, caseId, createdAt, activeAgent, version, exchanges]
+      properties:
+        id: { type: string, format: uuid }
+        caseId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        activeAgent: { $ref: '#/components/schemas/ChatAgent' }
+        version: { type: integer, minimum: 1 }
+        exchanges: { type: array, items: { $ref: '#/components/schemas/ChatExchange' } }
     AgentTool:
       type: string
       enum: [CASE_LEGAL_DATA, CASE_PDF_LIST, CASE_PDF_TEXT]
@@ -358,6 +499,17 @@ components:
             endCursor:
               type: [string, 'null']
   responses:
+    ChatError:
+      description: Error seguro 400/401/403/404/409/503, sin pregunta, respuesta, contenido de fuente ni trazas.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [category, message]
+            properties:
+              category: { type: string, enum: [VALIDATION, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, SERVICE_UNAVAILABLE] }
+              message: { type: string }
     Change:
       description: Cambio aplicado. PARTIAL_FAILURE significa auditoria no confirmada; no repetir la mutacion automaticamente.
       content:

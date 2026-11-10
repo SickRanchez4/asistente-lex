@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Spec y plan aprobados el 2026-11-08. T01 verificada por capas y catálogo operativo aprovisionado. Capacidades propias de T02/T03 implementadas y verificadas por capas; entrega integrada pendiente de credencial de auditoría y flujos reales 007/011. No se crean archivos de testing ni se acredita aceptación autenticada completa.
+En progreso. Spec y plan aprobados el 2026-11-08. T01 verificada por capas y catálogo operativo aprovisionado. Capacidades propias de T02/T03 implementadas; 007/011 ya aportan evidencia de consumo y disponibilidad reales. Sigue pendiente aceptación administrativa/auditoría completa. No se crean archivos de testing ni se acredita un registro de auditoría no comprobado.
 
 ## Lista de trabajo
 
@@ -25,7 +25,7 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C11 siguen el orde
   - [x] Captura interna de configuración vigente con política no editable para 011; modelo libre sin sustitución por el inicial.
   - [x] Emisor HTTP síncrono a MS-01 con autor firmado, credencial dedicada, ID/fecha estables y resultado parcial sin reintento. Pruebas HTTP con receptor controlado y fallo de conexión real; cambio guardado conservado.
   - [ ] Configurar `MS04_AUDIT_API_TOKEN` fuera del repositorio y verificar modificación real autenticada desde navegador, evento consultable en 004 y reconocimiento de reenvío en el receptor desplegado. La variable local quedó vacía; no se inventa registro exitoso.
-  - [ ] Con 011, verificar uso de la nueva revisión por una pregunta real y rechazo explícito de OpenAI a modelo inválido/no autorizado/incompatible. `OPENAI_API_KEY` está prevista como secreto de entorno, vacía en esta ejecución; no se invoca al proveedor en 005.
+  - [x] Con 011, pregunta real capturó configuración vigente y un modelo inexistente configurado mediante administración produjo error real de OpenAI, sin sustitución ni intercambio. Configuración original restaurada; clave exclusivamente privada. La ejecución original de 005 no había llamado al proveedor.
 
 - [ ] **005-T03. Controlar disponibilidad sin ocultar agentes ni destruir historial.**
   - **Valor/entrega:** habilitar/deshabilitar desde administración, mostrar motivos y auditar; ambos pueden quedar deshabilitados. Pregunta iniciada puede terminar salvo archivo; nuevas consultas/expedientes exigen agente habilitado y alternativa explícita cuando el inicial no esté disponible.
@@ -35,7 +35,7 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C11 siguen el orde
   - [x] Cambios de disponibilidad con revisión esperada, confirmación, auditoría y advertencia sobre ambos deshabilitados, sin ocultar agentes ni perder historial.
   - [x] REST rechaza disponibilidad de deshabilitado con `CONFLICT`; `capture_for_question` rechaza nuevas admisiones y no modifica una instantánea ya capturada. React conserva la selección inicial deshabilitada y exige elegir explícitamente la alternativa.
   - [x] Rehabilitar permite validación de nuevas operaciones. Ambos deshabilitados permanecen visibles/no seleccionables, con motivo y cadena de historial intacta; casos de uso/MongoDB reales y UI con respuestas simuladas.
-  - [ ] Integrar creación real de expediente en 007 y nuevas preguntas en 011 con validación autoritativa al admitirlas. Verificar pregunta iniciada que termina tras deshabilitar y resultado descartado al archivar; no existen aún esos flujos.
+  - [x] Creación real de expediente en 007 y nuevas preguntas en 011 validan disponibilidad autoritativa. En 011: toggle real rechaza admisiones nuevas y permite terminar una captura previa con proveedor controlado; archivo real descarta la respuesta pendiente por generación durable. React mostró deshabilitado/no seleccionable y alternativa explícita, sin cambiar el agente inicial.
 
 ## Verificación de aceptación
 
@@ -44,6 +44,8 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C11 siguen el orde
 - [x] Actualizar spec, plan e [índice](../index.md); implementación de catálogo no equivale a integración completa de agentes.
 
 ## Registro de verificación
+
+- **Ampliación desde 011 (2026-11-10):** respuestas OpenAI reales Civilista/Penalista, cambio conservando contexto e identificación anterior; modelo inválido configurado/rechazado/restaurado; ambos deshabilitados sin fallback, alternativa explícita y captura admitida que termina. Archivo real tiene prioridad y descarta respuesta pendiente. Las revisiones administrativas de prueba se conservan; configuración/disponibilidad originales restauradas y cuentas sintéticas eliminadas. Esto no cierra el evento/auditoría autenticada pendiente de T02 ni acredita toda la spec 005. El registro original siguiente describe el estado de su propia ejecución.
 
 - **31 comprobaciones de núcleo/MongoDB externo real:** catálogo exactamente de dos, herramientas iniciales, reinicialización sin sobrescribir modelo, proyección pública, permisos, ID inexistente, edición, captura antigua/nueva, conflicto obsoleto y carrera de dos CAS con un solo ganador. Historial paginado completo sin duplicados, exclusión de revisión perdedora, rechazo de cursor alterado/otro agente; parcial, deshabilitar ambos, historial intacto, rehabilitar y validaciones. Colecciones temporales aisladas eliminadas al terminar.
 - **21 comprobaciones HTTP/FastAPI y emisión:** API real mediante ASGI y MongoDB temporal, sin servicio/no contexto/Abogado, proyección mínima y `no-store`, DTO cerrado, booleano estricto, publicación/ID de evento, contexto/credencial/plazo, evento sin configuración, disponibilidad 409, conflicto 409, paginación inválida 400, resultado parcial de receptor no disponible y ausencia de creación/borrado. Receptor de auditoría controlado: no se acredita escritura real en el MS-01 desplegado.

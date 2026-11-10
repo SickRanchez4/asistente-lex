@@ -18,3 +18,7 @@ class Settings(BaseSettings):
     agent_initial_model: str = ""
     agents_prepare: bool = False
     openai_api_key: SecretStr = SecretStr("")
+    ms01_api_token: SecretStr = SecretStr("")
+    ms02_url: str = "http://ms-02-documental:8082"
+    ms02_api_token: SecretStr = SecretStr("")
+    ai_budget_ms: int = 60000

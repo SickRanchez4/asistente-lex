@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08. Implementación de T01–T04 entregada y desplegada localmente el 2026-11-10; T01/T02/T04 verificadas. De los 16 criterios, 14 confirmados; C07 pendiente y C15 parcial hasta comprobar exclusión con informes realmente guardados de 012. No se amplía esta entrega a implementar informes.
 
 ## Fuente y trazabilidad
 
@@ -84,22 +84,24 @@ Las conversaciones contienen información confidencial, deben vincularse a un ex
 
 ## Criterios de aceptación
 
-- [ ] Dado un expediente Abierto o Cerrado, cuando el abogado inicia un chat, entonces se activa el agente inicial del expediente.
-- [ ] Dado un expediente Archivado, cuando se intenta iniciar o continuar un chat, entonces MS-04 lo rechaza y la interfaz no lo ofrece.
-- [ ] Dada una pregunta, cuando el agente responde, entonces la respuesta llega completa e indica qué agente la generó.
-- [ ] Dado un chat con historial, cuando el abogado cambia de agente y envía otra pregunta, entonces el historial se conserva, la nueva respuesta indica el nuevo agente y el agente inicial del expediente no cambia.
-- [ ] Dado un agente deshabilitado, cuando se intenta seleccionarlo o enviarle una consulta directamente a MS-04, entonces se rechaza.
-- [ ] Dada una pregunta sobre un documento del expediente, cuando el agente responde usando ese documento, entonces la respuesta muestra la fuente.
+- [x] Dado un expediente Abierto o Cerrado, cuando el abogado inicia un chat, entonces se activa el agente inicial del expediente.
+- [x] Dado un expediente Archivado, cuando se intenta iniciar o continuar un chat, entonces MS-04 lo rechaza y la interfaz no lo ofrece.
+- [x] Dada una pregunta, cuando el agente responde, entonces la respuesta llega completa e indica qué agente la generó.
+- [x] Dado un chat con historial, cuando el abogado cambia de agente y envía otra pregunta, entonces el historial se conserva, la nueva respuesta indica el nuevo agente y el agente inicial del expediente no cambia.
+- [x] Dado un agente deshabilitado, cuando se intenta seleccionarlo o enviarle una consulta directamente a MS-04, entonces se rechaza.
+- [x] Dada una pregunta sobre un documento del expediente, cuando el agente responde usando ese documento, entonces la respuesta muestra la fuente.
 - [ ] Dado un expediente con informes guardados, cuando el agente responde, entonces ninguna fuente es un informe guardado.
-- [ ] Dada la IA temporalmente no disponible, cuando el abogado envía una pregunta, entonces se informa el error y no se muestra una respuesta.
-- [ ] Dado un expediente con conversaciones, cuando MS-01 solicita su eliminación, entonces se eliminan todas, la operación lo confirma y repetirla no produce error.
-- [ ] Dado un expediente desarchivado, cuando el abogado abre el chat, entonces no ve conversaciones previas.
-- [ ] Dados dos abogados A y B, cuando A intenta consultar las conversaciones de B, entonces se rechaza.
-- [ ] Dado un administrador, cuando intenta consultar conversaciones, entonces recibe "no autorizado".
-- [ ] Dadas varias conversaciones del mismo expediente, cuando se consulta o cambia agente en una, entonces las otras conservan su historial y agente activo.
-- [ ] Dado un fallo o timeout de IA, cuando termina, entonces la pregunta permanece en el cuadro de entrada y no aparece un intercambio incompleto en el historial.
+- [x] Dada la IA temporalmente no disponible, cuando el abogado envía una pregunta, entonces se informa el error y no se muestra una respuesta.
+- [x] Dado un expediente con conversaciones, cuando MS-01 solicita su eliminación, entonces se eliminan todas, la operación lo confirma y repetirla no produce error.
+- [x] Dado un expediente desarchivado, cuando el abogado abre el chat, entonces no ve conversaciones previas.
+- [x] Dados dos abogados A y B, cuando A intenta consultar las conversaciones de B, entonces se rechaza.
+- [x] Dado un administrador, cuando intenta consultar conversaciones, entonces recibe "no autorizado".
+- [x] Dadas varias conversaciones del mismo expediente, cuando se consulta o cambia agente en una, entonces las otras conservan su historial y agente activo.
+- [x] Dado un fallo o timeout de IA, cuando termina, entonces la pregunta permanece en el cuadro de entrada y no aparece un intercambio incompleto en el historial.
 - [ ] Dado un PDF sin texto, cuando se solicita analizarlo, entonces se informa la limitación sin OCR ni procesamiento visual; notas, fotografías e informes no llegan al proveedor.
-- [ ] Dada una respuesta pendiente al archivar, cuando llega, entonces no se publica ni recrea el historial borrado.
+- [x] Dada una respuesta pendiente al archivar, cuando llega, entonces no se publica ni recrea el historial borrado.
+
+C15: PDF sin texto, notas y fotografías comprobados con fuentes reales y cuerpo saliente inspeccionado en memoria. Falta su parte de informes, compartida con C07; no se fabricaron informes para cerrar esa aceptación. Evidencia y límites en [tareas](./tasks.md).
 
 ## Dependencias
 

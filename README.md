@@ -31,7 +31,7 @@ src/
     └── ms-04-ia/          Python / FastAPI
 ```
 
-Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría, personas, participantes, actuaciones, notas privadas y la capacidad propietaria de expedientes; archivo integrado y operaciones económicas continúan pendientes de sus specs.
+Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría, personas, participantes, actuaciones, notas privadas y expedientes; el archivo ya se integra con el chat de MS-04. Las operaciones económicas continúan pendientes de sus specs.
 
 ## Requisitos previos
 
@@ -167,7 +167,7 @@ El entorno inicial usa `gpt-4o-mini`, elegido por el responsable. Ambos agentes 
 
 Las herramientas tienen catálogo cerrado: `CASE_LEGAL_DATA`, `CASE_PDF_LIST`, `CASE_PDF_TEXT`. No son conexiones configurables; sus implementaciones autorizadas de expediente/PDF pertenecen a los flujos de 011 y sus propietarios. No se registran URLs, comandos, credenciales ni servidores MCP. La política de Bolivia, fuentes autorizadas y revisión profesional se conserva separada de las instrucciones editables.
 
-MS-04 expone `GET /agents` como proyección mínima y `GET /agents/{id}/availability` para consumidores internos; esta última devuelve `CONFLICT` si el agente está deshabilitado. Todas requieren la credencial de MS-04; el Gateway exige además sesión para la consulta del Abogado. 007 ya valida disponibilidad al crear un expediente o cambiar su agente inicial; 011 debe usar `capture_for_question` dentro de MS-04 para capturar una revisión al admitir la pregunta. La interfaz no es autorización: siguen pendientes el flujo de preguntas y su descarte por archivo.
+MS-04 expone `GET /agents` como proyección mínima y `GET /agents/{id}/availability` para consumidores internos; esta última devuelve `CONFLICT` si el agente está deshabilitado. Todas requieren la credencial de MS-04; el Gateway exige además sesión para la consulta del Abogado. 007 valida disponibilidad al crear un expediente o cambiar su agente inicial; 011 usa `capture_for_question` dentro de MS-04 para capturar una revisión al admitir la pregunta. La interfaz no es autorización: el backend revalida disponibilidad, propiedad y elegibilidad; archivo descarta respuestas anteriores al borrado.
 
 Las revisiones MongoDB son inmutables por API. Primero se inserta la revisión y después se publica el puntero mediante compare-and-set; una revisión no publicada no cuenta como historia aplicada. El historial recorre la cadena en páginas de hasta 100 con cursor firmado ligado al agente, sin truncarla ni exigir transacciones MongoDB. Un conflicto exige recargar antes de confirmar otra edición.
 
@@ -204,7 +204,7 @@ REST `/cases`, `/cases/{id}`, `/cases/{id}/transitions` y `/cases/{id}/eligibili
 
 Cerrar lleva de Abierto a Cerrado; reabrir, de Cerrado a Abierto. Estado e historial se guardan juntos. Archivar solo se solicita desde Cerrado y exige confirmar la eliminación irreversible de conversaciones. MS-01 persiste un intento estable, bloquea elegibilidad de nuevas preguntas/reapertura y pide borrado completo a MS-04 antes de guardar Archivado. Un fallo conserva Cerrado con marca; no vence automáticamente ni se desbloquea con una reapertura. Si el borrado se confirmó pero falló la transición local, se comunica pérdida irreversible y resultado parcial. Consultar el estado antes de reintentar reutiliza el intento sin duplicar historia.
 
-**Límite actual:** el contrato `POST /cases/{id}/conversations/delete` está definido, pero el handler y la coordinación por generación/recibos de borrado pertenecen a 011 y todavía no existen. Solicitar archivo ahora informa indisponibilidad y deja Cerrado con archivo pendiente; no confirma borrado ni éxito. Desarchivar está implementado como Archivado→Cerrado, sin restaurar chats ni escribir contenido/documentos. Su aceptación completa y el comportamiento de chats existentes/nuevos requieren 008/009/010/011 según [tareas de 007](specs/007-expedientes-y-ciclo-de-vida/tasks.md). No se declara esta integración lista para producción.
+**Integración local de 011:** `POST /cases/{id}/conversations/delete` ya elimina conversaciones e intercambios con generación/recibo durables. Archivo/desarchivo reales, respuesta tardía descartada y fallo SQL posterior al borrado con reintento sin duplicación comprobados. Un intento antiguo no borra chats posteriores al desarchivo. Si el borrado falla, sigue Cerrado con marca; nunca se fabrica confirmación. La matriz y demás aceptación pendiente de 007 permanecen en sus [tareas](specs/007-expedientes-y-ciclo-de-vida/tasks.md). Garantía de instancia local única, no de coordinación entre réplicas ni disponibilidad de producción.
 
 ### Participantes
 
@@ -228,7 +228,7 @@ Ambas entidades se consultan con conexión en cualquier estado; registrar/correg
 
 La preparación explícita de MS-01 mostrada en Personas aplica también V7: `juridico.actuations`, `juridico.actuation_corrections` y `juridico.private_notes`, con pertenencia compuesta e índices. REST publica GET/POST `/cases/{caseId}/actuations` y `/private-notes`, y GET/PUT de sus IDs. GraphQL expone consultas, altas y correcciones separadas; las correcciones requieren `expectedVersion`. Sin API de borrado ni historial de notas.
 
-**Límite actual:** C01–C11 verificadas; C12 parcial. La marca privada y la separación no acreditan todavía la exclusión de notas de contextos reales de IA/informes (011/012); la copia offline propia corresponde a 013. Archivado controlado sin chats solo acredita reglas de 009, no el archivo integrado de 007/011. Ver [tareas de 009](specs/009-actuaciones-y-notas/tasks.md).
+**Límite actual:** C01–C11 verificadas; C12 parcial. En 011 se comprobó exclusión de una nota real sintética del contexto OpenAI; siguen pendientes informes de 012 y la copia offline propia de 013. El Archivado controlado usado originalmente en 009 no acredita por sí solo archivo integrado; este tiene evidencia adicional en 011. Ver [tareas de 009](specs/009-actuaciones-y-notas/tasks.md).
 
 ### Documentos y fotografías
 
@@ -252,7 +252,32 @@ docker compose run --rm --no-deps -e DOCUMENTS_CLEANUP=true --entrypoint node ms
 
 Las transferencias usan el plazo configurable `GATEWAY_FILE_TRANSFER_TIMEOUT_MS` de la raíz (60 segundos por defecto); en ejecución directa MS-02 usa `FILE_TRANSFER_TIMEOUT_MS`, `MS01_URL` y `MS01_API_TOKEN`. PostgreSQL usa SQL calificado, migraciones con checksum y TLS verificado. La [decisión de consistencia](specs/010-documentos-y-fotografias/decisions/0001-consistencia-y-migraciones.md) detalla fallos y límites entre almacenes.
 
-**Estado:** T01–T03 y C01–C13 verificados; [evidencia de 010](specs/010-documentos-y-fotografias/tasks.md). REST publica archivos y fuentes autorizadas, más texto PDF con estado explícito NO_TEXT cuando no existe texto extraíble, sin OCR. Los consumidores reales de IA/informes/offline siguen pendientes en 011/012/013; no se acredita su integración ni el archivo de chats de 007/011. No se hicieron llamadas al proveedor IA.
+**Estado:** T01–T03 y C01–C13 verificados; [evidencia de 010](specs/010-documentos-y-fotografias/tasks.md). REST publica archivos y fuentes autorizadas, más texto PDF con estado explícito NO_TEXT cuando no existe texto extraíble, sin OCR. El consumidor IA y archivo de chats tienen evidencia integrada en 011; informes/offline siguen pendientes en 012/013. En la entrega original de 010 no se llamó al proveedor IA.
+
+### Asistencia jurídica IA
+
+Dentro de la ficha de expediente Abierto/Cerrado, Asistencia jurídica IA ofrece varias conversaciones privadas paginadas, agente activo independiente, cambio entre Civilista/Penalista, pregunta sobre expediente o PDF y respuestas completas con agente/fuentes. Orientadas a Bolivia y sujetas a revisión profesional. No streaming, SSE, MCP, OCR, modelos visuales ni títulos generados por IA.
+
+El agente inicial del expediente se conserva. Si está deshabilitado, se exige elegir explícitamente otro habilitado; si ambos lo están no se consulta. Una pregunta admitida usa su revisión capturada aunque después se deshabilite el agente, salvo archivo. Solo el abogado propietario activo accede: no Administrador ni otra cuenta.
+
+Configura `OPENAI_API_KEY` únicamente en el entorno privado de MS-04. El modelo vigente se usa exactamente, sin fallback; un identificador inválido produce error, no sustitución. Compose pasa a MS-04 `MS01_API_TOKEN`, `MS02_URL`, `MS02_API_TOKEN` y `AI_BUDGET_MS` a partir de las credenciales existentes y `GATEWAY_AI_BUDGET_MS` (60000 por defecto). Fuera de Compose, define también `MS01_URL` y esas variables en el entorno del servicio.
+
+Para actualizar un entorno con catálogo existente y preparar los índices del chat, sin sobrescribir revisiones:
+
+```sh
+docker compose build ms-04-ia gateway abogado shell
+docker compose run --rm --no-deps -e AGENTS_PREPARE=true --entrypoint python ms-04-ia -m app.infrastructure.prepare_agents
+docker compose --profile app up -d --no-deps ms-04-ia gateway abogado shell
+docker compose restart shell
+```
+
+Las herramientas tienen manejadores REST reales: datos jurídicos permitidos, lista de PDF y texto PDF autorizado. La proyección excluye notas, contacto personal, fotografías, informes y ERP; no hay navegación web. El modelo no elige cuenta, URLs ni comandos. Las referencias deben corresponder a fuentes efectivamente leídas. PDF sin texto informa limitación antes de llamar al proveedor; exceso de contexto se rechaza sin omitir datos silenciosamente.
+
+MongoDB conserva intercambios completos con un append atómico/versionado; no persiste media respuesta. La pregunta tiene hasta 8000 caracteres. Error, timeout o resultado incierto conserva el borrador solo en memoria; no hay reintento automático, y la incertidumbre exige consultar el historial. Sin conexión se ocultan chat e historial remotos, sin copia local.
+
+Archivar elimina todas las conversaciones/intercambios y descarta respuestas anteriores por generación. Los recibos técnicos durables no contienen preguntas ni respuestas; repetir un intento antiguo no borra chats nuevos tras desarchivar. El plazo total de pregunta incluye autenticación, fuentes, OpenAI y persistencia; una confirmación incierta se consulta antes de repetir.
+
+**Estado:** implementación de T01–T04 entregada; T01/T02/T04 verificadas y T03 pendiente solo de aceptación integrada con informes guardados de 012. C01–C06, C08–C14 y C16 confirmados (14/16); C07 pendiente y C15 parcial. Hubo respuestas OpenAI reales con datos exclusivamente sintéticos, archivo integrado y navegador de escritorio/móvil. [Evidencia y límites](specs/011-asistencia-juridica-ia/tasks.md). No enviar datos reales sin condiciones de tratamiento adecuadas; esta verificación local no las acredita.
 
 ### Puertos
 

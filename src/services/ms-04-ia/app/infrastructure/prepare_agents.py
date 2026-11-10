@@ -3,6 +3,7 @@ import asyncio
 from pymongo import AsyncMongoClient
 
 from app.adapters.outbound.mongo_agents import MongoAgents
+from app.adapters.outbound.mongo_conversations import MongoConversations
 from app.domain.agents import AgentFailure
 from app.infrastructure.config import Settings
 
@@ -15,6 +16,7 @@ async def prepare() -> None:
     try:
         repository = MongoAgents(client[settings.mongo_db], settings.user_context_signing_key.get_secret_value())
         await repository.provision(settings.agent_initial_model)
+        await MongoConversations(client[settings.mongo_db]).provision()
         print("Catalogo v1 preparado: Penalista y Civilista. Revisiones existentes conservadas.")
     finally:
         await client.close()

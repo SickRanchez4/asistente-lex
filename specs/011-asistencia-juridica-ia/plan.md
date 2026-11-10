@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado el 2026-11-08; implementación entregada y desplegada localmente el 2026-11-10. T01/T02/T04 completas y T03 implementada con aceptación integrada pendiente de informes de 012: 14/16 criterios confirmados, C07 pendiente y C15 parcial. Ver [evidencia y límites](./tasks.md).
 
 ## Resumen técnico
 
@@ -53,7 +53,18 @@ Colecciones de conversaciones/mensajes en MongoDB `ia`, con cuenta, expediente y
 
 Índices de pertenencia/expediente/conversación y orden estable. Guardar pregunta/respuesta completa con agente/fuentes en un documento de intercambio atómico, evitando persistir media respuesta. La consulta agrupa intercambios sin mezclar conversaciones. No exigir transacciones distribuidas o réplica MongoDB.
 
-Eliminar todas las colecciones/estados propios de chat relacionados; no conservar copias de historial como fallback ni mezclarlo con auditoría de agentes. Protección frente a respuesta tardía se concreta junto con 007.
+Eliminar todo contenido de conversaciones/intercambios y admisiones pendientes relacionadas; no conservar copias de historial como fallback ni mezclarlo con auditoría de agentes. Se implementó la protección frente a respuesta tardía compatible con 007: generación e intento/recibo técnicos durables, sin preguntas ni respuestas. No se eliminan esos identificadores de coordinación al borrar contenido, porque un intento antiguo no debe borrar conversaciones posteriores al desarchivo.
+
+### Concreción implementada
+
+- `conversations_v1` embebe intercambios completos; cada append actualiza intercambio y versión mediante un único CAS. Modelo/revisión capturados permanecen internos y no se publican en GraphQL.
+- `chat_epochs_v1` conserva generación/marca de borrado y `chat_deletion_receipts_v1` el recibo de cuenta/expediente/intento/generación; escrituras con mayoría. Un borrado incierto conserva la marca y se reanuda con el mismo intento. El recibo antiguo confirma su generación sin borrar contenido nuevo.
+- Un coordinador compartido por proceso serializa admisión/persistencia/eliminación por cuenta/expediente; la espera de OpenAI no mantiene ese bloqueo. Tras recibir respuesta se revalida generación, elegibilidad, conexión/plazo y versión antes del append.
+- REST y GraphQL ofrecen listado paginado, detalle, creación, cambio de agente y pregunta; mutaciones de conversación exigen `expectedVersion`. La cuenta procede exclusivamente de la identidad verificada, nunca de argumentos del navegador o del modelo.
+- OpenAI Chat Completions usa el modelo exacto capturado, JSON completo, `stream:false`, hasta 4000 tokens de salida y solo los tres manejadores internos seleccionados. Se rechazan respuestas incompletas, rechazos, referencias desconocidas o ausencia de la fuente necesaria; sin retry ni modelo de respaldo.
+- Límites explícitos: pregunta 8000 caracteres, PDF extraído 200000 caracteres, historial de contexto 200000 caracteres serializados, solicitud/respuesta del proveedor y conversación persistida hasta 1000000 bytes. Hasta 1000 elementos por listado de contexto; exceso da error sin truncamiento silencioso. Hasta 8 rondas/12 herramientas, máximo 4 por ronda, dentro del mismo plazo.
+- Gateway inicia el presupuesto de pregunta antes de autenticar; MS-04 usa el restante y el presupuesto configurado, cancela por plazo/desconexión y propaga el restante a MS-01/MS-02/OpenAI. No anuncia finalización si una persistencia queda incierta: React conserva borrador y exige consultar antes de repetir.
+- React mantiene borradores por conversación únicamente en memoria, no almacena chat en el navegador y lo oculta al perder conexión. Agente/fuentes y aviso de Bolivia/revisión profesional permanecen visibles; contenido como texto, sin ejecutar HTML o instrucciones del documento.
 
 ## Seguridad y privacidad
 
@@ -106,3 +117,4 @@ Verificar aviso de jurisdicción/revisión, fuentes privadas y ausencia de conte
 - PDF sin texto o exceso de contexto del modelo se comunica como limitación/error, sin inventar lectura ni omitir fuentes silenciosamente.
 - Concurrencia diseñada para instancia local única, no réplicas; el desarrollador comprueba archivo y respuestas tardías.
 - Sin preguntas funcionales abiertas.
+- C07 y la parte de informes de C15 no se cierran hasta existir informes guardados de 012. La whitelist y el rechazo de referencias inventadas están comprobados, pero no sustituyen ese escenario integrado.

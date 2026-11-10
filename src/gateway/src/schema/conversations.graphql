@@ -1,0 +1,18 @@
+enum ChatAnalysisScope { CASE PDF }
+enum ChatSourceKind { CASE PDF }
+type ChatAgent { id: ID! name: String! }
+type ChatSource { id: ID! kind: ChatSourceKind! label: String! }
+type ChatExchange { id: ID! question: String! answer: String! agent: ChatAgent! occurredAt: String! sources: [ChatSource!]! }
+type LegalConversation { id: ID! caseId: ID! createdAt: String! activeAgent: ChatAgent! version: Int! exchanges: [ChatExchange!]! }
+type ConversationSummary { id: ID! caseId: ID! createdAt: String! activeAgent: ChatAgent! version: Int! }
+type ConversationPage { items: [ConversationSummary!]! pageInfo: PageInfo! }
+input LegalQuestionInput { question: String! expectedVersion: Int! scope: ChatAnalysisScope! documentId: ID }
+extend type Query {
+  legalConversations(caseId: ID!, first: Int = 25, after: String): ConversationPage!
+  legalConversation(caseId: ID!, id: ID!): LegalConversation!
+}
+extend type Mutation {
+  startLegalConversation(caseId: ID!, agentId: ID): LegalConversation!
+  changeConversationAgent(caseId: ID!, id: ID!, agentId: ID!, expectedVersion: Int!): LegalConversation!
+  askLegalQuestion(caseId: ID!, id: ID!, input: LegalQuestionInput!): LegalConversation!
+}

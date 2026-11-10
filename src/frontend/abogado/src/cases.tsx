@@ -7,6 +7,7 @@ import { useAvailableAgents } from './agents';
 import Participants from './participants';
 import CaseRecords from './case-records';
 import CaseDocuments from './case-documents';
+import CaseConversations from './case-conversations';
 
 type State = 'OPEN' | 'CLOSED' | 'ARCHIVED';
 type Action = 'CLOSE' | 'REOPEN' | 'ARCHIVE' | 'UNARCHIVE';
@@ -168,6 +169,7 @@ export default function Cases() {
       <Participants key={item.id} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
       <CaseRecords key={`records:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
       <CaseDocuments key={`documents:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
+      {item.state !== 'ARCHIVED' && !item.archiving && <CaseConversations key={`chat:${item.id}`} caseId={item.id} initialAgentId={item.initialAgentId} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />}
       <History key={`${item.id}:${item.version}`} id={item.id} revision={revision} />
     </>}
     <ConfirmationDialog id="case-archive-confirmation" open={archive !== null} title="Archivar expediente" consequences="Se eliminaran de forma irreversible todas las conversaciones, sus intercambios y estados. Desarchivar no las recupera. Los participantes, actuaciones y documentos no se eliminan." confirmLabel="Eliminar conversaciones y archivar" pending={pending} onCancel={() => setArchive(null)} onConfirm={() => { if (archive) void change('ARCHIVE', archive); }} />

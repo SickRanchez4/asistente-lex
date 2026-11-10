@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Spec y plan aprobados el 2026-11-08. T01/T03 completas; implementación propia de T02/T04/T05 disponible, con comprobaciones integradas aún bloqueadas por 008/009/010/011. No se declara completa la spec ni se implementó chat fuera de alcance.
+En progreso. Spec y plan aprobados el 2026-11-08. T01/T03 completas; implementación propia de T02/T04/T05 disponible. 011 ya aporta borrado, archivo/desarchivo y respuesta tardía reales; faltan las comprobaciones restantes señaladas abajo. No se declara completa toda la spec por esa integración parcial.
 
 ## Lista de trabajo
 
@@ -37,7 +37,8 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C15 siguen el orde
   - [x] Confirmación irreversible; cancelar no llama backend. Intento persistido antes de REST, rechazo de reapertura y elegibilidad negativa durante incertidumbre; mismo intento al reintentar.
   - [x] Orden borrado→transacción de Archivado/historial y fallo parcial comprobados con puerto controlado. Repositorio y PostgreSQL reales; no equivale a borrar conversaciones reales.
   - [x] Fallo real de MS-04 sin handler: Cerrado, marca conservada, sin historial falso ni éxito; navegador informa posible pérdida irreversible y exige consulta vigente.
-  - [ ] Borrado real completo y generación/recibo durable en MS-04, respuesta tardía, timeout y reinicio sin recreación de conversaciones (011-T04; C06 integrado, C07, C09, C15).
+  - [x] En 011: borrado real completo y generación/recibo durable, archivo durante pregunta controlada sin recreación, y fallo SQL posterior al borrado con marca y reintento sin duplicar historia. Recibo antiguo no borra chats nuevos tras desarchivo.
+  - [ ] Completar el escenario específico de timeout/reinicio de 007 sin recreación de conversaciones; la evidencia anterior no equivale a todas sus variantes (C06 integrado, C07, C09, C15).
 
 - [ ] **007-T05. Recuperar acceso de consulta al desarchivar, sin restaurar chats.**
   - **Valor/entrega:** Archivado→Cerrado y su historial; contenido jurídico/documentos intactos y conversaciones nuevas vacías. Aplicar la matriz completa de transiciones sin reabrir automáticamente.
@@ -45,7 +46,8 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C15 siguen el orde
   - **Evidencia/validación:** desarchivo deja Cerrado, datos previos intactos y ningún historial de IA anterior; transición directa a Abierto se rechaza.
   - **Cobertura:** C05, C06, C10, C11, C12.
   - [x] Caso de uso/REST/GraphQL/acción React de Archivado→Cerrado; historial atómico, consulta y prohibición de edición/reapertura directa. Persistencia verificada con archivo confirmado por puerto controlado.
-  - [ ] Verificar conservación de participantes, actuaciones y documentos reales y ausencia de conversaciones anteriores (C10, requiere 008/009/010/011).
+  - [x] En 011: desarchivo real a Cerrado sin conversaciones previas, documentos reales intactos y nueva conversación vacía; repetición del intento anterior no elimina ese chat.
+  - [ ] Completar comparación explícita de participantes y actuaciones antes/después, además de los documentos ya comprobados (C10).
 
 ## Verificación de aceptación
 
@@ -55,6 +57,8 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C15 siguen el orde
 - [x] Actualizar spec, plan e [índice](../index.md); implementación de cerrar/reabrir no acredita archivo o desarchivo completos.
 
 ## Registro de verificación
+
+- **Ampliación desde 011 (2026-11-10):** MS-01 desplegado llamó al handler real de MS-04 y confirmó Archivado tras borrar varias conversaciones/intercambios. Se comprobó desarchivo sin historial, documentos intactos y recibo antiguo sin efecto sobre chat nuevo. Archivo durante respuesta controlada descartó el resultado; fallo SQL limitado al fixture después del borrado conservó Cerrado/marca y reintentó sin duplicar transición. Fixtures y fallo retirados. T02/C14, comparación jurídica completa de T05 y variantes específicas de reinicio/timeout siguen abiertas; no se reetiqueta como completa toda 007. El registro siguiente conserva la evidencia histórica previa al handler de 011.
 
 - **Compilación y contratos:** MS-01 con JDK 25; Gateway, Abogado y Shell con Node 26. Tipos de Gateway, Abogado, Shell y Admin comprobados; SDL compuesto válido y ambos OpenAPI 3.1 válidos con referencias resueltas. Sin nuevas dependencias de aplicación.
 - **Dominio:** 14 comprobaciones iniciales de matriz de transiciones y validación de campos, incluido código textual con ceros y recorte exterior.
