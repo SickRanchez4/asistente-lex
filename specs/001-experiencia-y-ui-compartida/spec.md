@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Aprobada por el responsable el 2026-11-08; base visual y patrones implementados. Integración funcional y verificación de aceptación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08; revision ejecutiva implementada y desplegada localmente el 2026-11-10. Identidad, dispositivos, navegacion administrativa y formatos verificados en el alcance disponible. La aceptacion integrada completa sigue pendiente; no se simulan destinos de 013-016.
 
 ## Fuente y trazabilidad
 
@@ -85,7 +85,7 @@ Esta spec define la navegación por rol y los patrones de experiencia compartido
 ## Criterios de aceptación
 
 - [ ] Dado un abogado autenticado, cuando abre la aplicación, entonces ve la navegación del abogado con sus secciones y no ve opciones administrativas.
-- [ ] Dado un administrador autenticado, cuando abre la aplicación, entonces ve la navegación administrativa y no ve las secciones del abogado.
+- [x] Dado un administrador autenticado, cuando abre la aplicación, entonces ve la navegación administrativa y no ve las secciones del abogado.
 - [ ] Dado un expediente Cerrado o Archivado, cuando el abogado consulta su contenido jurídico, entonces las acciones de escritura no están disponibles y se indica el motivo.
 - [ ] Dado el modo sin conexión, cuando el abogado navega, entonces ve el indicador de modo sin conexión y las acciones de escritura, chat y generación de informes aparecen no disponibles con su motivo.
 - [ ] Dado un agente deshabilitado, cuando aparece en un selector, entonces es visible, no puede seleccionarse y se indica el motivo.
@@ -93,11 +93,13 @@ Esta spec define la navegación por rol y los patrones de experiencia compartido
 - [ ] Dada una acción irreversible, cuando el usuario la inicia, entonces se solicita confirmación con sus consecuencias; y si cancela, la acción no se ejecuta.
 - [ ] Dada una operación fallida o completada parcialmente, cuando finaliza, entonces no se muestra un mensaje de éxito y se informa el resultado real.
 - [ ] Dado un formulario con errores de validación, cuando se envía, entonces los errores se muestran junto a los campos afectados y los datos ingresados se conservan.
-- [ ] Dados importes en BOB y fechas, cuando se presentan en cualquier microfrontend, entonces usan el mismo formato.
-- [ ] Dado el plan de esta spec, cuando un plan funcional necesita un patrón compartido, entonces puede referenciarlo sin redefinirlo.
-- [ ] Dadas ambas interfaces, cuando se navega, entonces están en español y usan logotipo, negro/dorado y tipografía del sistema acordados, con áreas de lectura claras.
-- [ ] Dada la interfaz del Abogado desde 360 px y la administrativa desde 1024 px, cuando se usan las pantallas, entonces sus controles y contenidos se adaptan al ámbito de soporte acordado.
-- [ ] Dados formularios y acciones, cuando se usan con teclado, entonces se identifican etiquetas, foco y errores sin depender solo del color.
+- [x] Dados importes en BOB y fechas, cuando se presentan en cualquier microfrontend, entonces usan el mismo formato.
+- [x] Dado el plan de esta spec, cuando un plan funcional necesita un patrón compartido, entonces puede referenciarlo sin redefinirlo.
+- [x] Dadas ambas interfaces, cuando se navega, entonces están en español y usan logotipo, negro/dorado y tipografía del sistema acordados, con áreas de lectura claras.
+- [x] Dada la interfaz del Abogado desde 360 px y la administrativa desde 1024 px, cuando se usan las pantallas, entonces sus controles y contenidos se adaptan al ámbito de soporte acordado.
+- [x] Dados formularios y acciones, cuando se usan con teclado, entonces se identifican etiquetas, foco y errores sin depender solo del color.
+
+Evidencia y limites de esta revision en [tasks.md](./tasks.md). Los criterios abiertos conservan comprobaciones parciales utiles, pero no equivalen a su aceptacion completa en ambos frameworks y consumidores.
 
 ## Dependencias
 

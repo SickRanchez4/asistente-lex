@@ -17,6 +17,7 @@ Aplicar los principios IV, V y X de la [constitución](../../docs/constitution.m
 - **Servicios propietarios:** comprobar identidad, rol y cuenta antes de cada operación. El Administrador no puede leer ni escribir expedientes, chats, informes o ERP.
 - **Shell:** recibir estado de sesión y rol verificado, montar React o Angular y retirar contenido privado al cerrar o expirar la sesión.
 - **Pantalla de acceso:** correo y contraseña, errores seguros, estado pendiente y cierre; reutilizar [001](../001-experiencia-y-ui-compartida/plan.md). No añadir selector de roles ni pantalla SSO.
+- Ajuste solicitado el 2026-11-10: cada login confirmado reemplaza la ruta por la portada del rol y el logout confirmado la reemplaza por `/`. No cambia la guardia de visitas directas. Menú «Mi cuenta» con nombre, acceso al espacio, cambio de contraseña y cierre; Escape y clic exterior lo cierran.
 
 Cuenta con nombre completo, correo único, hash y un rol fijo. Validar correo/contraseña contra la cuenta, nunca confiar en el correo o rol aportado como identidad ya autenticada. El Administrador crea/restablece cuentas Abogado en 004.
 

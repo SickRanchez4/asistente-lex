@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { GraphqlFailure, requestGraphql } from '../../shared/graphql';
 import { feedbackForError, type Feedback } from '../../shared/presentation';
-import { StatusNotice, TextField } from './ui';
+import { StatusNotice, TextField, useOnline } from './ui';
+import { ArrowLeft, Plus, RefreshCw } from 'lucide-react';
 
 type PersonType = 'NATURAL' | 'LEGAL';
 interface PersonInput {
@@ -40,6 +41,7 @@ function failure(error: unknown): Feedback {
 }
 
 export default function People() {
+  const online = useOnline();
   const [mode, setMode] = useState<'list' | 'create' | 'detail' | 'edit'>('list');
   const [filters, setFilters] = useState(EMPTY_FILTER);
   const [applied, setApplied] = useState(EMPTY_FILTER);
@@ -83,7 +85,7 @@ export default function People() {
   function open(id: string) { setSelectedId(id); setErrors({}); setUncertain(false); setMode('detail'); setVersion(value => value + 1); }
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (mutation.current || uncertain) return;
+    if (mutation.current || uncertain || !navigator.onLine) return;
     const fields = validation(input); setErrors(fields); setFeedback(null);
     if (Object.keys(fields).length) { setFeedback(feedbackForError('validation')); return; }
     const controller = new AbortController(); mutation.current = controller; setPending(true);
@@ -108,10 +110,10 @@ export default function People() {
   }
   const editing = mode === 'create' || mode === 'edit';
   return <section aria-labelledby="people-heading">
-    <div className="al-toolbar al-people-heading">
+    <div className="al-page-heading">
       <h1 id="people-heading" ref={heading} tabIndex={-1}>{mode === 'list' ? 'Personas' : mode === 'create' ? 'Registrar persona' : mode === 'edit' ? 'Editar ficha' : 'Ficha de persona'}</h1>
-      {mode === 'list' ? <button className="al-button" type="button" onClick={startCreate}>Registrar persona</button>
-        : <button className="al-button al-button--secondary" type="button" disabled={pending} onClick={showList}>Volver al listado</button>}
+      {mode === 'list' ? <button className="al-button" type="button" disabled={!online} onClick={startCreate}><Plus className="al-icon" aria-hidden="true" />Registrar persona</button>
+        : <button className="al-button al-button--secondary" type="button" disabled={pending} onClick={showList}><ArrowLeft className="al-icon" aria-hidden="true" />Volver al listado</button>}
     </div>
     {feedback && <StatusNotice feedback={feedback} onRetry={!editing ? () => setVersion(value => value + 1) : undefined} />}
     {mode === 'list' && <>
@@ -125,20 +127,20 @@ export default function People() {
           <button className="al-button al-button--secondary" type="button" onClick={() => { setFilters(EMPTY_FILTER); setApplied({ ...EMPTY_FILTER }); setCursors([null]); }}>Limpiar</button></div>
       </form>
       {page?.items.length === 0 && <StatusNotice feedback={{ kind: 'empty', title: 'Sin personas', message: 'No hay personas que coincidan con los filtros.' }} />}
-      {page && page.items.length > 0 && <div className="al-table-scroll"><table className="al-table"><caption className="al-muted">Personas de mi cuenta</caption><thead><tr><th scope="col">Nombre o razon social</th><th scope="col">Tipo</th><th scope="col">Identificacion</th><th scope="col">Ficha</th></tr></thead>
+      {page && page.items.length > 0 && <div className="al-table-scroll" tabIndex={0} role="region" aria-label="Personas de mi cuenta"><table className="al-table"><caption className="al-muted">Personas de mi cuenta</caption><thead><tr><th scope="col">Nombre o razon social</th><th scope="col">Tipo</th><th scope="col">Identificacion</th><th scope="col">Ficha</th></tr></thead>
         <tbody>{page.items.map(item => <tr key={item.id}><td>{item.displayName}</td><td>{item.type === 'NATURAL' ? 'Natural' : 'Juridica'}</td>
           <td>{item.documentType ? `${item.documentType} / ${item.documentNumber} / ${item.issuingCountry}` : 'Sin identificacion'}</td>
           <td><button className="al-button al-button--secondary" type="button" aria-label={`Ver ficha de ${item.displayName}`} onClick={() => open(item.id)}>Ver ficha</button></td></tr>)}</tbody></table></div>}
       {page && <div className="al-toolbar"><button className="al-button al-button--secondary" type="button" disabled={cursors.length === 1 || loading} onClick={() => setCursors(previous => previous.slice(0, -1))}>Anterior</button>
         <span>Pagina {cursors.length}</span><button className="al-button al-button--secondary" type="button" disabled={!page.pageInfo.hasNextPage || loading} onClick={() => setCursors(previous => [...previous, page.pageInfo.endCursor])}>Siguiente</button>
-        <button className="al-button al-button--secondary" type="button" title="Actualizar listado" aria-label="Actualizar listado" disabled={loading} onClick={() => setVersion(value => value + 1)}>&#8635;</button></div>}
+        <button className="al-button al-button--secondary al-icon-button" type="button" title="Actualizar listado" aria-label="Actualizar listado" disabled={loading} onClick={() => setVersion(value => value + 1)}><RefreshCw className="al-icon" aria-hidden="true" /></button></div>}
     </>}
     {loading && <p role="status">Cargando personas...</p>}
     {mode === 'detail' && person && <div className="al-person-detail">
       <h2>{person.displayName}</h2><dl className="al-admin-data"><dt>Tipo de persona</dt><dd>{person.type === 'NATURAL' ? 'Natural' : 'Juridica'}</dd>
         {Object.entries(LABELS).filter(([key]) => person.type === 'NATURAL' ? key !== 'businessName' : !['firstNames', 'lastNames'].includes(key)).map(([key, label]) =>
           <div className="al-person-fact" key={key}><dt>{label}</dt><dd>{person[key as keyof PersonInput] || 'No informado'}</dd></div>)}</dl>
-      <button className="al-button" type="button" onClick={() => { setInput(formValues(person)); setFeedback(null); setMode('edit'); }}>Editar ficha</button>
+      <button className="al-button" type="button" disabled={!online} onClick={() => { setInput(formValues(person)); setFeedback(null); setMode('edit'); }}>Editar ficha</button>
     </div>}
     {editing && <form className="al-person-form" noValidate onSubmit={event => void save(event)}>
       <fieldset disabled={pending}>
@@ -150,7 +152,7 @@ export default function People() {
         <h2>Identificacion</h2><div className="al-grid">{DOCUMENT_FIELDS.map(key => field(key, DOCUMENT_FIELDS.some(part => Boolean(input[part].trim()))))}</div>
         <h2>Contacto</h2><div className="al-grid">{field('phone')}{field('email')}</div>{field('address')}
         {uncertain && <p className="al-notice" role="alert">Resultado no confirmado. El guardado queda bloqueado; vuelve al listado y comprueba la ficha antes de repetirlo.</p>}
-        <div className="al-toolbar"><button className="al-button" type="submit" disabled={pending || uncertain} aria-busy={pending}>{pending ? 'Guardando...' : 'Guardar persona'}</button>
+        <div className="al-toolbar"><button className="al-button" type="submit" disabled={pending || uncertain || !online} aria-busy={pending}>{pending ? 'Guardando...' : 'Guardar persona'}</button>
           <button className="al-button al-button--secondary" type="button" disabled={pending} onClick={() => { if (selectedId) open(selectedId); else showList(); }}>Cancelar</button></div>
       </fieldset>
     </form>}

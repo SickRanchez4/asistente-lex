@@ -23,6 +23,9 @@ export function startAuthentication(onChange: (session: SessionState) => void): 
   const logout = document.getElementById('al-logout') as HTMLButtonElement;
   const retry = document.getElementById('al-session-retry') as HTMLButtonElement;
   const message = document.getElementById('al-auth-message')!;
+  const accountMenu = document.getElementById('al-account-menu') as HTMLDetailsElement;
+  const accountName = document.getElementById('al-account-name')!;
+  const accountMonogram = document.getElementById('al-account-monogram')!;
   const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('lex-session');
   let state: SessionState = { status: 'pending' };
   let revision = 0;
@@ -47,6 +50,8 @@ export function startAuthentication(onChange: (session: SessionState) => void): 
       workspace.textContent = next.role === 'Abogado' ? 'Mi espacio' : 'Administración';
     }
     if (changed) {
+      accountMenu.open = false;
+      if (next.status !== 'authenticated') { accountName.textContent = ''; accountMonogram.textContent = ''; }
       password.reset();
       window.dispatchEvent(new CustomEvent('al-session-changed', { detail: next }));
     }
@@ -56,6 +61,8 @@ export function startAuthentication(onChange: (session: SessionState) => void): 
   function accept(result: Outcome): void {
     if (result.success && result.user) {
       setState({ status: 'authenticated', role: result.user.role === 'ABOGADO' ? 'Abogado' : 'Administrador', accountId: result.user.accountId });
+      accountName.textContent = result.user.name;
+      accountMonogram.textContent = result.user.name.trim().slice(0, 1).toLocaleUpperCase('es');
     } else {
       setState({ status: 'anonymous' });
     }
@@ -109,7 +116,10 @@ export function startAuthentication(onChange: (session: SessionState) => void): 
       const result = await graphql(`mutation Login($email:String!,$password:String!){ login(email:$email,password:$password){ ${fields} } }`,
         { email: String(values.get('email')), password: String(values.get('password')) });
       if (operationRevision !== revision) return;
-      if (result.success) { login.reset(); lastActivity = Date.now(); channel?.postMessage('changed'); }
+      if (result.success && result.user) {
+        window.history.replaceState(null, '', result.user.role === 'ABOGADO' ? '/abogado' : '/admin');
+        login.reset(); lastActivity = Date.now(); channel?.postMessage('changed');
+      }
       accept(result);
       if (!result.success) notice(result.message);
     });
@@ -119,6 +129,7 @@ export function startAuthentication(onChange: (session: SessionState) => void): 
     const result = await graphql(`mutation { logout { ${fields} } }`);
     if (operationRevision !== revision) return;
     if (result.success || result.category === 'UNAUTHENTICATED') {
+      window.history.replaceState(null, '', '/');
       setState({ status: 'anonymous' }); login.reset(); password.reset();
       channel?.postMessage('changed');
     }
@@ -160,6 +171,15 @@ export function startAuthentication(onChange: (session: SessionState) => void): 
     }
   }
 
+  accountMenu.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && accountMenu.open) { accountMenu.open = false; accountMenu.querySelector('summary')?.focus(); }
+  });
+  accountMenu.addEventListener('click', (event) => {
+    if (event.target instanceof Element && event.target.closest('a, button')) accountMenu.open = false;
+  });
+  document.addEventListener('click', (event) => {
+    if (event.target instanceof Node && !accountMenu.contains(event.target)) accountMenu.open = false;
+  });
   retry.addEventListener('click', () => { notice(null); void refresh(); });
   channel?.addEventListener('message', () => { revision++; setState({ status: 'pending' }); void refresh(); });
   window.addEventListener('pointerdown', (event) => void activity(event));

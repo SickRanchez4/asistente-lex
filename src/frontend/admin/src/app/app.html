@@ -1,11 +1,15 @@
-<main id="al-admin-content" class="al-page" tabindex="-1">
-  <h1>Administración</h1>
-  <nav class="al-nav al-admin-tabs" aria-label="Administración">
+<main id="al-admin-content" class="al-page al-workspace-layout" tabindex="-1">
+  <aside class="al-workspace-sidebar">
+  <span class="al-workspace-role">Administrador</span>
+  <nav class="al-nav al-workspace-nav" aria-label="Administración">
     <a href="/admin/cuentas" [attr.aria-current]="tab() === 'cuentas' ? 'page' : null" (click)="navigate($event, 'cuentas')">Cuentas</a>
     <a href="/admin/parametros" [attr.aria-current]="tab() === 'parametros' ? 'page' : null" (click)="navigate($event, 'parametros')">Parámetros</a>
     <a href="/admin/auditoria" [attr.aria-current]="tab() === 'auditoria' ? 'page' : null" (click)="navigate($event, 'auditoria')">Auditoría</a>
     <a href="/admin/agentes" [attr.aria-current]="tab() === 'agentes' ? 'page' : null" (click)="navigate($event, 'agentes')">Agentes</a>
   </nav>
+  </aside>
+  <div class="al-workspace-body">
+  <div class="al-page-heading"><h1>{{ tab() === 'cuentas' ? 'Cuentas' : tab() === 'parametros' ? 'Parámetros generales' : tab() === 'auditoria' ? 'Auditoría' : 'Agentes jurídicos' }}</h1></div>
   @if (feedback(); as notice) { <al-status-notice [feedback]="notice" /> }
   @if (errors.feedback(); as notice) { <al-status-notice [feedback]="notice" /> }
   @if (loading()) { <p role="status">Cargando...</p> }
@@ -17,9 +21,9 @@
         <div class="al-table-scroll" tabindex="0" role="region" aria-label="Cuentas de abogados">
           <table class="al-table"><thead><tr><th>Nombre</th><th>Correo</th><th>Estado</th><th>Cuenta</th></tr></thead>
             <tbody>@for (account of accounts(); track account.id) {
-              <tr><td>{{ account.name }}</td><td>{{ account.email }}</td><td>{{ account.enabled ? 'Activa' : 'Suspendida' }}</td>
+              <tr><td>{{ account.name }}</td><td>{{ account.email }}</td><td><span class="al-badge" [attr.data-state]="account.enabled ? 'enabled' : 'disabled'">{{ account.enabled ? 'Activa' : 'Suspendida' }}</span></td>
                 <td><button class="al-button al-button--secondary" type="button" [disabled]="busy() || loading()" (click)="detail(account.id)" [attr.aria-label]="'Ver cuenta de ' + account.name">Ver</button></td></tr>
-            } @empty { @if (!loading()) { <tr><td colspan="4">No hay cuentas en esta página.</td></tr> } }</tbody>
+            } @empty { @if (!loading() && !feedback()) { <tr><td colspan="4">No hay cuentas en esta página.</td></tr> } }</tbody>
           </table>
         </div>
         <div class="al-toolbar" aria-label="Páginas de cuentas">
@@ -80,7 +84,7 @@
               <td>@if (event.targetId) { <div>Cuenta: {{ event.targetId }}</div> } @if (event.agentId) { <div>Agente: {{ event.agentId }}</div> }
                 @if (event.parameter) { <div>{{ event.parameter }}</div><div>Anterior: {{ event.previousValue || '(vacío)' }}</div><div>Nuevo: {{ event.newValue || '(vacío)' }}</div> }
                 <details><summary>Referencia</summary>{{ event.id }}</details></td></tr>
-          } @empty { @if (!loading()) { <tr><td colspan="5">No hay coincidencias en esta página.</td></tr> } }</tbody>
+          } @empty { @if (!loading() && !feedback()) { <tr><td colspan="5">No hay coincidencias en esta página.</td></tr> } }</tbody>
         </table>
       </div>
       <div class="al-toolbar" aria-label="Páginas de auditoría">
@@ -97,4 +101,5 @@
       [consequences]="confirmation() === 'password' ? 'Se reemplazará la contraseña y se cerrarán las sesiones de esta cuenta. No se enviará correo.' : account.enabled ? 'Se cerrarán sus sesiones y no podrá iniciar sesión. Sus datos se conservarán.' : 'La cuenta podrá volver a iniciar sesión con su contraseña vigente.'"
       (cancel)="cancel()" (confirm)="confirm()" />
   }
+  </div>
 </main>

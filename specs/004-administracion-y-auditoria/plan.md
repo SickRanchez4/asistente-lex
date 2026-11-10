@@ -38,6 +38,8 @@ Restablecer contraseña es operación separada, sin consultar hash anterior, cor
 
 Contratos vigentes: [SDL administrativo](../../src/gateway/src/schema/admin.graphql) y [OpenAPI MS-01](../../src/services/ms-01-juridico/contracts/openapi.yaml). Cuentas ordenadas por correo único y cursor; páginas de 25 por defecto, máximo 100. Eventos por índices DynamoDB `by-date`, `by-type` o `by-user`, con `Limit` acotado y filtros combinables. Puede haber páginas vacías con continuación; el cursor está vinculado a los filtros. Fechas RFC3339 con zona: inicio inclusivo y final exclusivo, normalizados a UTC y presentados en Bolivia.
 
+Corrección 2026-11-10: Gateway omite `after: null` al construir el listado REST de cuentas. Convertirlo en la cadena `null` hacía que MS-01 lo decodificara como cursor y rechazara su contenido como correo inválido. Se conserva el cursor real de continuación y no se relaja su validación.
+
 Recepción de agentes: `/audit/events` exige una credencial exclusiva `MS04_AUDIT_API_TOKEN`, además del autor firmado vigente. `AGENT_ACTION` acepta solo cambios de configuración/habilitación de `penalista` o `civilista`, con identificador y fecha originales estables. El reenvío idéntico no duplica el registro; cambiar su contenido no se reconoce como entrega. La emisión después de una acción real se integrará en 005; no se ejecutan cambios de agentes en 004.
 
 ## Persistencia y migraciones

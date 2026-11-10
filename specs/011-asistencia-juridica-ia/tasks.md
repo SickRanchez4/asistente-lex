@@ -6,6 +6,20 @@ Completa. Spec y plan aprobados el 2026-11-08. T01–T04 entregadas y desplegada
 
 ## Lista de trabajo
 
+### Corrección posterior del formato de respuesta, 2026-11-10
+
+La pregunta «Dame los datos mas importantes del expediente» de `abogado@demo.com` reprodujo HTTP 503 en MS-04: OpenAI respondía HTTP 200, pero el resultado no cumplía el contrato de respuesta completa. Las fuentes y la configuración estaban disponibles; no era un fallo de permisos o conectividad. El adaptador pasó de `json_object` a `json_schema` estricto con `answer` y `sourceIds`, límites y referencias autorizadas actualizadas por ronda. Se conservó la validación posterior, sin relajar fuentes, cambiar modelo o introducir reintentos.
+
+Verificación focalizada: diez escenarios temporales de adaptador con transporte simulado cubrieron CASE, PDF, ausencia de fuentes, ampliación de referencias mediante herramientas y rechazo de claves inválidas, referencias desconocidas, fuente obligatoria ausente, respuesta parcial, rechazo y fallo del proveedor sin retry. OpenAI real aceptó el esquema y respondió a la frase exacta con una fuente autorizada en 9439 ms, sin persistir esa primera comprobación. Tras reconstruir únicamente MS-04, navegador → GraphQL → MS-04 → OpenAI confirmó la misma frase desde la cuenta afectada: respuesta visible, un intercambio completo guardado, una fuente y borrador limpiado tras confirmación. Sin errores de editor en el adaptador.
+
+Se retiraron exclusivamente las dos conversaciones de diagnóstico creadas durante esta corrección. La conversación original conservó versión 1 y cero intercambios; expediente, agentes, claves y cuentas no se modificaron. Sesión de QA cerrada. Esta evidencia real posterior resuelve el fallo documentado en el ajuste visual siguiente, sin convertirlo retrospectivamente en una prueba exitosa del proveedor. Sin commit ni push.
+
+### Ajuste conversacional solicitado, 2026-11-10
+
+Confirmación final: foco restaurado al compositor después del refresco confirmado; historial móvil plegable operativo. Medidas a 1440/768/360 px sin desbordamiento de página; la última confirmación de escritorio/móvil incluyó fuentes y mensajes sintéticos. Se retiraron los interceptores y los datos del expediente temporal exacto, incluida una conversación vacía y su coordinación MongoDB. Las cuatro cuentas solicitadas se conservaron y la sesión de navegador quedó cerrada.
+
+Nueva presentación con historial lateral (plegable en móvil), agente contextual, mensajes y fuentes desplegables, compositor inferior y etiquetas accesibles. Typecheck y build React correctos. Enter produjo una sola petición; Mayús+Enter añadió línea y cambiar de pestaña conservó borrador. El envío real de esta revisión devolvió SERVICE_UNAVAILABLE: se comprobó borrador intacto, cero intercambios persistidos y recuperación de entrada al consultar. No se reintentó automáticamente. Mensajes y fuentes de éxito revisados con respuesta sintética interceptada temporalmente, sin guardarla; esa comprobación visual no acredita disponibilidad actual de OpenAI ni reemplaza la evidencia real histórica de 011. Sin cambios en los contratos o adaptadores del proveedor.
+
 Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C16 siguen el orden de criterios. OpenAI, sin MCP, imágenes, notas o informes guardados como fuentes. Las claves no forman parte de código, historial o documentación de evidencia.
 
 - [x] **011-T01. Preguntar sobre un expediente en conversaciones privadas con respuestas completas.**

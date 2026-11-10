@@ -102,7 +102,16 @@ class OpenAILegal:
         call_count = 0
         for _round in range(8):
             body = {"model": configuration.revision.model, "messages": messages, "stream": False,
-                    "response_format": {"type": "json_object"}, "max_completion_tokens": 4000}
+                    "response_format": {"type": "json_schema", "json_schema": {
+                        "name": "legal_chat_answer", "strict": True,
+                        "schema": {"type": "object", "additionalProperties": False,
+                                   "properties": {
+                                       "answer": {"type": "string", "minLength": 1, "maxLength": 50000},
+                                       "sourceIds": {"type": "array", "items": {
+                                           "type": "string", **({"enum": sorted(sources)} if sources else {})},
+                                           "minItems": 1 if required_source else 0,
+                                           "maxItems": 100 if sources else 0}},
+                                   "required": ["answer", "sourceIds"]}}}, "max_completion_tokens": 4000}
             if definitions:
                 body["tools"] = definitions
             choice = await self.completion(body)

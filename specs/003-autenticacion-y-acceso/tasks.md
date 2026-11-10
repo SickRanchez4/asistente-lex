@@ -6,6 +6,10 @@ En progreso. Spec y plan aprobados el 2026-11-08. Verificación parcial realizad
 
 ## Lista de trabajo
 
+### Ajuste de cambio de usuario, 2026-11-10
+
+Corregido el destino tras login/logout en Shell: ciclo real Administrador desde `/admin/agentes`, cierre a `/` y login Abogado a `/abogado`, sin heredar permisos/ruta. Prueba focalizada del controlador y typecheck Shell Node 26 correctos. Menú de cuenta con cierre por Escape. Las cuatro cuentas solicitadas (`admin.alfa@demo.com`, `admi.beta@demo.com`, `abogado.alfa@demo.com`, `abogado.beta@demo.com`) verificaron login y rol reales; sesiones de API cerradas. Administradores aprovisionados explícitamente en local con BCrypt 12 sin sobrescribir cuentas; abogados creados mediante API administrativa auditada. Contraseña inicial pública demo `password`. No se amplía la semilla ni se cierran los criterios globales pendientes de 003.
+
 Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C13 siguen el orden de criterios. Cada entrega integra contratos, capas, persistencia y UI pertinentes; no se crean tareas aisladas de migración o archivo. SSO permanece diferido.
 
 - [ ] **003-T01. Entrar a la aplicación con una cuenta local válida.**

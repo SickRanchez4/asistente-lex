@@ -2,9 +2,13 @@
 
 ## Estado
 
-En progreso. Spec y plan aprobados el 2026-11-08. T01–T03 implementadas y verificadas por capas; capacidades propias de T04 implementadas, con integración real de agentes pendiente de 005. No se acredita un recorrido autenticado completo navegador/GraphQL/REST en esta ejecución.
+En progreso. Spec y plan aprobados el 2026-11-08. T01–T03 implementadas y verificadas por capas; capacidades propias de T04 implementadas, con integración real de agentes pendiente de 005. El ajuste posterior de Cuentas acredita listado autenticado real y altas por API, no toda la matriz administrativa.
 
 ## Lista de trabajo
+
+### Corrección de Cuentas, 2026-11-10
+
+Resuelto el aviso «Revisa los datos» de la primera carga: `after: null` se serializaba como texto en REST y terminaba en validación de correo del cursor. Prueba focalizada confirma omisión de null y conservación de continuación; typecheck Gateway Node 26 correcto. Consulta GraphQL real con null y listado Angular autenticado correctos. Creados `abogado.alfa@demo.com` y `abogado.beta@demo.com` por la API existente, con aplicación y auditoría confirmadas; ambos permiten login con rol Abogado. El alta local explícita de los dos Administradores solicitados se registra en 003 y no introduce una operación pública para crear administradores.
 
 Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C13 siguen el orden de criterios. Las dependencias son capacidades concretas, no aprobación/completitud de una spec entera.
 

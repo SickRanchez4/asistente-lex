@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Plan aprobado por el responsable el 2026-11-08; base visual y patrones implementados. Integración de sesión/destinos y verificación de aceptación pendientes.
+En progreso. Plan aprobado por el responsable el 2026-11-08; revision ejecutiva autorizada el 2026-11-10, implementada y desplegada localmente. Sesion y destinos disponibles integrados; aceptacion completa de navegacion/offline y matriz de estados pendiente.
 
 ## Resumen técnico
 
@@ -19,11 +19,11 @@ Se aplican los principios I, V, VI, IX, X, XI y XII de la [constitución](../../
 ### Implementación actual y límites
 
 - Recursos comunes en [shared](../../src/frontend/shared/): CSS, formatos exactos, estados y contrato de navegación de presentación. Los componentes nativos están en [React](../../src/frontend/abogado/src/ui.tsx) y [Angular](../../src/frontend/admin/src/app/ui.components.ts).
-- El Shell distribuye CSS/logotipo una vez, mantiene accesos explícitamente técnicos y muestra fallos de carga o dirección desconocida sin detalles internos. Se conservan `/abogado` y `/admin`, sin añadir pantallas funcionales ficticias.
+- El Shell distribuye CSS/logotipo una vez y muestra fallos de carga o dirección desconocida sin detalles internos. La sesion real controla el montaje y la cabecera de cuenta. Se conservan `/abogado` y `/admin`, sin añadir pantallas funcionales ficticias.
 - La galería de React usa un flag de compilación de desarrollo; Angular usa `isDevMode()`. Ninguna se renderiza en producción ni ejecuta operaciones reales.
 - Angular utiliza el input `controlId` para controles/diálogos, evitando duplicar el `id` del host y romper etiquetas o referencias ARIA.
 - Los formularios son controlados por sus consumidores; el kit no limpia valores ni ejecuta backend. `OperationOutcome` es un contrato UI, no el resultado GraphQL definitivo de 002; éxito exige confirmación del consumidor y fallo parcial/incierto se mantiene explícito.
-- Los componentes de navegación aceptan `SessionPresentation` y destinos reales aportados por las funcionalidades. No hay adaptador de autenticación o rutas de negocio hasta 003/004–016: 001-T03 permanece bloqueada conforme a la decisión del responsable.
+- Los componentes de navegación aceptan `SessionPresentation` y destinos reales aportados por las funcionalidades. La sesion real de 003 y destinos de 004-012 ya estan integrados; 001-T03 sigue abierta por las pantallas de 013-016, no por ausencia de autenticacion.
 - Docker usa contexto común `src/frontend` con un Dockerfile por componente para copiar los recursos fuente. No se comparten instalaciones npm ni se cambia el despliegue de los servicios.
 
 ### Responsabilidades y reutilización
@@ -57,6 +57,21 @@ Los componentes React y Angular se mantienen separados. Compartir comportamiento
 - No construir pantallas vacías para todas las funcionalidades. Sus entradas se incorporan con la spec correspondiente; la navegación completa se verifica cuando esas integraciones estén disponibles.
 
 ### Identidad visual y terminología
+
+#### Revision ejecutiva 2026-11-10
+
+El responsable prioriza el trabajo diario del Abogado y permite reorganizar la presentacion conservando funciones. Se refina el sistema existente, sin reemplazar la identidad ni introducir fuentes externas. Modo Impeccable: Operate.
+
+- Direccion: espacio de trabajo ejecutivo, negro/dorado en marca y navegacion; contenido blanco sobre gris neutro, bordes precisos y jerarquia compacta.
+- Primera vista: cabecera de cuenta compacta, navegacion lateral en escritorio y horizontal adaptable, titulo y accion principal claros. Sin indicadores ficticios ni funciones futuras simuladas.
+- Recorrido: Mi espacio ofrece accesos reales; el expediente organiza sus secciones sin perder borradores al cambiar de seccion. Se mantienen los contratos, restricciones y confirmaciones existentes.
+- Verificacion: compilacion por superficie, interacciones reales, teclado y capturas agrupadas en escritorio/movil. La aceptacion integrada de offline/ERP sigue condicionada a 013-016.
+
+La navegacion React usa el historial interceptado por el Shell, sin importar otra instancia de single-spa; conserva clics modificados, destinos externos y descargas. Los paneles de expediente usan pestañas con flechas, Inicio/Fin y un unico panel accesible; `hidden` mantiene montados los consumidores para conservar borradores al cambiar de seccion. En movil la franja se desplaza horizontalmente, sin ampliar la pagina.
+
+Mi espacio muestra accesos a Personas/Expedientes y disponibilidad real de agentes, sin selector inerte ni cifras inventadas. `useOnline` reutiliza eventos del navegador para indicador persistente y bloqueos de escrituras de Personas, Expedientes y Participantes; no crea persistencia offline. Se justifica `lucide-react` 1.71.0 para iconos de navegacion y herramientas React, sin cambiar versiones existentes.
+
+Ajustes posteriores solicitados el mismo día: cabecera reducida a marca y menú «Mi cuenta», sin enlace aislado «Contraseña»; eliminado el botón duplicado «Ver expedientes» de la portada. El chat contextual de 011 usa historial lateral plegable en móvil, mensajes diferenciados y compositor inferior; conserva reglas, fuentes, borradores y ausencia de streaming. Login y logout corrigen el destino en 003; primera carga administrativa corregida en el resolver de 004.
 
 Usar una base pequeña de variables CSS para colores semánticos, texto, fondo, bordes, espaciado, tipografía y foco. Identidad acordada: negro/dorado en marca y navegación, fondo claro en contenido y formularios, [logotipo existente](../../src/frontend/shell/src/static/lex-ai-logo.png) y tipografía del sistema. Interfaz solo en español. No añadir temas, modo oscuro, fuentes externas ni personalización por cuenta.
 

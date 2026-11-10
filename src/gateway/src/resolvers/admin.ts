@@ -54,8 +54,8 @@ export function createAdminResolvers(config: GatewayConfig) {
   }
   return {
     Query: {
-      adminAccounts: (_parent: unknown, args: { first: number; after?: string }, context: GatewayContext) =>
-        call(context, '/admin/accounts', 'GET', (data) => page(data, account), undefined, args),
+      adminAccounts: (_parent: unknown, args: { first: number; after?: string | null }, context: GatewayContext) =>
+        call(context, '/admin/accounts', 'GET', (data) => page(data, account), undefined, { first: args.first, after: args.after ?? undefined }),
       adminAccount: (_parent: unknown, args: { id: string }, context: GatewayContext) =>
         call(context, `/admin/accounts/${encodeURIComponent(args.id)}`, 'GET', account),
       applicationSettings: (_parent: unknown, _args: unknown, context: GatewayContext) =>

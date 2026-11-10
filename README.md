@@ -131,7 +131,11 @@ El proceso aplica las migraciones Flyway sobre `juridico`, aprovisiona `lex-acce
 
 Las demos públicas son `admin@demo.com` / `password` (Administrador) y `abogado@demo.com` / `password` (Abogado). Solo se preparan con `APP_ENV=local`, `AUTH_PREPARE=true` y `AUTH_DEMO=true`. Si ya existe el administrador anterior `admi@demo.com`, la preparación cambia únicamente su correo a `admin@demo.com`, conservando identificador, nombre, contraseña, estado e historial. Un conflicto de correo o rol se rechaza sin sobrescribir cuentas. Repetir la preparación no duplica cuentas ni restablece contraseñas o estados existentes. No existe registro público; el Administrador puede crear otras cuentas Abogado desde 004.
 
+Por solicitud del responsable, el 2026-11-10 se crearon además los Administradores `admin.alfa@demo.com` y `admi.beta@demo.com`, y los Abogados `abogado.alfa@demo.com` y `abogado.beta@demo.com`, con contraseña inicial pública `password`. Son cuentas exclusivamente demo local, no de producción. Los administradores se aprovisionaron mediante una operación local explícita con BCrypt; los abogados, mediante la API administrativa con auditoría confirmada. No se modificaron las demos anteriores. Estas cuatro altas no forman parte de la semilla automática ni del arranque; repetir `AUTH_DEMO` no las recrea ni restablece.
+
 Las sesiones duran como máximo 8 horas, con 30 minutos de inactividad. Son opacas, persisten como digest en PostgreSQL y el navegador recibe únicamente una cookie HttpOnly, SameSite=Strict, limitada a `/graphql`. Configura `COOKIE_SECURE=true` al servir por HTTPS. El Shell usa `/graphql` del mismo origen, mediante nginx en Docker o proxy de desarrollo. Las solicitudes GraphQL exigen POST JSON y `X-Lex-Request: 1`; CORS por sí solo no protege frente a CSRF.
+
+La cabecera agrupa inicio del espacio, cambio de contraseña y cierre de sesión en «Mi cuenta». Cada login exitoso abre la portada del rol verificado y cerrar sesión retira la ruta privada; no se reutiliza el destino del usuario anterior. Una visita directa a una ruta del otro rol sigue siendo rechazada.
 
 MS-01 consulta las tablas con el prefijo `juridico` y comprueba la existencia del esquema sin depender de `search_path`, para admitir poolers transaccionales y proveedores que rechazan ese parámetro de inicio JDBC. La adquisición de conexiones tiene su propio límite de 10 segundos: `MS01_DB_CONNECTION_TIMEOUT_MS` en la raíz y `DB_CONNECTION_TIMEOUT_MS` en ejecución directa. TLS sigue verificando CA y hostname; este límite no sustituye los plazos del Gateway.
 
@@ -386,6 +390,9 @@ Las funcionalidades posteriores deben usar los guards de identidad, rol y perten
 
 ### Patrones UI compartidos
 
+- Revision ejecutiva de [001](./specs/001-experiencia-y-ui-compartida/tasks.md): navegacion lateral por rol en escritorio, compacta en movil, marca negro/dorado y contenido claro, sin fuentes externas ni metricas ficticias.
+- Mi espacio ofrece accesos a Personas/Expedientes y disponibilidad real de agentes. La ficha de expediente organiza Resumen, Participantes, Actuaciones y notas, Documentos, Informes, Chat e Historial en pestañas accesibles que conservan borradores al cambiar de seccion.
+- El aviso de desconexion es permanente en el espacio del Abogado y bloquea escrituras; no supone que haya copias locales. La persistencia offline y los destinos economicos siguen pendientes de 013-016.
 - El Shell carga una sola vez [ui.css](./src/frontend/shared/ui.css) y sirve el logotipo desde sus propios archivos estáticos, sin CDN o fuentes externas.
 - React reutiliza [ui.tsx](./src/frontend/abogado/src/ui.tsx); Angular reutiliza [ui.components.ts](./src/frontend/admin/src/app/ui.components.ts). Incluyen estados, campos, acciones no disponibles, selector de agentes y confirmación modal con cancelación y retorno de foco.
 - En Angular usa `controlId` para identificar el control interno; no reutilices el `id` del elemento host como identificador del campo. En React se usa `id`.

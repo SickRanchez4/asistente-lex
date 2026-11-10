@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AgentSelect, StatusNotice } from './ui';
+import { StatusNotice } from './ui';
+import { RefreshCw } from 'lucide-react';
 import { GraphqlFailure, requestGraphql } from '../../shared/graphql';
 import { feedbackForError, type Feedback } from '../../shared/presentation';
 
@@ -47,18 +48,18 @@ export function useAvailableAgents() {
 
 export default function AgentCatalog() {
   const { agents, loading, feedback, refresh } = useAvailableAgents();
-  const [selectedId, setSelectedId] = useState('');
-  const selected = agents.find(agent => agent.id === selectedId);
-  return <section aria-labelledby="available-agents-heading" className="al-admin-form">
-    <div className="al-toolbar"><h2 id="available-agents-heading">Agentes juridicos</h2>
-      <button className="al-button al-button--secondary" type="button" title="Actualizar agentes" aria-label="Actualizar agentes" onClick={refresh}>&#8635;</button>
+  return <section aria-labelledby="available-agents-heading" className="al-agent-catalog" aria-busy={loading}>
+    <div className="al-section-heading"><h2 id="available-agents-heading">Agentes jurídicos</h2>
+      <button className="al-button al-button--secondary al-icon-button" type="button" title="Actualizar agentes" aria-label="Actualizar agentes" disabled={loading} onClick={refresh}><RefreshCw className="al-icon" aria-hidden="true" /></button>
     </div>
     {loading && <p role="status">Cargando agentes...</p>}
     {feedback && <StatusNotice feedback={feedback} onRetry={refresh} />}
+    {!loading && !feedback && agents.length === 0 && <StatusNotice feedback={{ kind: 'empty', title: 'Sin agentes disponibles', message: 'No hay agentes en el catálogo en este momento.' }} />}
     {agents.length > 0 && <>
-      <AgentSelect id="available-agent" label="Agente" value={selectedId} onChange={event => setSelectedId(event.target.value)}
-        options={agents.map(agent => ({ id: agent.id, name: `${agent.name} / ${agent.specialty}`, available: agent.enabled }))} />
-      {selected && !selected.enabled && <p className="al-notice" role="status">{selected.unavailableReason} Selecciona explicitamente otro agente habilitado.</p>}
+      <ul className="al-agent-list">{agents.map(agent => <li key={agent.id}>
+        <div><strong>{agent.name}</strong><p>{agent.specialty}</p>{!agent.enabled && <p>{agent.unavailableReason ?? 'Agente deshabilitado'}</p>}</div>
+        <span className="al-badge" data-state={agent.enabled ? 'enabled' : 'disabled'}>{agent.enabled ? 'Disponible' : 'No disponible'}</span>
+      </li>)}</ul>
       {agents.every(agent => !agent.enabled) && <p className="al-notice" role="alert">No hay agentes habilitados. No se pueden crear expedientes ni enviar nuevas preguntas.</p>}
     </>}
   </section>;

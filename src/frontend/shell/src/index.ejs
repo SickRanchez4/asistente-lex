@@ -25,9 +25,14 @@
           <span>Asistente Lex</span>
         </a>
         <nav id="al-session-nav" class="al-nav" aria-label="Cuenta" hidden>
-          <a id="al-workspace" href="/" data-al-navigation>Mi espacio</a>
-          <a href="/cuenta" data-al-navigation>Contraseña</a>
-          <button id="al-logout" class="al-button al-button--secondary" type="button">Cerrar sesión</button>
+          <details id="al-account-menu" class="al-account-menu">
+            <summary><span id="al-account-monogram" class="al-account-monogram" aria-hidden="true"></span><span>Mi cuenta<span id="al-account-name" class="al-account-name"></span></span></summary>
+            <div class="al-account-menu-items">
+              <a id="al-workspace" href="/" data-al-navigation>Mi espacio</a>
+              <a href="/cuenta" data-al-navigation>Cambiar contraseña</a>
+              <button id="al-logout" type="button">Cerrar sesión</button>
+            </div>
+          </details>
         </nav>
       </div>
     </header>

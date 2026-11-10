@@ -2,13 +2,14 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { GraphqlFailure, requestGraphql } from '../../shared/graphql';
 import { formatEventDateTime } from '../../shared/formats';
 import { feedbackForError, type Feedback, type CaseState } from '../../shared/presentation';
-import { AgentSelect, ConfirmationDialog, ReadOnlyNotice, StatusNotice, TextField } from './ui';
+import { AgentSelect, ConfirmationDialog, ReadOnlyNotice, StatusNotice, TextField, useOnline } from './ui';
 import { useAvailableAgents } from './agents';
 import Participants from './participants';
 import CaseRecords from './case-records';
 import CaseDocuments from './case-documents';
 import CaseConversations from './case-conversations';
 import CaseReports from './case-reports';
+import { ArrowLeft, Plus } from 'lucide-react';
 
 type State = 'OPEN' | 'CLOSED' | 'ARCHIVED';
 type Action = 'CLOSE' | 'REOPEN' | 'ARCHIVE' | 'UNARCHIVE';
@@ -21,6 +22,11 @@ const EMPTY: Input = { code: '', title: '', description: '', area: '', initialAg
 const FILTERS = { state: '', area: '', code: '', title: '' };
 const STATES: Record<State, CaseState> = { OPEN: 'Abierto', CLOSED: 'Cerrado', ARCHIVED: 'Archivado' };
 const ACTIONS: Record<Action, string> = { CLOSE: 'Cerrar expediente', REOPEN: 'Reabrir expediente', ARCHIVE: 'Archivar expediente', UNARCHIVE: 'Desarchivar expediente' };
+const SECTIONS = [
+  ['summary', 'Resumen'], ['participants', 'Participantes'], ['records', 'Actuaciones y notas'],
+  ['documents', 'Documentos'], ['reports', 'Informes'], ['chat', 'Chat'], ['history', 'Historial'],
+] as const;
+type CaseSection = typeof SECTIONS[number][0];
 function values(item: CaseFile): Input { return { code: item.code, title: item.title, description: item.description ?? '', area: item.area, initialAgentId: item.initialAgentId }; }
 function failure(error: unknown): Feedback {
   const category = error instanceof GraphqlFailure ? error.category : 'SERVICE_UNAVAILABLE';
@@ -55,7 +61,9 @@ function History({ id, revision }: { id: string; revision: number }) {
 }
 
 export default function Cases() {
+  const online = useOnline();
   const [mode, setMode] = useState<'list' | 'create' | 'detail' | 'edit'>('list');
+  const [section, setSection] = useState<CaseSection>('summary');
   const [filters, setFilters] = useState(FILTERS), [applied, setApplied] = useState(FILTERS);
   const [cursors, setCursors] = useState<(string | null)[]>([null]);
   const [page, setPage] = useState<Page<CaseFile> | null>(null), [item, setItem] = useState<CaseFile | null>(null);
@@ -81,7 +89,7 @@ export default function Cases() {
     return () => { active = false; controller.abort(); };
   }, [mode, applied, after, selectedId, revision]);
   function showList() { setErrors({}); setUncertain(false); setMode('list'); setRevision(value => value + 1); }
-  function open(id: string) { setSelectedId(id); setErrors({}); setMode('detail'); setRevision(value => value + 1); }
+  function open(id: string) { if (id !== selectedId) setSection('summary'); setSelectedId(id); setErrors({}); setMode('detail'); setRevision(value => value + 1); }
   function create() { setSelectedId(null); setItem(null); setInput({ ...EMPTY }); setFeedback(null); setErrors({}); setUncertain(false); setLoading(false); setMode('create'); }
   function rejected(error: unknown) {
     setFeedback(failure(error));
@@ -89,7 +97,7 @@ export default function Cases() {
     setUncertain(!(error instanceof GraphqlFailure) || error.uncertain || ['CONFLICT', 'PARTIAL_FAILURE'].includes(error.category));
   }
   async function save(event: FormEvent) {
-    event.preventDefault(); if (mutation.current || uncertain) return;
+    event.preventDefault(); if (mutation.current || uncertain || !navigator.onLine) return;
     const fields = Object.fromEntries((['code', 'title', 'area', 'initialAgentId'] as const).filter(key => !input[key].trim()).map(key => [key, 'Este campo es obligatorio.']));
     setErrors(fields); if (Object.keys(fields).length) { setFeedback(feedbackForError('validation')); return; }
     const controller = new AbortController(); mutation.current = controller; setPending(true); setFeedback(null);
@@ -102,7 +110,7 @@ export default function Cases() {
     finally { mutation.current = null; if (!controller.signal.aborted) setPending(false); }
   }
   async function change(action: Action, snapshot: CaseFile) {
-    if (mutation.current || uncertain) return;
+    if (mutation.current || uncertain || !navigator.onLine) return;
     const controller = new AbortController(); mutation.current = controller; setPending(true); setFeedback(null);
     try {
       const data = await requestGraphql<{ transitionCase: CaseFile }>(`mutation($id:ID!,$action:CaseAction!,$expectedVersion:Int!,$confirmed:Boolean!){transitionCase(id:$id,action:$action,expectedVersion:$expectedVersion,confirmConversationDeletion:$confirmed){${FIELDS}}}`,
@@ -120,12 +128,15 @@ export default function Cases() {
   }
   const agentUnchanged = mode === 'edit' && input.initialAgentId === item?.initialAgentId;
   const agentEnabled = catalog.agents.some(agent => agent.id === input.initialAgentId && agent.enabled);
+  const sections = SECTIONS.filter(([key]) => key !== 'chat' || (item?.state !== 'ARCHIVED' && !item?.archiving));
+  const activeSection = sections.some(([key]) => key === section) ? section : 'summary';
   function textField(key: 'code' | 'title', label: string) {
     return <TextField id={`case-${key}`} label={label} value={input[key]} required error={errors[key]} onChange={event => setInput(previous => ({ ...previous, [key]: event.target.value }))} />;
   }
   return <section aria-labelledby="cases-heading">
-    <div className="al-toolbar"><h1 id="cases-heading" ref={heading} tabIndex={-1}>{mode === 'list' ? 'Expedientes' : mode === 'create' ? 'Abrir expediente' : mode === 'edit' ? 'Editar expediente' : 'Ficha de expediente'}</h1>
-      {mode === 'list' ? <button className="al-button" onClick={create}>Abrir expediente</button> : <button className="al-button al-button--secondary" disabled={pending} onClick={showList}>Volver al listado</button>}
+    <div className="al-page-heading"><div><h1 id="cases-heading" ref={heading} tabIndex={-1}>{mode === 'list' ? 'Expedientes' : mode === 'create' ? 'Abrir expediente' : mode === 'edit' ? 'Editar expediente' : item?.title ?? 'Ficha de expediente'}</h1>
+      {mode === 'detail' && item && <p className="al-page-subtitle">{item.code} · {item.area === 'CIVIL' ? 'Civil' : 'Penal'}</p>}</div>
+      {mode === 'list' ? <button className="al-button" disabled={!online} onClick={create}><Plus className="al-icon" aria-hidden="true" />Abrir expediente</button> : <button className="al-button al-button--secondary" disabled={pending} onClick={showList}><ArrowLeft className="al-icon" aria-hidden="true" />Volver al listado</button>}
     </div>
     {feedback && <StatusNotice feedback={feedback} onRetry={!editing && !uncertain && !pending ? () => setRevision(value => value + 1) : undefined} />}
     {uncertain && <div className="al-toolbar"><p>Consulta el estado vigente antes de repetir la operacion.</p><button className="al-button al-button--secondary" disabled={pending} onClick={() => selectedId ? open(selectedId) : showList()}>Consultar estado</button></div>}
@@ -140,7 +151,7 @@ export default function Cases() {
       </form>
       {page?.items.length === 0 && <StatusNotice feedback={{ kind: 'empty', title: 'Sin expedientes', message: 'No hay expedientes que coincidan con los filtros.' }} />}
       {page && page.items.length > 0 && <>
-        <div className="al-table-scroll"><table className="al-table"><caption>Expedientes de mi cuenta</caption><thead><tr><th>Codigo</th><th>Titulo</th><th>Area</th><th>Estado</th><th>Ficha</th></tr></thead><tbody>{page.items.map(row => <tr key={row.id}><td>{row.code}</td><td>{row.title}</td><td>{row.area === 'CIVIL' ? 'Civil' : 'Penal'}</td><td>{STATES[row.state]}{row.archiving ? ' / Archivo pendiente' : ''}</td><td><button className="al-button al-button--secondary" onClick={() => open(row.id)}>Consultar</button></td></tr>)}</tbody></table></div>
+        <div className="al-table-scroll" tabIndex={0} role="region" aria-label="Expedientes de mi cuenta"><table className="al-table"><caption>Expedientes de mi cuenta</caption><thead><tr><th>Código</th><th>Título</th><th>Área</th><th>Estado</th><th>Ficha</th></tr></thead><tbody>{page.items.map(row => <tr key={row.id}><td>{row.code}</td><td>{row.title}</td><td>{row.area === 'CIVIL' ? 'Civil' : 'Penal'}</td><td><span className="al-badge" data-state={row.state}>{STATES[row.state]}</span>{row.archiving && <p className="al-field-hint">Archivo pendiente</p>}</td><td><button className="al-button al-button--secondary" aria-label={`Consultar expediente ${row.code}`} onClick={() => open(row.id)}>Consultar</button></td></tr>)}</tbody></table></div>
         <div className="al-toolbar"><button className="al-button al-button--secondary" disabled={cursors.length === 1 || loading} onClick={() => setCursors(previous => previous.slice(0, -1))}>Anterior</button><span>Pagina {cursors.length}</span><button className="al-button al-button--secondary" disabled={!page.pageInfo.hasNextPage || loading} onClick={() => setCursors(previous => [...previous, page.pageInfo.endCursor])}>Siguiente</button></div>
       </>}
     </>}
@@ -154,25 +165,34 @@ export default function Cases() {
         <AgentSelect id="case-agent" label="Agente inicial (obligatorio)" value={input.initialAgentId} options={catalog.agents.map(agent => ({ id: agent.id, name: agent.name, available: agent.enabled }))} onChange={event => setInput(previous => ({ ...previous, initialAgentId: event.target.value }))} />
         {errors.initialAgentId && <p className="al-field-error">{errors.initialAgentId}</p>}
         {!agentUnchanged && !agentEnabled && <p className="al-notice">Selecciona un agente habilitado para guardar.</p>}
-        <div className="al-toolbar"><button className="al-button" disabled={pending || uncertain || (!agentUnchanged && (!agentEnabled || catalog.loading))}>{pending ? 'Guardando...' : 'Guardar expediente'}</button>
+        <div className="al-toolbar"><button className="al-button" disabled={pending || uncertain || !online || (!agentUnchanged && (!agentEnabled || catalog.loading))}>{pending ? 'Guardando...' : 'Guardar expediente'}</button>
           <button type="button" className="al-button al-button--secondary" disabled={pending} onClick={() => selectedId ? open(selectedId) : showList()}>Cancelar</button></div>
       </fieldset>
     </form>}
     {mode === 'detail' && item && !loading && <>
       <ReadOnlyNotice state={STATES[item.state]} />
       {item.archiving && <p className="al-notice" role="status">Archivo pendiente de confirmacion. Nuevas preguntas y reapertura bloqueadas; reintenta el archivo para resolverlo.</p>}
+      <div className="al-case-tabs" role="tablist" aria-label="Secciones del expediente" onKeyDown={event => {
+        const index = sections.findIndex(([key]) => key === activeSection);
+        const next = event.key === 'ArrowRight' ? (index + 1) % sections.length : event.key === 'ArrowLeft' ? (index - 1 + sections.length) % sections.length : event.key === 'Home' ? 0 : event.key === 'End' ? sections.length - 1 : -1;
+        if (next < 0) return;
+        event.preventDefault(); setSection(sections[next][0]);
+        event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+      }}>{sections.map(([key, label]) => <button key={key} type="button" role="tab" id={`case-tab-${key}`} aria-controls={`case-panel-${key}`} aria-selected={activeSection === key} tabIndex={activeSection === key ? 0 : -1} onClick={() => setSection(key)}>{label}</button>)}</div>
+      <div className="al-case-panel" role="tabpanel" id="case-panel-summary" aria-labelledby="case-tab-summary" tabIndex={0} hidden={activeSection !== 'summary'}>
       <dl className="al-case-details"><dt>Codigo interno</dt><dd>{item.code}</dd><dt>Titulo</dt><dd>{item.title}</dd><dt>Descripcion</dt><dd className="al-case-description">{item.description ?? 'Sin descripcion'}</dd><dt>Area</dt><dd>{item.area === 'CIVIL' ? 'Civil' : 'Penal'}</dd><dt>Agente inicial</dt><dd>{catalog.agents.find(agent => agent.id === item.initialAgentId)?.name ?? item.initialAgentId}</dd><dt>Estado</dt><dd>{STATES[item.state]}</dd></dl>
       <div className="al-toolbar">
         <button className="al-button al-button--secondary" disabled={pending} onClick={() => open(item.id)}>Actualizar ficha</button>
-        {item.state === 'OPEN' && <button className="al-button" disabled={pending || uncertain} onClick={() => { setInput(values(item)); setErrors({}); setFeedback(null); setMode('edit'); }}>Editar expediente</button>}
-        {(item.state === 'OPEN' ? ['CLOSE'] as const : item.state === 'CLOSED' ? ['REOPEN', 'ARCHIVE'] as const : ['UNARCHIVE'] as const).map(action => <button key={action} className={`al-button ${action === 'ARCHIVE' ? 'al-button--danger' : 'al-button--secondary'}`} disabled={pending || uncertain || (item.archiving && action !== 'ARCHIVE')} onClick={() => action === 'ARCHIVE' ? setArchive(item) : void change(action, item)}>{item.archiving && action === 'ARCHIVE' ? 'Reintentar archivo' : ACTIONS[action]}</button>)}
+        {item.state === 'OPEN' && <button className="al-button" disabled={pending || uncertain || !online} onClick={() => { setInput(values(item)); setErrors({}); setFeedback(null); setMode('edit'); }}>Editar expediente</button>}
+        {(item.state === 'OPEN' ? ['CLOSE'] as const : item.state === 'CLOSED' ? ['REOPEN', 'ARCHIVE'] as const : ['UNARCHIVE'] as const).map(action => <button key={action} className={`al-button ${action === 'ARCHIVE' ? 'al-button--danger' : 'al-button--secondary'}`} disabled={pending || uncertain || !online || (item.archiving && action !== 'ARCHIVE')} onClick={() => action === 'ARCHIVE' ? setArchive(item) : void change(action, item)}>{item.archiving && action === 'ARCHIVE' ? 'Reintentar archivo' : ACTIONS[action]}</button>)}
       </div>
-      <Participants key={item.id} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
-      <CaseRecords key={`records:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
-      <CaseDocuments key={`documents:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
-      <CaseReports key={`reports:${item.id}:${item.state}:${item.archiving}`} caseId={item.id} initialAgentId={item.initialAgentId} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
-      {item.state !== 'ARCHIVED' && !item.archiving && <CaseConversations key={`chat:${item.id}`} caseId={item.id} initialAgentId={item.initialAgentId} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />}
-      <History key={`${item.id}:${item.version}`} id={item.id} revision={revision} />
+      </div>
+      <div className="al-case-panel" role="tabpanel" id="case-panel-participants" aria-labelledby="case-tab-participants" tabIndex={0} hidden={activeSection !== 'participants'}><Participants key={item.id} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain || !online} onRefreshCase={() => open(item.id)} /></div>
+      <div className="al-case-panel" role="tabpanel" id="case-panel-records" aria-labelledby="case-tab-records" tabIndex={0} hidden={activeSection !== 'records'}><CaseRecords key={`records:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} /></div>
+      <div className="al-case-panel" role="tabpanel" id="case-panel-documents" aria-labelledby="case-tab-documents" tabIndex={0} hidden={activeSection !== 'documents'}><CaseDocuments key={`documents:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} /></div>
+      <div className="al-case-panel" role="tabpanel" id="case-panel-reports" aria-labelledby="case-tab-reports" tabIndex={0} hidden={activeSection !== 'reports'}><CaseReports key={`reports:${item.id}:${item.state}:${item.archiving}`} caseId={item.id} initialAgentId={item.initialAgentId} pending={pending || uncertain} onRefreshCase={() => open(item.id)} /></div>
+      {item.state !== 'ARCHIVED' && !item.archiving && <div className="al-case-panel" role="tabpanel" id="case-panel-chat" aria-labelledby="case-tab-chat" tabIndex={0} hidden={activeSection !== 'chat'}><CaseConversations key={`chat:${item.id}`} caseId={item.id} initialAgentId={item.initialAgentId} pending={pending || uncertain} onRefreshCase={() => open(item.id)} /></div>}
+      <div className="al-case-panel" role="tabpanel" id="case-panel-history" aria-labelledby="case-tab-history" tabIndex={0} hidden={activeSection !== 'history'}><History key={`${item.id}:${item.version}`} id={item.id} revision={revision} /></div>
     </>}
     <ConfirmationDialog id="case-archive-confirmation" open={archive !== null} title="Archivar expediente" consequences="Se eliminaran de forma irreversible todas las conversaciones, sus intercambios y estados. Desarchivar no las recupera. Los participantes, actuaciones y documentos no se eliminan." confirmLabel="Eliminar conversaciones y archivar" pending={pending} onCancel={() => setArchive(null)} onConfirm={() => { if (archive) void change('ARCHIVE', archive); }} />
   </section>;
