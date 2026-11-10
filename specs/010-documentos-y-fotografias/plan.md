@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+Completa. Plan aprobado el 2026-11-08, implementado y verificado localmente el 2026-11-10. Ver [evidencia y límites](./tasks.md).
 
 ## Resumen técnico
 
@@ -87,7 +87,7 @@ Comprobar fallos entre binario y metadatos, y consumo autorizado por IA/informes
 ## Decisiones
 
 - Mantener [almacenamiento local aprobado](../../docs/decisions/0002-monorepo-y-entorno-local.md) y [propiedad de datos](../../docs/decisions/0003-persistencia-por-servicio.md).
-- Registrar en `decisions/` estrategia significativa de consistencia de archivos/metadatos y herramienta de migraciones; transporte binario reutiliza la decisión de 002.
+- [Consistencia, limpieza y migraciones](./decisions/0001-consistencia-y-migraciones.md): estados técnicos, bloqueo de fila, limpieza individual y SQL versionado con checksums mediante `pg`; transporte binario reutiliza la decisión de 002.
 - Sin búsqueda por contenido ni reemplazo; la eliminación en Abierto sí está aprobada. El desarrollador verifica los criterios sin crear archivos de testing.
 
 ## Riesgos y preguntas abiertas
@@ -96,3 +96,12 @@ Comprobar fallos entre binario y metadatos, y consumo autorizado por IA/informes
 - Borrado no elimina copias previamente descargadas; el usuario debe conocer el alcance local/remoto.
 - Sin preguntas funcionales abiertas. La verificación queda a cargo del desarrollador.
 - Coordinar verificación de estado concurrente con 007, sin prometer una transacción entre servicios.
+- Riesgo operativo pendiente: el diagnóstico Docker de VS Code informa 1 vulnerabilidad crítica y 7 altas en `node:26-alpine`. Las referencias FROM no cambiaron en 010; esta verificación funcional no acredita remediación de la imagen base.
+
+## Resultado de implementación
+
+MS-02 aplica V1 de forma explícita e idempotente, con metadatos en `documental.files` y binarios originales en el volumen aprobado. REST y GraphQL exponen carga, metadatos paginados, contenido protegido, reclasificación y borrado con versión. Los endpoints REST de fuentes y texto PDF están disponibles para integraciones posteriores; no incluyen informes guardados ni realizan OCR.
+
+React integra filtros y visualizadores PDF.js/imagen en la ficha. Las transferencias usan 60 segundos; los errores conservan formularios, bloquean reenvíos inciertos y exigen consulta. Los conflictos de eliminación cierran la confirmación para no ocultar el rechazo. Los fragmentos y el worker PDF se resuelven desde el microfrontend mediante SystemJS y MIME JavaScript, sin fijar el puerto del despliegue.
+
+Tipos de MS-02 y los cuatro proyectos TypeScript consumidores, contratos SDL/OpenAPI, builds y despliegue local verificados. Pasaron 12 comprobaciones iniciales de dominio/transporte, 142 comprobaciones reales REST/GraphQL/SQL/binarios, 11 adicionales de límites/fallos y rechazo de identidad suspendida. Navegador de escritorio/móvil verificó carga, visualización, descarga, filtros, paginación, solo lectura, conflictos, desconexión y resultados inciertos. El detalle está en tareas; el consumo real por 011/012/013 se verificará al implementar esas specs.

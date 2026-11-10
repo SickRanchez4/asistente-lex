@@ -1,0 +1,19 @@
+enum FileFormat { PDF JPEG PNG }
+enum FileClassification { FILING DECISION EVIDENCE OTHER }
+enum FileAvailability { AVAILABLE DELETE_PENDING }
+input CaseFileInput { name: String! contentType: String! base64: String! classification: FileClassification! }
+input CaseFileFilter { name: String classification: FileClassification format: FileFormat fromDate: String toDate: String }
+type CaseDocument { id: ID! name: String! format: FileFormat! size: Int! uploadedAt: String! classification: FileClassification! version: Int! availability: FileAvailability! }
+type CaseDocumentPage { items: [CaseDocument!]! pageInfo: PageInfo! }
+type CaseFileContent { name: String! contentType: String! base64: String! size: Int! }
+type FileDeletion { deleted: Boolean! cleanupPending: Boolean! }
+extend type Query {
+  caseFiles(caseId: ID!, first: Int! = 25, after: String, filter: CaseFileFilter): CaseDocumentPage!
+  caseDocument(caseId: ID!, id: ID!): CaseDocument!
+  caseFileContent(caseId: ID!, id: ID!): CaseFileContent!
+}
+extend type Mutation {
+  uploadCaseFile(caseId: ID!, input: CaseFileInput!): CaseDocument!
+  classifyCaseFile(caseId: ID!, id: ID!, classification: FileClassification!, expectedVersion: Int!): CaseDocument!
+  deleteCaseFile(caseId: ID!, id: ID!, expectedVersion: Int!, confirm: Boolean!): FileDeletion!
+}

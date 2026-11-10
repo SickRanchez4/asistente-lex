@@ -5,7 +5,7 @@ import webpack from 'webpack';
 const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default (_env, argv = {}) => ({
-  entry: './src/asistente-lex-abogado.tsx',
+  entry: ['./src/public-path.js', './src/asistente-lex-abogado.tsx'],
   output: {
     filename: 'asistente-lex-abogado.js',
     path: path.resolve(root, 'dist'),

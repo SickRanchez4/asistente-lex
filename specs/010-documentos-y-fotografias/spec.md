@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+Completa. Aprobada el 2026-11-08; T01–T03 implementadas y C01–C13 verificadas localmente el 2026-11-10. Evidencia y límites de integración en [tareas](./tasks.md).
 
 ## Fuente y trazabilidad
 
@@ -70,19 +70,19 @@ Los archivos los administra MS-02, pero el estado del expediente que autoriza ad
 
 ## Criterios de aceptación
 
-- [ ] Dado un expediente Abierto, cuando el abogado adjunta un documento o fotografía válidos, entonces queda registrado con sus metadatos y clasificación.
-- [ ] Dado un expediente Cerrado o Archivado, cuando se intenta adjuntar un archivo, entonces MS-02 lo rechaza aunque la solicitud no pase por la interfaz.
-- [ ] Dado MS-01 no disponible, cuando se intenta adjuntar un archivo, entonces la carga se rechaza y no se informa éxito.
-- [ ] Dada una carga interrumpida, cuando el abogado consulta los archivos del expediente, entonces el archivo incompleto no aparece como disponible.
-- [ ] Dado un archivo inválido, cuando se intenta adjuntar, entonces se rechaza indicando el motivo.
-- [ ] Dados varios archivos, cuando el abogado busca o filtra por metadatos, entonces obtiene solo las coincidencias.
-- [ ] Dado un archivo autorizado, cuando el abogado lo abre, entonces puede visualizarlo en la aplicación.
-- [ ] Dado un expediente Abierto, cuando el abogado cambia la clasificación de un archivo, entonces se guarda; y en un expediente Cerrado o Archivado, se rechaza.
-- [ ] Dados dos abogados A y B, cuando A intenta obtener un archivo de B, incluso mediante un enlace directo, entonces la solicitud se rechaza.
-- [ ] Dada la interfaz de carga, cuando el abogado adjunta un archivo, entonces no se ofrece captura con cámara ni se admiten audio o video.
-- [ ] Dado un archivo de más de 10.485.760 bytes o de formato distinto de PDF/JPEG/PNG, cuando se carga por API, entonces se rechaza aunque su extensión simule un formato válido.
-- [ ] Dado un archivo de expediente Abierto, cuando se confirma eliminarlo, entonces deja de estar disponible y se informa el resultado real del borrado; cancelar no ejecuta y en Cerrado/Archivado se rechaza.
-- [ ] Dada una fotografía admitida, cuando se descarga autorizadamente, entonces conserva sus bytes originales sin que la interfaz exponga EXIF.
+- [x] Dado un expediente Abierto, cuando el abogado adjunta un documento o fotografía válidos, entonces queda registrado con sus metadatos y clasificación.
+- [x] Dado un expediente Cerrado o Archivado, cuando se intenta adjuntar un archivo, entonces MS-02 lo rechaza aunque la solicitud no pase por la interfaz.
+- [x] Dado MS-01 no disponible, cuando se intenta adjuntar un archivo, entonces la carga se rechaza y no se informa éxito.
+- [x] Dada una carga interrumpida, cuando el abogado consulta los archivos del expediente, entonces el archivo incompleto no aparece como disponible.
+- [x] Dado un archivo inválido, cuando se intenta adjuntar, entonces se rechaza indicando el motivo.
+- [x] Dados varios archivos, cuando el abogado busca o filtra por metadatos, entonces obtiene solo las coincidencias.
+- [x] Dado un archivo autorizado, cuando el abogado lo abre, entonces puede visualizarlo en la aplicación.
+- [x] Dado un expediente Abierto, cuando el abogado cambia la clasificación de un archivo, entonces se guarda; y en un expediente Cerrado o Archivado, se rechaza.
+- [x] Dados dos abogados A y B, cuando A intenta obtener un archivo de B, incluso mediante un enlace directo, entonces la solicitud se rechaza.
+- [x] Dada la interfaz de carga, cuando el abogado adjunta un archivo, entonces no se ofrece captura con cámara ni se admiten audio o video.
+- [x] Dado un archivo de más de 10.485.760 bytes o de formato distinto de PDF/JPEG/PNG, cuando se carga por API, entonces se rechaza aunque su extensión simule un formato válido.
+- [x] Dado un archivo de expediente Abierto, cuando se confirma eliminarlo, entonces deja de estar disponible y se informa el resultado real del borrado; cancelar no ejecuta y en Cerrado/Archivado se rechaza.
+- [x] Dada una fotografía admitida, cuando se descarga autorizadamente, entonces conserva sus bytes originales sin que la interfaz exponga EXIF.
 
 ## Dependencias
 

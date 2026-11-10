@@ -3,13 +3,13 @@ export class GraphqlFailure extends Error {
     readonly fields: readonly { field: string; message: string }[] = []) { super(message); }
 }
 
-export async function requestGraphql<T>(query: string, variables: Record<string, unknown> = {}, signal?: AbortSignal): Promise<T> {
+export async function requestGraphql<T>(query: string, variables: Record<string, unknown> = {}, signal?: AbortSignal, timeoutMs = 12_000): Promise<T> {
   let response: Response;
   let body: { data?: T; errors?: { message?: string; extensions?: { code?: string; fields?: unknown } }[] };
   try {
     response = await fetch('/graphql', { method: 'POST', credentials: 'same-origin', cache: 'no-store',
       headers: { 'content-type': 'application/json', 'x-lex-request': '1' }, body: JSON.stringify({ query, variables }),
-      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12_000)]) : AbortSignal.timeout(12_000) });
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs) });
     body = await response.json();
   } catch { throw new GraphqlFailure('SERVICE_UNAVAILABLE', 'No se pudo confirmar el resultado. Comprueba el estado antes de repetir la operación.', true); }
   if (body.errors?.length) {

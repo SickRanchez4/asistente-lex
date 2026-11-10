@@ -230,6 +230,30 @@ La preparación explícita de MS-01 mostrada en Personas aplica también V7: `ju
 
 **Límite actual:** C01–C11 verificadas; C12 parcial. La marca privada y la separación no acreditan todavía la exclusión de notas de contextos reales de IA/informes (011/012); la copia offline propia corresponde a 013. Archivado controlado sin chats solo acredita reglas de 009, no el archivo integrado de 007/011. Ver [tareas de 009](specs/009-actuaciones-y-notas/tasks.md).
 
+### Documentos y fotografías
+
+La ficha de expediente incluye archivos existentes PDF/JPEG/PNG, uno por operación, hasta 10 MiB reales (10.485.760 bytes). La clasificación obligatoria es Escrito, Resolución, Prueba u Otro; nombre, formato, tamaño y fecha se obtienen automáticamente. No hay cámara, audio/video, lotes, reemplazo ni descripción adicional.
+
+MS-02 comprueba identidad vigente, pertenencia y estado en MS-01: adjuntar, reclasificar y eliminar requieren Abierto; consultar y visualizar están permitidos en cualquier estado. Si MS-01 no responde, no autoriza. Los binarios no son públicos y no se accede por nombre de disco. Los filtros son solo de metadatos; PDF.js visualiza PDF y el visor de imágenes no expone EXIF. La descarga conserva los bytes y metadatos originales de fotografías.
+
+Preparación explícita de V1 de MS-02, después del bootstrap PostgreSQL y antes de usar archivos; no se ejecuta al arrancar:
+
+```powershell
+docker compose run --rm --no-deps -e DOCUMENTS_PREPARE=true --entrypoint node ms-02-documental src/infrastructure/prepare-documents.ts
+```
+
+Los metadatos están en `documental.files` y el binario en el volumen `ms02-files`. STAGING no se publica; DELETE_PENDING no permite obtener contenido. El borrado exige confirmación y versión; un fallo informa `deleted=false, cleanupPending=true`, sin afirmar éxito global. Puede reintentarse con autorización vigente en Abierto. No elimina copias descargadas ni modifica informes guardados.
+
+Para un resto técnico identificado, un operador puede sustituir `ID_DEL_ARCHIVO` por su UUID y ejecutar limpieza individual e idempotente; solo admite STAGING de más de 15 minutos o DELETE_PENDING, nunca AVAILABLE:
+
+```powershell
+docker compose run --rm --no-deps -e DOCUMENTS_CLEANUP=true --entrypoint node ms-02-documental src/infrastructure/cleanup-document.ts ID_DEL_ARCHIVO
+```
+
+Las transferencias usan el plazo configurable `GATEWAY_FILE_TRANSFER_TIMEOUT_MS` de la raíz (60 segundos por defecto); en ejecución directa MS-02 usa `FILE_TRANSFER_TIMEOUT_MS`, `MS01_URL` y `MS01_API_TOKEN`. PostgreSQL usa SQL calificado, migraciones con checksum y TLS verificado. La [decisión de consistencia](specs/010-documentos-y-fotografias/decisions/0001-consistencia-y-migraciones.md) detalla fallos y límites entre almacenes.
+
+**Estado:** T01–T03 y C01–C13 verificados; [evidencia de 010](specs/010-documentos-y-fotografias/tasks.md). REST publica archivos y fuentes autorizadas, más texto PDF con estado explícito NO_TEXT cuando no existe texto extraíble, sin OCR. Los consumidores reales de IA/informes/offline siguen pendientes en 011/012/013; no se acredita su integración ni el archivo de chats de 007/011. No se hicieron llamadas al proveedor IA.
+
 ### Puertos
 
 Todos los puertos se publican solo en `127.0.0.1` y pueden cambiarse en `.env`.

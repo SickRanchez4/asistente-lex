@@ -18,6 +18,8 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     FILE_STORAGE_PATH=/data/files
 COPY --from=build /app/.next/standalone ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/src ./src
 # El volumen de archivos hereda este propietario al crearse por primera vez.
 RUN mkdir -p /data/files && chown node:node /data/files
 USER node

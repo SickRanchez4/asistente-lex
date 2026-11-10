@@ -5,6 +5,10 @@
 .al-record-list { list-style: none; margin: 1rem 0; padding: 0; min-width: 0; }
 .al-record-list > li { padding: 1rem 0; border-bottom: 1px solid var(--al-border); }
 .al-record-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.al-document-preview { min-width: 0; border-top: 1px solid var(--al-border); padding-top: 1rem; }
+.al-document-image { display: block; max-width: 100%; max-height: 65vh; width: auto; height: auto; object-fit: contain; }
+.al-document-canvas { max-width: 100%; overflow: auto; }
+.al-document-canvas canvas { display: block; max-width: 100%; height: auto; }
 .al-participant-choice { display: flex; align-items: baseline; gap: .75rem; min-width: 10rem; cursor: pointer; }
 .al-participant-choice input { flex: 0 0 auto; }
 @media (max-width: 40rem) { .al-case-details { grid-template-columns: minmax(0, 1fr); gap: .25rem; } .al-case-details dd { margin-bottom: .75rem; } }

@@ -13,6 +13,9 @@ export interface ServiceConfig {
   fileStoragePath: string;
   internalApiToken: string;
   userContextSigningKey: string;
+  ms01Url: string;
+  ms01ApiToken: string;
+  fileTransferTimeoutMs: number;
 }
 
 export function loadConfig(): ServiceConfig {
@@ -36,5 +39,8 @@ export function loadConfig(): ServiceConfig {
     fileStoragePath: env.FILE_STORAGE_PATH ?? '',
     internalApiToken: env.INTERNAL_API_TOKEN ?? '',
     userContextSigningKey: env.USER_CONTEXT_SIGNING_KEY ?? '',
+    ms01Url: env.MS01_URL ?? 'http://ms-01-juridico:8081',
+    ms01ApiToken: env.MS01_API_TOKEN ?? '',
+    fileTransferTimeoutMs: Number(env.FILE_TRANSFER_TIMEOUT_MS ?? 60000),
   };
 }

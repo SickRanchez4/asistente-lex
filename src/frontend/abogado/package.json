@@ -9,9 +9,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "pdfjs-dist": "6.5.438",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "single-spa-react": "6.0.2"
+    "single-spa-react": "6.0.2",
+    "systemjs-webpack-interop": "2.3.7"
   },
   "devDependencies": {
     "@types/react": "19.3.0",

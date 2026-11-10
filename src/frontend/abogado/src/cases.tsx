@@ -6,6 +6,7 @@ import { AgentSelect, ConfirmationDialog, ReadOnlyNotice, StatusNotice, TextFiel
 import { useAvailableAgents } from './agents';
 import Participants from './participants';
 import CaseRecords from './case-records';
+import CaseDocuments from './case-documents';
 
 type State = 'OPEN' | 'CLOSED' | 'ARCHIVED';
 type Action = 'CLOSE' | 'REOPEN' | 'ARCHIVE' | 'UNARCHIVE';
@@ -166,6 +167,7 @@ export default function Cases() {
       </div>
       <Participants key={item.id} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
       <CaseRecords key={`records:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
+      <CaseDocuments key={`documents:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
       <History key={`${item.id}:${item.version}`} id={item.id} revision={revision} />
     </>}
     <ConfirmationDialog id="case-archive-confirmation" open={archive !== null} title="Archivar expediente" consequences="Se eliminaran de forma irreversible todas las conversaciones, sus intercambios y estados. Desarchivar no las recupera. Los participantes, actuaciones y documentos no se eliminan." confirmLabel="Eliminar conversaciones y archivar" pending={pending} onCancel={() => setArchive(null)} onConfirm={() => { if (archive) void change('ARCHIVE', archive); }} />
