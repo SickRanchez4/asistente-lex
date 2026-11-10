@@ -21,9 +21,31 @@ type AgentConfiguration {
   instructions: String!
   model: String!
   tools: [AgentTool!]!
+  laws: [AgentLawMetadata!]!
   authorId: ID
   occurredAt: String!
 }
+
+type AgentLawMetadata {
+  id: ID!
+  name: String!
+  size: Int!
+  sha256: String!
+  authorId: ID!
+  uploadedAt: String!
+}
+
+type AgentLaw {
+  id: ID!
+  name: String!
+  size: Int!
+  sha256: String!
+  authorId: ID!
+  uploadedAt: String!
+  text: String!
+}
+
+input AgentLawInput { expectedRevision: ID! name: String! base64: String! }
 
 type AgentRevision {
   current: AgentConfiguration!
@@ -53,10 +75,13 @@ input AgentConfigurationInput {
 extend type Query {
   availableAgents: [AvailableAgent!]!
   adminAgents: [AgentConfiguration!]!
+  adminAgentLaw(id: ID!, lawId: ID!): AgentLaw!
   adminAgentHistory(id: ID!, first: Int = 20, after: String): AgentHistoryPage!
 }
 
 extend type Mutation {
   updateAgentConfiguration(id: ID!, input: AgentConfigurationInput!): AgentChangeResult!
   setAgentEnabled(id: ID!, expectedRevision: ID!, enabled: Boolean!): AgentChangeResult!
+  uploadAgentLaw(id: ID!, input: AgentLawInput!): AgentChangeResult!
+  removeAgentLaw(id: ID!, lawId: ID!, expectedRevision: ID!): AgentChangeResult!
 }

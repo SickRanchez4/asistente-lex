@@ -196,7 +196,7 @@ components:
           properties:
             columns: { type: array, minItems: 1, maxItems: 12, items: { type: object, required: [key, label, type], properties: { key: { type: string }, label: { type: string }, type: { type: string, enum: [TEXT, DATE, AMOUNT, NUMBER, BOOLEAN] } }, additionalProperties: false } }
             rows: { type: array, maxItems: 200, items: { type: array, items: { type: string, maxLength: 2000 } } }
-        sources: { type: array, items: { type: object, required: [id, kind, label], properties: { id: { type: string }, kind: { type: string, enum: [CASE, PDF] }, label: { type: string } }, additionalProperties: false } }
+        sources: { type: array, items: { type: object, required: [id, kind, label], properties: { id: { type: string }, kind: { type: string, enum: [CASE, PDF, LAW] }, label: { type: string } }, additionalProperties: false } }
         agent: { type: object, required: [id, name], properties: { id: { type: string, enum: [civilista, penalista] }, name: { type: string } }, additionalProperties: false }
     File:
       type: object

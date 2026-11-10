@@ -3,7 +3,7 @@ import { DocumentFailure, identifier, invalid } from './documents.ts';
 export type ReportKind = 'EXECUTIVE' | 'CLIENT' | 'NATURAL';
 export type ColumnType = 'TEXT' | 'DATE' | 'AMOUNT' | 'NUMBER' | 'BOOLEAN';
 export interface ReportTable { columns: { key: string; label: string; type: ColumnType }[]; rows: string[][] }
-export interface ReportContent { title: string; sections: { heading: string; body: string }[]; table: ReportTable | null; sources: { id: string; kind: 'CASE' | 'PDF'; label: string }[]; agent: { id: string; name: string } }
+export interface ReportContent { title: string; sections: { heading: string; body: string }[]; table: ReportTable | null; sources: { id: string; kind: 'CASE' | 'PDF' | 'LAW'; label: string }[]; agent: { id: string; name: string } }
 export interface ReportRecord extends ReportContent { id: string; caseId: string; kind: ReportKind; createdAt: string; size: number; requestId: string }
 export interface ReportInput { requestId: string; kind: ReportKind; agentId?: string; question: string; documentIds: string[]; filter: { actuationType: string | null; fromDate: string | null; toDate: string | null } }
 export function object(value: unknown): Record<string, unknown> {

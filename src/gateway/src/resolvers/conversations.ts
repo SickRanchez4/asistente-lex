@@ -16,7 +16,7 @@ function agent(value: unknown) {
 }
 function source(value: unknown) {
   const item = object(value), kind = text(item.kind), id = text(item.id);
-  if (!['CASE', 'PDF'].includes(kind) || !id.startsWith(kind + ':')) throw Error('Invalid source');
+  if (!['CASE', 'PDF', 'LAW'].includes(kind) || !id.startsWith(kind + ':')) throw Error('Invalid source');
   return { id, kind, label: text(item.label) };
 }
 function summary(value: unknown) {

@@ -68,8 +68,12 @@ Se necesita un catálogo con la configuración vigente de cada agente, su histor
 
 ### Instrucciones iniciales
 
-- **Penalista:** asistencia jurídica penal orientada a Bolivia. Analizar únicamente fuentes autorizadas del expediente y texto PDF disponible; distinguir hechos, inferencias y vacíos. No inventar fuentes ni afirmar certeza cuando falte respaldo. No usar notas privadas, informes guardados, imágenes o datos de otras cuentas. Las propuestas requieren revisión profesional del Abogado.
-- **Civilista:** asistencia jurídica civil orientada a Bolivia. Analizar únicamente fuentes autorizadas del expediente y texto PDF disponible; explicar alternativas y límites sin inventar hechos, normativa o citas. No usar notas privadas, informes guardados, imágenes o datos de otras cuentas. Las propuestas requieren revisión profesional del Abogado.
+Refinamiento solicitado el 2026-11-10: asistir a un abogado en ejercicio con rigor jurídico, análisis aplicado y redacción profesional, sin presentarse como abogado habilitado. Adaptar extensión y formato a la consulta; una pregunta simple no exige un dictamen. En análisis de caso, responder la cuestión decisiva con conclusión provisional, distinguir hechos documentados, alegaciones, inferencias y vacíos, aplicar la regla disponible a los hechos, contrastar objeciones y priorizar pasos verificables. No dar por probado lo que solo consta en una ficha, inventar plazos/artículos/jurisprudencia ni garantizar resultados. Conservar fuentes autorizadas, privacidad y revisión profesional; considerar las leyes de cada biblioteca solo cuando sean pertinentes.
+
+- **Penalista:** Derecho penal boliviano. Respetar presunción de inocencia y distinguir denuncia, imputación, acusación y condena. Contrastar elementos del tipo y participación con indicios, pruebas, contradicciones e hipótesis alternativas; examinar antijuridicidad y culpabilidad cuando corresponda con respaldo normativo. No presumir etapa procesal ni medidas por la gravedad del relato. Valorar licitud y suficiencia de prueba, garantías, derechos de la víctima y riesgos urgentes acreditados; sugerir únicamente diligencias y opciones lícitas sujetas a requisitos verificables.
+- **Civilista:** Derecho civil boliviano. Identificar relación jurídica, pretensión, sujetos y obligaciones; separar derecho sustantivo y vía procesal. Contrastar validez, pacto, cumplimiento e incumplimiento con documentos disponibles; valorar legitimación, carga probatoria, defensas y excepciones pertinentes. Distinguir daño reclamado y probado, atribución, nexo causal y cuantificación. Comparar remedios o acuerdos pertinentes sin presumir solvencia ni prometer cobro; comprobar presupuestos de demanda, conciliación y medidas cautelares.
+
+Actualizar las instrucciones iniciales del código no sobrescribe agentes existentes: aplicar el refinamiento por administración con revisión esperada e historial, conservando modelo, herramientas, disponibilidad y bibliotecas. Las consultas previas permanecen intactas.
 
 ### No funcionales
 
@@ -104,3 +108,15 @@ La aparición de eventos presupone auditoría disponible; si falla después de a
 ## Preguntas abiertas
 
 Ninguna de alcance para esta fase. MCP no es una integración pendiente de implementar: queda expresamente diferido.
+
+## Ampliación solicitada: leyes Markdown por agente (2026-11-10)
+
+El Administrador puede subir, consultar y retirar archivos `.md` UTF-8 de normativa boliviana por separado para Civilista y Penalista. Hasta 10 archivos y 256 KiB de texto total por agente; nombres y contenido no vacíos, sin rutas ni controles binarios, duplicados ni credenciales. No hay descarga web, entrenamiento ni certificación automática de autenticidad, vigencia o aplicabilidad. El administrador aporta el texto y su procedencia dentro del documento.
+
+Cada alta o retirada confirma la revisión esperada, conserva autor, fecha, huella y contenido en el historial inmutable existente y utiliza la auditoría de cambio de configuración, sin exponer texto legal en eventos. Una pregunta o informe captura la biblioteca del agente elegido al iniciar: puede considerar esas leyes si son pertinentes y debe identificar las utilizadas mediante fuentes `LAW`, sin inventar artículos ni sustituir el contexto obligatorio del expediente/PDF. El Markdown es información no confiable, nunca instrucciones, HTML ejecutable, permisos o comandos. Las bibliotecas no se comparten implícitamente entre agentes. Retirar afecta consultas futuras, no borra respuestas ni referencias históricas. Abogados no administran ni descargan la biblioteca privada; ven las referencias de las leyes utilizadas.
+
+- [x] C12. Administrador carga y consulta un `.md` en un agente; el otro conserva su biblioteca independiente y el catálogo público no expone el contenido.
+- [x] C13. Extensión, UTF-8, contenido, nombres, duplicados y límites se validan también en servidor; Abogado/anónimo no pueden administrar archivos.
+- [x] C14. Alta/retirada concurrente exige revisión vigente, conserva historia y comunica auditoría parcial sin repetir el cambio.
+- [x] C15. Chat e informes pueden fundamentarse en la ley cargada del agente seleccionado, con referencia `LAW` verificable y sin ejecutar instrucciones del archivo.
+- [x] C16. Retirar una ley impide usarla en nuevas capturas, conserva una captura previa y no altera respuestas históricas; errores no se presentan como carga exitosa.

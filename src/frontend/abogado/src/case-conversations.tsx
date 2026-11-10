@@ -7,7 +7,7 @@ import { AgentSelect, StatusNotice } from './ui';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, MessageSquare, Plus, RefreshCw } from 'lucide-react';
 
 interface Agent { id: string; name: string }
-interface Source { id: string; kind: 'CASE' | 'PDF'; label: string }
+interface Source { id: string; kind: 'CASE' | 'PDF' | 'LAW'; label: string }
 interface Exchange { id: string; question: string; answer: string; agent: Agent; occurredAt: string; sources: Source[] }
 interface Summary { id: string; caseId: string; createdAt: string; activeAgent: Agent; version: number }
 interface Conversation extends Summary { exchanges: Exchange[] }
@@ -146,7 +146,7 @@ export default function CaseConversations(props: Props) {
             {conversation.exchanges.length === 0 && !asking && <div className="al-chat-empty"><MessageSquare className="al-chat-empty-icon" aria-hidden="true" /><h3>¿Qué necesitas analizar?</h3><p>{conversation.activeAgent.name} · Expediente actual</p></div>}
             <ol className="al-chat-messages" aria-label="Historial de conversación">{conversation.exchanges.map(exchange => <li key={exchange.id}>
               <article className="al-chat-message al-chat-message--user" aria-label="Tu pregunta"><span className="al-chat-author">Tú</span><p className="al-chat-text">{exchange.question}</p></article>
-              <article className="al-chat-message al-chat-message--assistant" aria-label={`Respuesta de ${exchange.agent.name}`}><div className="al-chat-message-meta"><strong>{exchange.agent.name}</strong><time dateTime={exchange.occurredAt}>{formatEventDateTime(exchange.occurredAt)}</time></div><p className="al-chat-text">{exchange.answer}</p>{exchange.sources.length > 0 && <details className="al-chat-sources"><summary>Fuentes ({exchange.sources.length})</summary><ul>{exchange.sources.map(source => <li key={source.id} className="al-chat-text">{source.kind === 'PDF' ? 'PDF' : 'Expediente'}: {source.label}</li>)}</ul></details>}</article>
+              <article className="al-chat-message al-chat-message--assistant" aria-label={`Respuesta de ${exchange.agent.name}`}><div className="al-chat-message-meta"><strong>{exchange.agent.name}</strong><time dateTime={exchange.occurredAt}>{formatEventDateTime(exchange.occurredAt)}</time></div><p className="al-chat-text">{exchange.answer}</p>{exchange.sources.length > 0 && <details className="al-chat-sources"><summary>Fuentes ({exchange.sources.length})</summary><ul>{exchange.sources.map(source => <li key={source.id} className="al-chat-text">{source.kind === 'LAW' ? 'Ley' : source.kind === 'PDF' ? 'PDF' : 'Expediente'}: {source.label}</li>)}</ul></details>}</article>
             </li>)}</ol>
             {asking && <div aria-label="Consulta en curso"><article className="al-chat-message al-chat-message--user"><span className="al-chat-author">Tú · Enviando</span><p className="al-chat-text">{question}</p></article><p className="al-chat-waiting" role="status">{conversation.activeAgent.name} está preparando la respuesta…</p></div>}
           </div>

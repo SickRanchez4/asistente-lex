@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Plan aprobado por el responsable el 2026-11-08. Implementadas las capacidades propias de MS-04, Gateway, Angular y selector React. Evidencia por capas registrada en tasks; aceptación integrada con 007/011 pendiente.
+En progreso. Plan aprobado por el responsable el 2026-11-08. Implementadas las capacidades propias de MS-04, Gateway, Angular y selector React. Biblioteca Markdown C12–C16 verificada con chat/informes reales de 011/012; credencial dedicada, recepción y reenvío idempotente de auditoría confirmados posteriormente. Aceptación administrativa completa pendiente. Evidencia y límites en tasks.
 
 ## Resumen técnico
 
@@ -12,6 +12,8 @@ Aplicar principios IV, VIII y X de la [constitución](../../docs/constitution.md
 
 ## Diseño y componentes
 
+- Refinamiento de prompts 2026-11-10: instrucciones profesionales compartidas y perfiles penal/civil diferenciados en las instrucciones iniciales del dominio. No modificar política fija, contratos ni modelo. Publicar las instrucciones en los agentes existentes por GraphQL administrativo con CAS y auditoría, conservando herramientas, disponibilidad, bibliotecas e historial. Verificar ensamblado en chat/informes y respuestas OpenAI reales con fuentes REST autorizadas, sin crear conversaciones de prueba persistentes.
+- Ampliación 2026-11-10: biblioteca Markdown integrada en revisiones inmutables de cada agente, sin nuevos servicios ni colecciones. Documentos con UUID, nombre, texto UTF-8, SHA-256, autor y fecha; máximo 10 y 256 KiB sumados. La lectura de revisiones anteriores sin biblioteca usa lista vacía. Alta/retirada reutilizan compare-and-set y auditoría `AGENT_CONFIGURATION_CHANGED`; catálogo público sin biblioteca y detalle de contenido solo administrativo. GraphQL/REST y Angular incorporan carga, consulta de texto y retirada confirmada. Chat e informes reciben la instantánea completa como fuentes `LAW`, subordinadas a la política fija, mantienen el contexto obligatorio del expediente y los límites existentes; exceso se rechaza sin truncar. El contenido no se renderiza como HTML ni se considera normativa oficialmente verificada.
 - Dominio: agente estable, instrucciones, identificador de modelo, selección de herramientas internas, habilitación y revisiones.
 - Casos de uso de consultar catálogo/configuración/historial, modificar configuración con confirmación y habilitar/deshabilitar.
 - Puertos para repositorio MongoDB y registro REST de auditoría en MS-01; framework y clientes fuera del dominio.

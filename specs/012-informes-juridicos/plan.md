@@ -12,6 +12,7 @@ Aplicar principios II, IV, X y XI de la [constitución](../../docs/constitution.
 
 ## Diseño y componentes
 
+- Ampliación de 005 (2026-11-10): MS-04 incorpora la biblioteca del agente después de verificar exactamente las fuentes CASE/PDF recibidas. Devuelve un manifiesto `lawSources` sin texto; MS-02 valida tipo LAW, UUID, nombre y ausencia de duplicados antes de autorizar referencias y guardar/renderizar el resultado. El cliente no aporta leyes ni manifiestos. Informe natural real con fuente CASE+LAW, PDF descargable e independencia de retirada posterior verificados; evidencia en [005](../005-configuracion-de-agentes/tasks.md).
 - Informe guardado inmutable: cuenta, un expediente, tipo, fecha y PDF completado; sin edición ni eliminación.
 - Casos de uso generar, listar/consultar, descargar y exportar resultado tabular; puertos de fuentes, generación IA, almacenamiento y metadatos.
 - Tipos: resumen ejecutivo de una página, informe para cliente en lenguaje claro y reporte por consulta natural con filtros autorizados.

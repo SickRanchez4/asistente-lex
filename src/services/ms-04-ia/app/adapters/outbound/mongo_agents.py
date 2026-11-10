@@ -9,7 +9,7 @@ from uuid import uuid4
 from pymongo import WriteConcern
 from pymongo.errors import DuplicateKeyError
 
-from app.domain.agents import AGENTS, INITIAL_INSTRUCTIONS, TOOLS, AgentFailure, Revision, revision_time, validate_configuration
+from app.domain.agents import AGENTS, INITIAL_INSTRUCTIONS, TOOLS, AgentFailure, LawDocument, Revision, revision_time, validate_configuration
 
 
 class MongoAgents:
@@ -48,6 +48,8 @@ class MongoAgents:
         document["revision"] = document.pop("_id")
         document["tools"] = tuple(document["tools"])
         document["occurred_at"] = document["occurred_at"].astimezone(timezone.utc)
+        document["laws"] = tuple(LawDocument(**{**law, "uploaded_at": law["uploaded_at"].astimezone(timezone.utc)})
+                     for law in document.get("laws", []))
         return Revision(**document)
 
     async def current(self, agent_id: str) -> Revision:

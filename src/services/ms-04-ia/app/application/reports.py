@@ -27,6 +27,10 @@ class ReportService:
         if "CASE_LEGAL_DATA" not in configuration.revision.tools or (context.get("pdfs") and "CASE_PDF_TEXT" not in configuration.revision.tools):
             raise ChatFailure("CONFLICT", "El agente no tiene habilitadas las herramientas requeridas por las fuentes elegidas.")
         sources = await self.sources.verify_context(actor, case_id, kind, context, filters)
+        laws = [law.context() for law in configuration.revision.laws]
+        law_sources = [law["source"] for law in laws]
+        sources = [*sources, *law_sources]
+        context = {**context, "laws": laws}
         await self.active()
         result = await self.provider.propose(configuration, kind, question, context, sources)
         if not isinstance(result, dict) or set(result) != {"title", "sections", "table", "sourceIds"} or not isinstance(result["sourceIds"], list) or not result["sourceIds"]:
@@ -35,4 +39,4 @@ class ReportService:
         if any(not isinstance(reference, str) or reference not in known for reference in result["sourceIds"]):
             raise ChatFailure("SERVICE_UNAVAILABLE", "La propuesta cito una fuente no autorizada.")
         await self.active()
-        return {**result, "agent": agent_identity(configuration.revision.agent_id)}
+        return {**result, "agent": agent_identity(configuration.revision.agent_id), "lawSources": law_sources}

@@ -12,6 +12,7 @@ Aplicar principios IV, VIII, X y XI de la [constitución](../../docs/constitutio
 
 ## Diseño y componentes
 
+- Ampliación de 005 (2026-11-10): capturar las leyes Markdown del agente junto a su revisión. Enviar texto como contexto no confiable, nunca instrucciones, y admitir referencias `LAW:UUID` solo de esa biblioteca; conservar CASE/PDF obligatorio y la historia tras retirar archivos. Civilista con fuente LAW, Penalista aislado y nueva captura tras retirada verificados con OpenAI real; evidencia en [005](../005-configuracion-de-agentes/tasks.md).
 - Conversaciones vinculadas a cuenta/expediente, identificadas por fecha/identificador sin autogeneración IA de títulos; agente activo e historial independiente con agente por respuesta.
 - Casos de uso iniciar/consultar chat, cambiar agente, preguntar y eliminar conversaciones por solicitud de MS-01.
 - Puertos de configuración, fuentes jurídicas/documentales, OpenAI y repositorio. Catálogo interno cerrado de consultar expediente permitido, listar PDF y leer texto PDF; no servidor MCP ni conectores externos.

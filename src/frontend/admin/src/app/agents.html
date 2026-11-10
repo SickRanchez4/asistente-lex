@@ -20,6 +20,27 @@
         <label class="al-agent-switch" for="agent-enabled"><input id="agent-enabled" type="checkbox" role="switch" [checked]="agent.enabled" [disabled]="busy() || loading() || requiresRefresh() || pending() !== null" (click)="$event.preventDefault(); beginEnabled()" /> Habilitado</label>
       </div>
       @if (!agent.enabled) { <p class="al-notice">Agente deshabilitado: no admite nuevas preguntas ni expedientes.</p> }
+      <section class="al-admin-detail" aria-labelledby="agent-laws-heading">
+        <div class="al-toolbar"><h3 id="agent-laws-heading">Leyes de {{ agent.name }}</h3><span>{{ agent.laws.length }}/10 archivos · {{ librarySize(agent) }} de 262144 bytes</span></div>
+        <form (submit)="uploadLaw($event)"><fieldset [disabled]="busy() || loading() || requiresRefresh() || pending() !== null">
+          <div class="al-field"><label for="agent-law-file">Archivo de ley (.md, UTF-8)</label><input #lawInput id="agent-law-file" class="al-input" type="file" accept=".md,text/markdown" required [attr.aria-invalid]="!!lawError()" [attr.aria-describedby]="lawError() ? 'agent-law-error' : null" (change)="chooseLaw($event)" />
+            @if (lawError()) { <p id="agent-law-error" class="al-field-error" role="alert">{{ lawError() }}</p> }
+          </div>
+          <button type="submit" class="al-button" [disabled]="!lawFile() || !!lawError() || agent.laws.length >= 10">{{ busy() ? 'Operacion en curso...' : 'Cargar ley en ' + agent.name }}</button>
+        </fieldset></form>
+        <div class="al-table-scroll" tabindex="0" role="region" [attr.aria-label]="'Leyes de ' + agent.name">
+          <table class="al-table"><thead><tr><th>Archivo</th><th>Fecha (Bolivia)</th><th>Bytes</th><th>Acciones</th></tr></thead><tbody>
+            @for (law of agent.laws; track law.id) {
+              <tr><td>{{ law.name }}</td><td>{{ date(law.uploadedAt) }}</td><td>{{ law.size }}</td><td><div class="al-toolbar">
+                <button type="button" class="al-button al-button--secondary" [disabled]="busy() || lawLoading() || pending() !== null" (click)="showLaw(law)" [attr.aria-label]="'Consultar ' + law.name">Consultar</button>
+                <button type="button" class="al-button al-button--secondary" [disabled]="busy() || requiresRefresh() || pending() !== null" (click)="beginRemoveLaw(law)" [attr.aria-label]="'Retirar ' + law.name">Retirar</button>
+              </div></td></tr>
+            } @empty { <tr><td colspan="4">No hay leyes cargadas para {{ agent.name }}.</td></tr> }
+          </tbody></table>
+        </div>
+        @if (lawLoading()) { <p role="status">Cargando texto de la ley...</p> }
+        @if (lawContent(); as law) { <div class="al-admin-detail"><div class="al-toolbar"><h4>{{ law.name }}</h4><button type="button" class="al-button al-button--secondary" (click)="lawContent.set(null)">Cerrar consulta</button></div><pre class="al-agent-instructions" tabindex="0">{{ law.text }}</pre></div> }
+      </section>
       <form (submit)="beginConfiguration($event)"><fieldset [disabled]="busy() || loading() || requiresRefresh() || pending() !== null">
         <div class="al-field"><label for="agent-instructions">Instrucciones</label><textarea class="al-input" id="agent-instructions" name="instructions" rows="9" maxlength="20000" required [value]="agent.instructions"></textarea></div>
         <div class="al-field"><label for="agent-model">Modelo OpenAI</label><input class="al-input" id="agent-model" name="model" maxlength="200" autocomplete="off" required [value]="agent.model" /></div>
@@ -47,9 +68,11 @@
                 @if (entry.previous; as previous) {
                   <p>Estado: {{ previous.enabled ? 'Habilitado' : 'Deshabilitado' }}. Modelo: {{ previous.model }}</p>
                   <p>Herramientas: {{ toolLabels(previous.tools) }}</p><pre class="al-agent-instructions">{{ previous.instructions }}</pre>
+                  <p>Leyes: @for (law of previous.laws; track law.id) { {{ law.name }}; } @empty { Ninguna. }</p>
                 } @else { <p>Sin revision anterior.</p> }
                 <h4>Nuevo</h4><p>Estado: {{ entry.current.enabled ? 'Habilitado' : 'Deshabilitado' }}. Modelo: {{ entry.current.model }}</p>
                 <p>Herramientas: {{ toolLabels(entry.current.tools) }}</p><pre class="al-agent-instructions">{{ entry.current.instructions }}</pre>
+                <p>Leyes: @for (law of entry.current.laws; track law.id) { {{ law.name }}; } @empty { Ninguna. }</p>
                 <p>Revision: {{ entry.current.revision }}</p>
               </details></td></tr>
           } @empty { @if (!historyLoading() && !historyError()) { <tr><td colspan="4">No hay revisiones en esta pagina.</td></tr> } }</tbody>
@@ -64,8 +87,8 @@
   }
   @if (pending(); as change) {
     <al-confirmation-dialog controlId="agent-confirm" [open]="true" [pending]="busy()"
-      [title]="change.kind === 'configuration' ? 'Guardar configuracion de ' + change.agent.name : change.agent.enabled ? 'Deshabilitar ' + change.agent.name : 'Habilitar ' + change.agent.name"
-      [confirmLabel]="change.kind === 'configuration' ? 'Guardar' : change.agent.enabled ? 'Deshabilitar' : 'Habilitar'"
+      [title]="change.kind === 'remove-law' ? 'Retirar ley de ' + change.agent.name : change.kind === 'configuration' ? 'Guardar configuracion de ' + change.agent.name : change.agent.enabled ? 'Deshabilitar ' + change.agent.name : 'Habilitar ' + change.agent.name"
+      [confirmLabel]="change.kind === 'remove-law' ? 'Retirar' : change.kind === 'configuration' ? 'Guardar' : change.agent.enabled ? 'Deshabilitar' : 'Habilitar'"
       [consequences]="consequences()" (cancel)="pending.set(null)" (confirm)="confirm()" />
   }
 </section>

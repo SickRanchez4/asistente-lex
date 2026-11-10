@@ -157,6 +157,10 @@ La recepción `/audit/events` exige una credencial distinta para MS-04: `MS04_AU
 
 El panel `/admin/agentes` permite consultar y editar Penalista y Civilista, sus instrucciones, modelo OpenAI libre, tres herramientas internas y disponibilidad, con confirmación e historial anterior/nuevo/autor/fecha. No se crean ni eliminan agentes, ni se consultan conversaciones. El Abogado ve solo nombre, especialidad y disponibilidad desde React; un agente deshabilitado sigue visible y no se selecciona automáticamente otro.
 
+Para aportar leyes, inicia sesión como Administrador, abre **Agentes**, selecciona Civilista o Penalista y utiliza **Leyes de Civilista/Penalista** para cargar un archivo `.md` UTF-8. Cada biblioteca admite hasta 10 archivos y 256 KiB de texto total; rechaza nombres o contenidos duplicados, archivos vacíos, texto inválido y credenciales evidentes. **Consultar** muestra el texto sin ejecutar HTML; **Retirar** exige confirmación y afecta las nuevas consultas, conservando revisiones y respuestas anteriores. El otro agente no recibe esos archivos automáticamente.
+
+Chat e informes capturan la biblioteca del agente elegido y pueden utilizar sus leyes cuando sean pertinentes, identificándolas como fuentes `LAW` y citando archivo/artículo cuando conste. No sustituyen las fuentes obligatorias del expediente o PDF. Es contexto de referencia, no entrenamiento del modelo ni instrucciones ejecutables. El Administrador debe aportar el texto y su procedencia; no se descargan leyes ni se certifican automáticamente su autenticidad, vigencia o aplicabilidad. No hay normativa precargada. Las validaciones y la evidencia integrada se registran en [005](specs/005-configuracion-de-agentes/tasks.md).
+
 Antes de usar el catálogo, define `AGENT_INITIAL_MODEL` en `.env` y ejecuta la preparación explícita:
 
 ```sh
@@ -167,7 +171,7 @@ docker compose --profile app up -d --no-deps ms-04-ia gateway admin abogado shel
 
 El entorno inicial usa `gpt-4o-mini`, elegido por el responsable. Ambos agentes se aprovisionan habilitados con las tres herramientas. La preparación v1 usa `MONGO_DB`; repetirla no sobrescribe configuración ni revisiones. El arranque ordinario no aprovisiona. Sin catálogo preparado, las operaciones responden indisponibilidad, aunque la sonda técnica MongoDB pueda estar `UP`.
 
-`OPENAI_API_KEY` es un secreto del entorno de MS-04: complétala únicamente en `.env` privado cuando vayas a usar OpenAI. No aparece en GraphQL, configuración de agentes ni historial. En 005 no se llama al proveedor ni se valida la existencia del modelo: su rechazo real y el uso de herramientas pertenecen a 011, sin reemplazar silenciosamente el identificador elegido.
+`OPENAI_API_KEY` es un secreto del entorno de MS-04: complétala únicamente en `.env` privado cuando vayas a usar OpenAI. No aparece en GraphQL, configuración de agentes ni historial. Editar configuración o cargar leyes no llama al proveedor ni valida la existencia del modelo; chat e informes usan esa configuración mediante 011/012, sin reemplazar silenciosamente el identificador elegido.
 
 Las herramientas tienen catálogo cerrado: `CASE_LEGAL_DATA`, `CASE_PDF_LIST`, `CASE_PDF_TEXT`. No son conexiones configurables; sus implementaciones autorizadas de expediente/PDF pertenecen a los flujos de 011 y sus propietarios. No se registran URLs, comandos, credenciales ni servidores MCP. La política de Bolivia, fuentes autorizadas y revisión profesional se conserva separada de las instrucciones editables.
 

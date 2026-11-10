@@ -40,7 +40,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                required: [title, sections, table, sourceIds, agent]
+                required: [title, sections, table, sourceIds, agent, lawSources]
                 properties:
                   title: { type: string, maxLength: 180 }
                   sections: { type: array, minItems: 1, maxItems: 12, items: { type: object, required: [heading, body], properties: { heading: { type: string, maxLength: 150 }, body: { type: string, maxLength: 12000 } }, additionalProperties: false } }
@@ -52,6 +52,7 @@ paths:
                       columns: { type: array, minItems: 1, maxItems: 12, items: { type: object, required: [key, label, type], properties: { key: { type: string }, label: { type: string }, type: { type: string, enum: [TEXT, DATE, AMOUNT, NUMBER, BOOLEAN] } }, additionalProperties: false } }
                       rows: { type: array, maxItems: 200, items: { type: array, items: { type: string, maxLength: 2000 } } }
                   sourceIds: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+                  lawSources: { type: array, maxItems: 10, items: { $ref: '#/components/schemas/ChatSource' }, description: Solo fuentes LAW de la biblioteca capturada en MS-04; nunca texto ni fuentes aportadas por el cliente. }
                   agent: { type: object, required: [id, name], properties: { id: { type: string, enum: [civilista, penalista] }, name: { type: string } }, additionalProperties: false }
         default: { $ref: '#/components/responses/ChatError' }
   /cases/{caseId}/conversations:
@@ -311,6 +312,53 @@ paths:
           $ref: '../../contracts/common.yaml#/components/responses/Conflict'
         '503':
           $ref: '../../contracts/common.yaml#/components/responses/ServiceUnavailable'
+  /admin/agents/{id}/laws:
+    parameters: [{ $ref: '#/components/parameters/AgentId' }]
+    post:
+      summary: Administrador carga Markdown UTF-8 y publica una revision con biblioteca independiente. Hasta 10 archivos y 256 KiB totales; duplicados rechazados y auditoria sin texto legal.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [expectedRevision, name, base64]
+              properties:
+                expectedRevision: { type: string, format: uuid }
+                name: { type: string, minLength: 1, maxLength: 180, pattern: '\.[mM][dD]$' }
+                base64: { type: string, minLength: 1, maxLength: 349528, contentEncoding: base64 }
+      responses:
+        '200': { $ref: '#/components/responses/Change' }
+        default: { $ref: '#/components/responses/ChatError' }
+  /admin/agents/{id}/laws/{lawId}:
+    parameters:
+      - { $ref: '#/components/parameters/AgentId' }
+      - { name: lawId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Solo Administrador consulta texto de una ley vigente del agente indicado. No renderiza Markdown como HTML.
+      responses:
+        '200':
+          description: Texto UTF-8 y metadatos de la ley.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LawContent' }
+        default: { $ref: '#/components/responses/ChatError' }
+    delete:
+      summary: Retira la ley de nuevas capturas con revision esperada; conserva revisiones inmutables y respuestas previas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [expectedRevision]
+              properties:
+                expectedRevision: { type: string, format: uuid }
+      responses:
+        '200': { $ref: '#/components/responses/Change' }
+        default: { $ref: '#/components/responses/ChatError' }
   /admin/agents/{id}/history:
     get:
       summary: Cadena aplicada paginada; cursor firmado ligado al agente, sin revisiones no publicadas.
@@ -375,7 +423,7 @@ components:
       required: [id, kind, label]
       properties:
         id: { type: string }
-        kind: { type: string, enum: [CASE, PDF] }
+        kind: { type: string, enum: [CASE, PDF, LAW] }
         label: { type: string }
     ChatExchange:
       type: object
@@ -428,10 +476,33 @@ components:
           type: boolean
         unavailableReason:
           type: [string, 'null']
+    LawMetadata:
+      type: object
+      additionalProperties: false
+      required: [id, name, size, sha256, authorId, uploadedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, maxLength: 180 }
+        size: { type: integer, minimum: 1, maximum: 262144 }
+        sha256: { type: string, pattern: '^[a-f0-9]{64}$' }
+        authorId: { type: string, format: uuid }
+        uploadedAt: { type: string, format: date-time }
+    LawContent:
+      type: object
+      additionalProperties: false
+      required: [id, name, size, sha256, authorId, uploadedAt, text]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, maxLength: 180 }
+        size: { type: integer, minimum: 1, maximum: 262144 }
+        sha256: { type: string, pattern: '^[a-f0-9]{64}$' }
+        authorId: { type: string, format: uuid }
+        uploadedAt: { type: string, format: date-time }
+        text: { type: string, minLength: 1, maxLength: 262144 }
     Configuration:
       type: object
       additionalProperties: false
-      required: [id, name, specialty, enabled, revision, instructions, model, tools, authorId, occurredAt]
+      required: [id, name, specialty, enabled, revision, instructions, model, tools, laws, authorId, occurredAt]
       properties:
         id:
           type: string
@@ -459,6 +530,10 @@ components:
           maxItems: 3
           items:
             $ref: '#/components/schemas/AgentTool'
+        laws:
+          type: array
+          maxItems: 10
+          items: { $ref: '#/components/schemas/LawMetadata' }
         authorId:
           type: [string, 'null']
         occurredAt:

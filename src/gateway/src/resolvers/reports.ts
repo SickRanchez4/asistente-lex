@@ -10,7 +10,7 @@ function summary(value:unknown){const item=object(value),kind=text(item.kind),cr
 function report(value:unknown){
   const item=object(value);if(!Array.isArray(item.sections)||item.sections.length>12||!Array.isArray(item.sources)||item.sources.length>20)throw Error('Invalid report content');
   const sections=item.sections.map(value=>{const section=object(value);return {heading:text(section.heading),body:text(section.body)};});
-  const sources=item.sources.map(value=>{const source=object(value),kind=text(source.kind),id=text(source.id);if(!['CASE','PDF'].includes(kind)||!id.startsWith(kind+':'))throw Error('Invalid report source');return {id,kind,label:text(source.label)};});
+  const sources=item.sources.map(value=>{const source=object(value),kind=text(source.kind),id=text(source.id);if(!['CASE','PDF','LAW'].includes(kind)||!id.startsWith(kind+':'))throw Error('Invalid report source');return {id,kind,label:text(source.label)};});
   let table=null;
   if(item.table!==null){const value=object(item.table);if(!Array.isArray(value.columns)||value.columns.length>12||!Array.isArray(value.rows)||value.rows.length>200)throw Error('Invalid table');const columns=value.columns.map(value=>{const column=object(value),type=text(column.type);if(!['TEXT','DATE','AMOUNT','NUMBER','BOOLEAN'].includes(type))throw Error('Invalid column');return {key:text(column.key),label:text(column.label),type};});const rows=value.rows.map(value=>{if(!Array.isArray(value)||value.length!==columns.length)throw Error('Invalid row');return value.map(text);});table={columns,rows};}
   return {...summary(item),sections,sources,table};

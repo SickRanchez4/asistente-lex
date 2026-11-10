@@ -2,7 +2,7 @@ from dataclasses import replace
 from uuid import UUID, uuid4
 
 from app.application.ports.outbound.agents import AgentAudit, AgentRepository
-from app.domain.agents import AGENTS, Actor, AgentFailure, ExecutionConfiguration, Revision, revision_time, validate_configuration
+from app.domain.agents import AGENTS, Actor, AgentFailure, ExecutionConfiguration, Revision, law_document, revision_time, validate_configuration
 
 
 class AgentService:
@@ -54,6 +54,37 @@ class AgentService:
         revision = replace(current, revision=str(uuid4()), previous_revision=current.revision,
                            enabled=enabled, author_id=admin.user_id, occurred_at=revision_time())
         return await self.apply(admin, revision, "AGENT_ENABLED" if enabled else "AGENT_DISABLED")
+
+    async def law(self, actor: Actor | None, agent_id: str, law_id: str) -> dict:
+        self.require_admin(actor)
+        self.valid_agent(agent_id)
+        current = await self.repository.current(agent_id)
+        for document in current.laws:
+            if document.id == law_id:
+                return {**document.metadata(), "text": document.text}
+        raise AgentFailure("NOT_FOUND", "La ley no existe en la biblioteca de este agente.")
+
+    async def upload_law(self, actor: Actor | None, agent_id: str, expected: str, name: str, encoded: str) -> dict:
+        admin = self.require_admin(actor)
+        current = await self.before_change(agent_id, expected)
+        document = law_document(name, encoded, admin.user_id)
+        if any(law.name.casefold() == document.name.casefold() or law.sha256 == document.sha256 for law in current.laws):
+            raise AgentFailure("CONFLICT", "Ya existe una ley con ese nombre o contenido en este agente.")
+        if len(current.laws) >= 10 or sum(len(law.text.encode("utf-8")) for law in current.laws) + len(document.text.encode("utf-8")) > 262144:
+            raise AgentFailure("VALIDATION", "La biblioteca admite hasta 10 archivos y 256 KiB de texto total por agente.")
+        revision = replace(current, revision=str(uuid4()), previous_revision=current.revision,
+                           laws=(*current.laws, document), author_id=admin.user_id, occurred_at=revision_time())
+        return await self.apply(admin, revision, "AGENT_CONFIGURATION_CHANGED")
+
+    async def remove_law(self, actor: Actor | None, agent_id: str, expected: str, law_id: str) -> dict:
+        admin = self.require_admin(actor)
+        current = await self.before_change(agent_id, expected)
+        laws = tuple(law for law in current.laws if law.id != law_id)
+        if len(laws) == len(current.laws):
+            raise AgentFailure("NOT_FOUND", "La ley no existe en la biblioteca de este agente.")
+        revision = replace(current, revision=str(uuid4()), previous_revision=current.revision,
+                           laws=laws, author_id=admin.user_id, occurred_at=revision_time())
+        return await self.apply(admin, revision, "AGENT_CONFIGURATION_CHANGED")
 
     async def before_change(self, agent_id: str, expected: str) -> Revision:
         self.valid_agent(agent_id)

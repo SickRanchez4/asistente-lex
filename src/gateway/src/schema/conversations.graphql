@@ -1,5 +1,5 @@
 enum ChatAnalysisScope { CASE PDF }
-enum ChatSourceKind { CASE PDF }
+enum ChatSourceKind { CASE PDF LAW }
 type ChatAgent { id: ID! name: String! }
 type ChatSource { id: ID! kind: ChatSourceKind! label: String! }
 type ChatExchange { id: ID! question: String! answer: String! agent: ChatAgent! occurredAt: String! sources: [ChatSource!]! }

@@ -26,6 +26,18 @@ class EnabledInput(BaseModel):
     enabled: bool
 
 
+class LawUploadInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    expectedRevision: str = Field(min_length=36, max_length=36)
+    name: str = Field(min_length=1, max_length=180)
+    base64: str = Field(min_length=1, max_length=349528)
+
+
+class LawRemovalInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    expectedRevision: str = Field(min_length=36, max_length=36)
+
+
 def actor(request: Request) -> Actor | None:
     identity = request.state.identity
     return Actor(identity.user_id, identity.account_id, identity.role) if identity else None
@@ -78,3 +90,18 @@ async def configure(agent_id: str, body: ConfigurationInput, request: Request) -
 @router.put("/admin/agents/{agent_id}/enabled")
 async def set_enabled(agent_id: str, body: EnabledInput, request: Request) -> dict:
     return await service(request).set_enabled(actor(request), agent_id, body.expectedRevision, body.enabled)
+
+
+@router.get("/admin/agents/{agent_id}/laws/{law_id}")
+async def law(agent_id: str, law_id: str, request: Request) -> dict:
+    return await service(request).law(actor(request), agent_id, law_id)
+
+
+@router.post("/admin/agents/{agent_id}/laws")
+async def upload_law(agent_id: str, body: LawUploadInput, request: Request) -> dict:
+    return await service(request).upload_law(actor(request), agent_id, body.expectedRevision, body.name, body.base64)
+
+
+@router.delete("/admin/agents/{agent_id}/laws/{law_id}")
+async def remove_law(agent_id: str, law_id: str, body: LawRemovalInput, request: Request) -> dict:
+    return await service(request).remove_law(actor(request), agent_id, body.expectedRevision, law_id)
