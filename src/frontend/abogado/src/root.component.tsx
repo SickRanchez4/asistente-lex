@@ -1,6 +1,7 @@
 import UiPreview from './ui-preview';
 import AgentCatalog from './agents';
 import People from './people';
+import Cases from './cases';
 import { useEffect, useState } from 'react';
 declare const __AL_UI_PREVIEW__: boolean;
 
@@ -13,14 +14,16 @@ export default function Root() {
     return () => { window.removeEventListener('single-spa:routing-event', update); window.removeEventListener('popstate', update); };
   }, []);
   const people = path.startsWith('/abogado/personas');
+  const cases = path.startsWith('/abogado/expedientes');
   return (
     <main id="al-abogado-content" className="al-page" tabIndex={-1}>
       <p className="al-eyebrow">Espacio del Abogado</p>
       <nav className="al-nav al-admin-tabs" aria-label="Secciones del abogado">
-        <a href="/abogado" aria-current={!people ? 'page' : undefined}>Mi espacio</a>
+        <a href="/abogado" aria-current={!people && !cases ? 'page' : undefined}>Mi espacio</a>
         <a href="/abogado/personas" aria-current={people ? 'page' : undefined}>Personas</a>
+        <a href="/abogado/expedientes" aria-current={cases ? 'page' : undefined}>Expedientes</a>
       </nav>
-      {people ? <People /> : <><h1>Mi espacio</h1><AgentCatalog />{__AL_UI_PREVIEW__ && <UiPreview />}</>}
+      {cases ? <Cases /> : people ? <People /> : <><h1>Mi espacio</h1><AgentCatalog />{__AL_UI_PREVIEW__ && <UiPreview />}</>}
     </main>
   );
 }

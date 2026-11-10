@@ -31,7 +31,7 @@ src/
     └── ms-04-ia/          Python / FastAPI
 ```
 
-Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría y fichas de personas; expedientes, participantes y operaciones económicas continúan pendientes de sus specs.
+Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría, personas y la capacidad propietaria de expedientes; archivo integrado, participantes y operaciones económicas continúan pendientes de sus specs.
 
 ## Requisitos previos
 
@@ -167,7 +167,7 @@ El entorno inicial usa `gpt-4o-mini`, elegido por el responsable. Ambos agentes 
 
 Las herramientas tienen catálogo cerrado: `CASE_LEGAL_DATA`, `CASE_PDF_LIST`, `CASE_PDF_TEXT`. No son conexiones configurables; sus implementaciones autorizadas de expediente/PDF pertenecen a los flujos de 011 y sus propietarios. No se registran URLs, comandos, credenciales ni servidores MCP. La política de Bolivia, fuentes autorizadas y revisión profesional se conserva separada de las instrucciones editables.
 
-MS-04 expone `GET /agents` como proyección mínima y `GET /agents/{id}/availability` para consumidores internos; esta última devuelve `CONFLICT` si el agente está deshabilitado. Todas requieren la credencial de MS-04; el Gateway exige además sesión para la consulta del Abogado. 007 debe validar disponibilidad al crear un expediente y 011 debe usar `capture_for_question` dentro de MS-04 para capturar una revisión al admitir la pregunta. La interfaz no es autorización: falta integrar esos flujos y el descarte por archivo de 007.
+MS-04 expone `GET /agents` como proyección mínima y `GET /agents/{id}/availability` para consumidores internos; esta última devuelve `CONFLICT` si el agente está deshabilitado. Todas requieren la credencial de MS-04; el Gateway exige además sesión para la consulta del Abogado. 007 ya valida disponibilidad al crear un expediente o cambiar su agente inicial; 011 debe usar `capture_for_question` dentro de MS-04 para capturar una revisión al admitir la pregunta. La interfaz no es autorización: siguen pendientes el flujo de preguntas y su descarte por archivo.
 
 Las revisiones MongoDB son inmutables por API. Primero se inserta la revisión y después se publica el puntero mediante compare-and-set; una revisión no publicada no cuenta como historia aplicada. El historial recorre la cadena en páginas de hasta 100 con cursor firmado ligado al agente, sin truncarla ni exigir transacciones MongoDB. Un conflicto exige recargar antes de confirmar otra edición.
 
@@ -193,6 +193,18 @@ V4 crea `juridico.people` y sus restricciones/índices; el arranque normal no mi
 REST propietario ofrece `/people`, `/people/{id}`, `/people/selections` y `/people/{id}/selection`; las dos últimas proyecciones contienen solo ID, tipo y nombre para participantes/contratantes, sin documento ni contacto. Exigen token interno y contexto firmado del propietario vigente. GraphQL expone altas, actualización y consultas equivalentes, sin operación de eliminación ni argumento de cuenta.
 
 Las consultas distinguen vacío de indisponibilidad. El formulario conserva datos rechazados y errores por campo. Si una escritura no recibe confirmación, bloquea su reenvío inmediato y exige consultar el estado. Editar la ficha no consulta ni altera expedientes/participaciones; la prueba con vínculos reales Cerrados/Archivados y su selección en 008/014 siguen pendientes según [tareas de 006](specs/006-personas/tasks.md).
+
+### Expedientes y ciclo de vida
+
+Con una cuenta Abogado activa, `/abogado/expedientes` ofrece alta, listado paginado con estado/área/código/título, ficha, edición en Abierto e historial de transiciones con fecha y autor. Código y título son texto; el código conserva ceros y es único por cuenta comparando `lower(btrim(code))`, también al editar y frente a solicitudes simultáneas. Los filtros de texto son subcadenas literales sin distinguir mayúsculas; no hay filtro de fecha. El Administrador y otros abogados no acceden.
+
+La preparación explícita mostrada en Personas aplica también V5 (`juridico.cases` y `juridico.case_transitions`). El arranque ordinario no migra. MS-01 necesita `MS04_URL` y `MS04_API_TOKEN` al ejecutarse directamente; Compose usa el destino interno de MS-04 y su `MS04_INTERNAL_API_TOKEN`, nunca una nueva credencial pública.
+
+REST `/cases`, `/cases/{id}`, `/cases/{id}/transitions` y `/cases/{id}/eligibility` exigen token del receptor y contexto firmado del propietario vigente. Elegibilidad solo devuelve ID, estado, agente inicial, versión, marca y permiso de preguntas; otros servicios no consultan tablas de MS-01. GraphQL no acepta cuenta autoritativa del cliente. Edición y transiciones exigen `expectedVersion`; un conflicto o resultado incierto requiere consultar la ficha antes de repetir.
+
+Cerrar lleva de Abierto a Cerrado; reabrir, de Cerrado a Abierto. Estado e historial se guardan juntos. Archivar solo se solicita desde Cerrado y exige confirmar la eliminación irreversible de conversaciones. MS-01 persiste un intento estable, bloquea elegibilidad de nuevas preguntas/reapertura y pide borrado completo a MS-04 antes de guardar Archivado. Un fallo conserva Cerrado con marca; no vence automáticamente ni se desbloquea con una reapertura. Si el borrado se confirmó pero falló la transición local, se comunica pérdida irreversible y resultado parcial. Consultar el estado antes de reintentar reutiliza el intento sin duplicar historia.
+
+**Límite actual:** el contrato `POST /cases/{id}/conversations/delete` está definido, pero el handler y la coordinación por generación/recibos de borrado pertenecen a 011 y todavía no existen. Solicitar archivo ahora informa indisponibilidad y deja Cerrado con archivo pendiente; no confirma borrado ni éxito. Desarchivar está implementado como Archivado→Cerrado, sin restaurar chats ni escribir contenido/documentos. Su aceptación completa y el comportamiento de chats existentes/nuevos requieren 008/009/010/011 según [tareas de 007](specs/007-expedientes-y-ciclo-de-vida/tasks.md). No se declara esta integración lista para producción.
 
 ### Puertos
 

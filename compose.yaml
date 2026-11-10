@@ -33,6 +33,8 @@ services:
       APP_ENV: ${APP_ENV:-local}
       AUDIT_TABLE: ${AUTH_AUDIT_TABLE:-lex-access-events-v1}
       MS04_AUDIT_API_TOKEN: ${MS04_AUDIT_API_TOKEN:-}
+      MS04_URL: http://ms-04-ia:8084
+      MS04_API_TOKEN: ${MS04_INTERNAL_API_TOKEN:?}
       DB_SSLMODE: ${POSTGRES_SSLMODE:-verify-full}
       DB_SSLROOTCERT: ${POSTGRES_SSLROOTCERT:-/certs/postgresql-ca.crt}
       DYNAMODB_ENDPOINT: http://dynamodb-local:8000

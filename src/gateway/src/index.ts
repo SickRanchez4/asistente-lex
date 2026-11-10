@@ -9,6 +9,7 @@ import { createAuthResolvers } from './resolvers/auth.ts';
 import { createAdminResolvers } from './resolvers/admin.ts';
 import { createAgentResolvers } from './resolvers/agents.ts';
 import { createPeopleResolvers } from './resolvers/people.ts';
+import { createCaseResolvers } from './resolvers/cases.ts';
 import { formatGraphQLError } from './errors.ts';
 import { createResolvers } from './resolvers/platform.ts';
 import { typeDefs } from './schema/schema.ts';
@@ -19,11 +20,12 @@ const authResolvers = createAuthResolvers(config);
 const adminResolvers = createAdminResolvers(config);
 const agentResolvers = createAgentResolvers(config);
 const peopleResolvers = createPeopleResolvers(config);
+const caseResolvers = createCaseResolvers(config);
 
 const server = new ApolloServer<GatewayContext>({
   typeDefs,
-  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query, ...adminResolvers.Query, ...agentResolvers.Query, ...peopleResolvers.Query },
-    Mutation: { ...authResolvers.Mutation, ...adminResolvers.Mutation, ...agentResolvers.Mutation, ...peopleResolvers.Mutation } },
+  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query, ...adminResolvers.Query, ...agentResolvers.Query, ...peopleResolvers.Query, ...caseResolvers.Query },
+    Mutation: { ...authResolvers.Mutation, ...adminResolvers.Mutation, ...agentResolvers.Mutation, ...peopleResolvers.Mutation, ...caseResolvers.Mutation } },
   includeStacktraceInErrorResponses: false,
   formatError: formatGraphQLError,
 });

@@ -11,6 +11,154 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /cases:
+    get:
+      summary: Expedientes propios del Abogado vigente; filtros combinables, nunca acepta cuenta del cliente.
+      description: Codigo/titulo por subcadena literal sin distinguir mayusculas; sin filtros de fecha. Orden estable por UUID, cursor ligado a cuenta y filtros.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - { name: state, in: query, schema: { type: string, enum: [OPEN, CLOSED, ARCHIVED] } }
+        - { name: area, in: query, schema: { type: string, enum: [CIVIL, PENAL] } }
+        - { name: code, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: title, in: query, schema: { type: string, maxLength: 300 } }
+      responses:
+        '200':
+          description: Pagina propia, no se confunde vacio con fallo de lectura.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/CaseFile' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
+        '400': { $ref: '#/components/responses/CaseError' }
+        '403': { $ref: '#/components/responses/CaseError' }
+        '503': { $ref: '#/components/responses/CaseError' }
+    post:
+      summary: Crea Abierto, version 1; valida disponibilidad autoritativa en MS-04 antes de persistir.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CaseInput' }
+      responses:
+        '200': { $ref: '#/components/responses/CaseFile' }
+        '400': { $ref: '#/components/responses/CaseError' }
+        '403': { $ref: '#/components/responses/CaseError' }
+        '409': { $ref: '#/components/responses/CaseError' }
+        '503': { $ref: '#/components/responses/CaseError' }
+  /cases/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Ficha propia en cualquier estado; ajena e inexistente son el mismo NOT_FOUND.
+      responses:
+        '200': { $ref: '#/components/responses/CaseFile' }
+        '400': { $ref: '#/components/responses/CaseError' }
+        '403': { $ref: '#/components/responses/CaseError' }
+        '404': { $ref: '#/components/responses/CaseError' }
+        '503': { $ref: '#/components/responses/CaseError' }
+    put:
+      summary: Solo Abierto y version esperada; cambiar agente valida disponibilidad y no modifica chats existentes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [input, expectedVersion]
+              properties:
+                input: { $ref: '#/components/schemas/CaseInput' }
+                expectedVersion: { type: integer, minimum: 1 }
+      responses:
+        '200': { $ref: '#/components/responses/CaseFile' }
+        '400': { $ref: '#/components/responses/CaseError' }
+        '403': { $ref: '#/components/responses/CaseError' }
+        '404': { $ref: '#/components/responses/CaseError' }
+        '409': { $ref: '#/components/responses/CaseError' }
+        '503': { $ref: '#/components/responses/CaseError' }
+  /cases/{id}/eligibility:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Proyeccion minima para MS-02/MS-03/MS-04; pertenencia del Abogado verificada en MS-01.
+      description: |
+        No acepta cuenta como argumento ni devuelve titulo/contenido. questionsAllowed es falso
+        cuando archiving=true o state=ARCHIVED. Una lectura no es una reserva distribuida;
+        011 debe leer bajo su coordinacion local de admision y comprobar generacion al persistir.
+      responses:
+        '200':
+          description: Estado vigente y elegibilidad tecnica, Cache-Control no-store.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [id, state, initialAgentId, version, archiving, questionsAllowed]
+                properties:
+                  id: { type: string, format: uuid }
+                  state: { type: string, enum: [OPEN, CLOSED, ARCHIVED] }
+                  initialAgentId: { type: string, enum: [civilista, penalista] }
+                  version: { type: integer, minimum: 1 }
+                  archiving: { type: boolean }
+                  questionsAllowed: { type: boolean }
+        '400': { $ref: '#/components/responses/CaseError' }
+        '403': { $ref: '#/components/responses/CaseError' }
+        '404': { $ref: '#/components/responses/CaseError' }
+        '503': { $ref: '#/components/responses/CaseError' }
+  /cases/{id}/transitions:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Historial paginado propio por version, con anterior/nuevo/fecha/autor.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+      responses:
+        '200':
+          description: Solo cambios efectivos; cursor ligado a cuenta y expediente.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/CaseTransition' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
+        '400': { $ref: '#/components/responses/CaseError' }
+        '403': { $ref: '#/components/responses/CaseError' }
+        '404': { $ref: '#/components/responses/CaseError' }
+        '503': { $ref: '#/components/responses/CaseError' }
+    post:
+      summary: Ejecuta CLOSE/REOPEN/ARCHIVE/UNARCHIVE con version esperada; sin transaccion SQL durante REST.
+      description: |
+        ARCHIVE requiere confirmConversationDeletion=true. Persiste intento tecnico estable y
+        bloquea admision antes de pedir borrado a MS-04; solo despues guarda Archivado/historial.
+        Ante incertidumbre conserva CLOSED + archiving; reintentar reutiliza el intento.
+        Desarchivar lleva a CLOSED sin restaurar chats ni escribir contenido/documentos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [action, expectedVersion]
+              properties:
+                action: { type: string, enum: [CLOSE, REOPEN, ARCHIVE, UNARCHIVE] }
+                expectedVersion: { type: integer, minimum: 1 }
+                confirmConversationDeletion: { type: boolean, default: false }
+      responses:
+        '200': { $ref: '#/components/responses/CaseFile' }
+        '400': { $ref: '#/components/responses/CaseError' }
+        '403': { $ref: '#/components/responses/CaseError' }
+        '404': { $ref: '#/components/responses/CaseError' }
+        '409': { $ref: '#/components/responses/CaseError' }
+        '502': { $ref: '#/components/responses/CaseError' }
+        '503': { $ref: '#/components/responses/CaseError' }
   /people:
     get:
       summary: Lista personas de la cuenta del Abogado vigente; nunca acepta cuenta del cliente.
@@ -396,6 +544,41 @@ components:
       in: query
       schema: { type: string, maxLength: 4096 }
   schemas:
+    CaseInput:
+      type: object
+      additionalProperties: false
+      required: [code, title, area, initialAgentId]
+      properties:
+        code: { type: string, minLength: 1, maxLength: 100, description: Texto; conservar ceros y comparar lower(btrim(code)) dentro de la cuenta. }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        description: { type: [string, 'null'], maxLength: 10000 }
+        area: { type: string, enum: [CIVIL, PENAL] }
+        initialAgentId: { type: string, enum: [civilista, penalista] }
+    CaseFile:
+      type: object
+      additionalProperties: false
+      required: [id, code, title, description, area, initialAgentId, state, version, archiving]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, minLength: 1, maxLength: 100 }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        description: { type: [string, 'null'], maxLength: 10000 }
+        area: { type: string, enum: [CIVIL, PENAL] }
+        initialAgentId: { type: string, enum: [civilista, penalista] }
+        state: { type: string, enum: [OPEN, CLOSED, ARCHIVED] }
+        version: { type: integer, minimum: 1 }
+        archiving: { type: boolean }
+    CaseTransition:
+      type: object
+      additionalProperties: false
+      required: [id, previousState, newState, date, authorId, version]
+      properties:
+        id: { type: string, format: uuid }
+        previousState: { type: string, enum: [OPEN, CLOSED, ARCHIVED] }
+        newState: { type: string, enum: [OPEN, CLOSED, ARCHIVED] }
+        date: { type: string, format: date-time }
+        authorId: { type: string, format: uuid }
+        version: { type: integer, minimum: 2 }
     PersonInput:
       type: object
       additionalProperties: false
@@ -495,6 +678,32 @@ components:
             properties:
               token: { type: string }
   responses:
+    CaseFile:
+      description: Ficha vigente propia, sin cuenta ni marca interna de intento.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/CaseFile' }
+    CaseError:
+      description: |
+        VALIDATION/CONFLICT incluyen campos seguros cuando corresponde; nunca SQL ni datos ajenos.
+        SERVICE_UNAVAILABLE no confirma eliminacion ni archivo. PARTIAL_FAILURE (502) indica
+        borrado confirmado pero transicion no confirmada: consultar estado antes de reintentar.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [category, message]
+            properties:
+              category: { type: string, enum: [VALIDATION, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, SERVICE_UNAVAILABLE, PARTIAL_FAILURE] }
+              message: { type: string }
+              fields:
+                type: array
+                items:
+                  type: object
+                  required: [field, message]
+                  properties:
+                    field: { type: string }
+                    message: { type: string }
     PersonError:
       description: |
         Categorias comunes; VALIDATION y CONFLICT incluyen fields (field/message).

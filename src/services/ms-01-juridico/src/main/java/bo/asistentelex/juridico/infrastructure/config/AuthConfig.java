@@ -12,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import bo.asistentelex.juridico.application.AuthService;
 import bo.asistentelex.juridico.application.AdministrationService;
 import bo.asistentelex.juridico.application.PeopleService;
+import bo.asistentelex.juridico.application.CaseService;
+import bo.asistentelex.juridico.application.ports.out.CasePorts;
 import bo.asistentelex.juridico.application.ports.out.PeopleStore;
 import bo.asistentelex.juridico.application.ports.out.AdministrationPorts;
 import bo.asistentelex.juridico.application.ports.out.IdentityPorts.*;
@@ -57,4 +59,7 @@ public class AuthConfig {
 
 	@Bean
 	PeopleService peopleService(PeopleStore store, AuthService auth) { return new PeopleService(store, auth); }
+
+	@Bean
+	CaseService caseService(CasePorts.Store store, CasePorts.Intelligence intelligence, AuthService auth) { return new CaseService(store, intelligence, auth); }
 }

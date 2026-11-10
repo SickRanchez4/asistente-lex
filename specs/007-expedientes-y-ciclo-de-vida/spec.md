@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08. Implementación propia de expedientes, ficha, transiciones e historial disponible; T01/T03 verificadas. Archivo real, conservación de contenido y comportamiento de chats siguen pendientes de 008/009/010/011. Evidencias y límites en [tasks](./tasks.md).
 
 ## Fuente y trazabilidad
 
@@ -75,19 +75,19 @@ Archivar un expediente tiene un efecto irreversible en otro servicio: se elimina
 
 ## Criterios de aceptación
 
-- [ ] Dados todos los datos obligatorios y un agente habilitado, cuando el abogado crea un expediente, entonces queda en estado Abierto con ese agente inicial.
-- [ ] Dado un agente deshabilitado, cuando se intenta crear un expediente con él, entonces MS-01 rechaza la creación aunque la solicitud no pase por la interfaz.
-- [ ] Dados datos obligatorios incompletos, cuando se intenta crear un expediente, entonces se rechaza indicando los datos faltantes.
-- [ ] Dado un expediente Abierto, cuando el abogado actualiza sus datos generales, entonces los cambios se guardan.
-- [ ] Dado un expediente Cerrado o Archivado, cuando se intenta actualizar sus datos generales, entonces se rechaza.
+- [x] Dados todos los datos obligatorios y un agente habilitado, cuando el abogado crea un expediente, entonces queda en estado Abierto con ese agente inicial.
+- [x] Dado un agente deshabilitado, cuando se intenta crear un expediente con él, entonces MS-01 rechaza la creación aunque la solicitud no pase por la interfaz.
+- [x] Dados datos obligatorios incompletos, cuando se intenta crear un expediente, entonces se rechaza indicando los datos faltantes.
+- [x] Dado un expediente Abierto, cuando el abogado actualiza sus datos generales, entonces los cambios se guardan.
+- [x] Dado un expediente Cerrado o Archivado, cuando se intenta actualizar sus datos generales, entonces se rechaza.
 - [ ] Dado un expediente en cada estado, cuando se solicita cada transición, entonces solo se aceptan Abierto→Cerrado, Cerrado→Abierto, Cerrado→Archivado y Archivado→Cerrado.
 - [ ] Dado un expediente Cerrado con conversaciones, cuando el abogado confirma el archivo, entonces las conversaciones se eliminan y el expediente queda Archivado.
-- [ ] Dado un fallo de MS-04 al eliminar las conversaciones, cuando se archiva, entonces el expediente permanece Cerrado, se informa el error y no se muestra éxito.
+- [x] Dado un fallo de MS-04 al eliminar las conversaciones, cuando se archiva, entonces el expediente permanece Cerrado, se informa el error y no se muestra éxito.
 - [ ] Dadas conversaciones eliminadas y un fallo posterior al cambiar el estado, cuando se informa el error y el abogado reintenta, entonces el expediente queda Archivado.
 - [ ] Dado un expediente Archivado, cuando el abogado lo desarchiva, entonces queda Cerrado, sin conversaciones previas y con su contenido jurídico y documentos intactos.
-- [ ] Dadas varias transiciones realizadas, cuando se consulta el historial del expediente, entonces muestra cada cambio con estado anterior, nuevo, fecha y autor.
-- [ ] Dados dos abogados A y B, cuando A intenta consultar o modificar un expediente de B, entonces la solicitud se rechaza sin revelar su contenido.
-- [ ] Dado un código existente en la cuenta, cuando se crea o actualiza otro expediente con ese código, entonces se rechaza; en otra cuenta se permite.
+- [x] Dadas varias transiciones realizadas, cuando se consulta el historial del expediente, entonces muestra cada cambio con estado anterior, nuevo, fecha y autor.
+- [x] Dados dos abogados A y B, cuando A intenta consultar o modificar un expediente de B, entonces la solicitud se rechaza sin revelar su contenido.
+- [x] Dado un código existente en la cuenta, cuando se crea o actualiza otro expediente con ese código, entonces se rechaza; en otra cuenta se permite.
 - [ ] Dado un expediente Abierto, cuando se cambia área o agente inicial habilitado, entonces se guarda; los chats existentes conservan su agente activo e historial y los nuevos usan el agente inicial vigente.
 - [ ] Dada una pregunta pendiente al confirmar el archivo, cuando termina la respuesta externa, entonces se descarta y no recrea conversaciones eliminadas.
 

@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado por el responsable el 2026-11-08. Implementación propia disponible y verificada por capas y recorridos reales; aceptación integrada incompleta por dependencias de 008/009/010/011. Registro detallado en [tasks](./tasks.md).
 
 ## Resumen técnico
 
@@ -120,6 +120,11 @@ Comprobar además consulta IA concurrente al archivo conforme al mecanismo acord
 
 ## Decisiones
 
+- Implementación: migración explícita `V5__cases.sql`, tablas `juridico.cases`/`juridico.case_transitions`, servicio `CaseService`, repositorio JDBC, adaptador HTTP y controlador `/cases`; fachada GraphQL y React en `/abogado/expedientes`. Sin endpoint de eliminación de expedientes ni ampliación del alcance de 011.
+- Código conservado como texto, recortado y único por cuenta mediante `lower(btrim(code))`. Código/título se filtran por subcadena literal sin distinguir mayúsculas; no se interpretan comodines. Cursor ligado a cuenta/filtros; páginas de 1 a 100 y orden estable por UUID. Historial ordenado por versión con cursor propio ligado a cuenta/expediente.
+- Las escrituras reciben `expectedVersion`; una colisión exige consultar la ficha vigente. `archive_attempt_id` persistido no es estado de negocio ni se expone al navegador. No vence automáticamente ante incertidumbre; solo se retira al confirmar Archivado junto al historial.
+- Cada llamada MS-01→MS-04 usa token del receptor, contexto firmado vigente, correlación y plazo restante; máximo 8 s por llamada, conexión 3 s, sin redirecciones ni reintentos automáticos. Una confirmación exige `deleted=true`, expediente e intento coincidentes y generación entera positiva. La UI exige consulta vigente tras conflicto, parcial o transporte incierto. El presupuesto GraphQL de archivo es el de IA; el límite del cliente web sigue siendo 12 s y su vencimiento no se presenta como fracaso confirmado.
+- `GET /cases/{id}/eligibility` verifica pertenencia y devuelve solo ID, estado, agente inicial, versión, marca y elegibilidad de preguntas. MS-04 recibe `POST /cases/{id}/conversations/delete` con intento estable y confirma borrado completo con expediente/intento/generación; su implementación y descarte de respuestas pertenecen a 011. Repetir un intento antiguo no debe borrar chats posteriores al desarchivo: 011 conserva un recibo técnico de borrado sin conversaciones.
 - Reutilizar MS-01 y las transacciones locales; la secuencia de archivo procede de la spec, no es opcional.
 - Concurrencia mínima local y limitaciones constan en el [ADR 0004](../../docs/decisions/0004-integraciones-minimas-del-mvp.md). No introducir saga, cola genérica ni réplicas.
 
@@ -128,3 +133,4 @@ Comprobar además consulta IA concurrente al archivo conforme al mecanismo acord
 - Filtros limitados a estado/área/código/título, sin fecha de creación. No quedan preguntas funcionales abiertas.
 - Archivo puede eliminar conversaciones antes de fallar persistencia local: mostrar la pérdida irreversible y permitir reintento, no restaurar datos ficticios.
 - La validación de estado entre servicios es remota, no una instantánea atómica global; acordar garantías sin prometer consistencia superior a la spec.
+- El contrato de borrado está definido en OpenAPI de MS-04, pero no tiene handler todavía. El fallo real devuelve indisponibilidad y conserva Cerrado con marca; no confirma borrado ni archivo. La coordinación por generación, recibos durables de intentos y descarte tras timeout/reinicio son obligaciones pendientes de 011, no garantías acreditadas por esta entrega.

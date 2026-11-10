@@ -12,6 +12,48 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /cases/{id}/conversations/delete:
+    post:
+      summary: Contrato de borrado para 007; implementacion real y coordinacion de generacion pendientes de 011.
+      description: |
+        Solo solicitud interna de MS-01 con contexto firmado de Abogado propietario ya autorizado.
+        No volver a consultar MS-01 dentro del borrado: evitar dependencia circular.
+        Serializar en la instancia local por cuenta/expediente con admision/persistencia;
+        avanzar generacion e impedir que respuestas previas vuelvan a persistir. Borrar todas
+        las conversaciones, intercambios y estados. Repetir archiveAttemptId confirma el mismo
+        borrado sin borrar chats nuevos despues de desarchivo; persistir recibo tecnico del intento.
+        Confirmar solo al terminar, no al aceptar. Respetar X-Lex-Deadline-Ms. Sin handler 011,
+        MS-01 interpreta 404/timeout como eliminacion no confirmada y conserva marca tecnica.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [archiveAttemptId]
+              properties:
+                archiveAttemptId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Borrado completo confirmado para esa cuenta, expediente e intento.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [deleted, caseId, archiveAttemptId, generation]
+                properties:
+                  deleted: { type: boolean, const: true }
+                  caseId: { type: string, format: uuid }
+                  archiveAttemptId: { type: string, format: uuid }
+                  generation: { type: integer, minimum: 1 }
+        '400': { $ref: '../../contracts/common.yaml#/components/responses/Validation' }
+        '401': { $ref: '../../contracts/common.yaml#/components/responses/Unauthenticated' }
+        '403': { $ref: '../../contracts/common.yaml#/components/responses/Forbidden' }
+        '503': { $ref: '../../contracts/common.yaml#/components/responses/ServiceUnavailable' }
   /health:
     get:
       summary: Comprobación técnica de MongoDB.

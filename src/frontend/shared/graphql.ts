@@ -14,7 +14,7 @@ export async function requestGraphql<T>(query: string, variables: Record<string,
   } catch { throw new GraphqlFailure('SERVICE_UNAVAILABLE', 'No se pudo confirmar el resultado. Comprueba el estado antes de repetir la operación.', true); }
   if (body.errors?.length) {
     const error = body.errors[0];
-    const known = ['VALIDATION', 'UNAUTHENTICATED', 'FORBIDDEN', 'NOT_FOUND', 'CONFLICT', 'SERVICE_UNAVAILABLE'];
+    const known = ['VALIDATION', 'UNAUTHENTICATED', 'FORBIDDEN', 'NOT_FOUND', 'CONFLICT', 'SERVICE_UNAVAILABLE', 'PARTIAL_FAILURE'];
     const category = known.includes(error.extensions?.code ?? '') ? error.extensions!.code! : 'SERVICE_UNAVAILABLE';
     const fields = Array.isArray(error.extensions?.fields) ? error.extensions.fields.filter(
       (value): value is { field: string; message: string } => value != null && typeof value === 'object'

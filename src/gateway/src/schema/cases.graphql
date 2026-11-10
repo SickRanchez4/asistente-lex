@@ -1,0 +1,31 @@
+enum CaseArea { CIVIL PENAL }
+enum CaseState { OPEN CLOSED ARCHIVED }
+enum CaseAction { CLOSE REOPEN ARCHIVE UNARCHIVE }
+input CaseInput { code: String! title: String! description: String area: CaseArea! initialAgentId: ID! }
+input CaseFilter { state: CaseState area: CaseArea code: String title: String }
+type CaseFile {
+  id: ID!
+  code: String!
+  title: String!
+  description: String
+  area: CaseArea!
+  initialAgentId: ID!
+  state: CaseState!
+  version: Int!
+  archiving: Boolean!
+}
+type CaseEligibility { id: ID! state: CaseState! initialAgentId: ID! version: Int! archiving: Boolean! questionsAllowed: Boolean! }
+type CaseTransition { id: ID! previousState: CaseState! newState: CaseState! date: String! authorId: ID! version: Int! }
+type CasePage { items: [CaseFile!]! pageInfo: PageInfo! }
+type CaseHistoryPage { items: [CaseTransition!]! pageInfo: PageInfo! }
+extend type Query {
+  cases(first: Int! = 25, after: String, filter: CaseFilter): CasePage!
+  caseFile(id: ID!): CaseFile!
+  caseEligibility(id: ID!): CaseEligibility!
+  caseHistory(id: ID!, first: Int! = 25, after: String): CaseHistoryPage!
+}
+extend type Mutation {
+  createCase(input: CaseInput!): CaseFile!
+  updateCase(id: ID!, input: CaseInput!, expectedVersion: Int!): CaseFile!
+  transitionCase(id: ID!, action: CaseAction!, expectedVersion: Int!, confirmConversationDeletion: Boolean! = false): CaseFile!
+}

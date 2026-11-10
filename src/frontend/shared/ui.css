@@ -1,3 +1,8 @@
+.al-case-details { display: grid; grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr); gap: .75rem 1.5rem; padding-block: 1rem; }
+.al-case-details dt { font-weight: 600; }
+.al-case-details dd { margin: 0; overflow-wrap: anywhere; }
+.al-case-description { white-space: pre-wrap; }
+@media (max-width: 40rem) { .al-case-details { grid-template-columns: minmax(0, 1fr); gap: .25rem; } .al-case-details dd { margin-bottom: .75rem; } }
 :root {
   --al-ink: #171717;
   --al-gold: #e2bf61;
