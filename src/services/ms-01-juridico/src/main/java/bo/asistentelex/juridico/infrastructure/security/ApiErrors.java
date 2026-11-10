@@ -9,13 +9,25 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiErrors {
+	@ExceptionHandler(bo.asistentelex.juridico.domain.Administration.Failure.class)
+	ResponseEntity<?> administration(bo.asistentelex.juridico.domain.Administration.Failure failure) {
+		int status = switch (failure.category()) {
+			case "VALIDATION" -> 400;
+			case "UNAUTHENTICATED" -> 401;
+			case "FORBIDDEN" -> 403;
+			case "NOT_FOUND" -> 404;
+			case "CONFLICT" -> 409;
+			default -> 503;
+		};
+		return ResponseEntity.status(status).body(Map.of("category", failure.category(), "message", failure.getMessage()));
+	}
 	@ExceptionHandler(DataAccessException.class)
 	ResponseEntity<?> storage() {
 		System.err.println("[ms-01] Almacen de identidad no disponible.");
 		return ResponseEntity.status(503).body(Map.of("category", "SERVICE_UNAVAILABLE", "message", "El servicio no está disponible."));
 	}
 
-	@ExceptionHandler(HttpMessageNotReadableException.class)
+	@ExceptionHandler({HttpMessageNotReadableException.class, org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class})
 	ResponseEntity<?> validation() {
 		return ResponseEntity.badRequest().body(Map.of("category", "VALIDATION", "message", "La solicitud no es válida."));
 	}

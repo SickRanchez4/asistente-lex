@@ -137,6 +137,18 @@ MS-01 consulta las tablas con el prefijo `juridico` y comprueba la existencia de
 
 Auditoría de mejor esfuerzo: una caída de DynamoDB no revierte un login/logout ya aplicado ni convierte un rechazo en acceso. Se comunica explícitamente como fallo de registro. Sin bloqueo de intentos, colas ni garantía de producción.
 
+### Administración y auditoría
+
+Con una sesión Administrador, el panel Angular ofrece `/admin/cuentas`, `/admin/parametros` y `/admin/auditoria`. Permite crear Abogados, consultar sus datos de cuenta, suspender/reactivar y restablecer contraseña sin editar nombre/correo/rol ni eliminar cuentas. Suspender y restablecer invalidan sus sesiones; reactivar no cambia la contraseña ni los datos.
+
+La preparación explícita de MS-01 anterior aplica también V3, que crea los parámetros cerrados en `juridico`. No hay migración automática al arrancar. Mensaje global y correo de soporte son opcionales; el Shell consulta solo esa proyección pública y no interpreta HTML. No se configura SMTP, secretos ni claves arbitrarias desde el panel.
+
+Los cambios devuelven `applied` y `auditRecorded` por separado. Si el cambio se guardó pero falló DynamoDB, se informa `PARTIAL_FAILURE`; no se repite el cambio para intentar auditarlo. Un fallo de transporte no confirma que la operación haya fallado: consulta su estado antes de reenviarla.
+
+La auditoría se consulta en páginas acotadas (25 por defecto, máximo 100), con filtros combinables por tipo/usuario y período RFC3339: inicio inclusivo, final exclusivo. Las páginas filtradas pueden estar vacías y aun tener cursor siguiente. No hay API de modificación/borrado ni TTL.
+
+La recepción `/audit/events` exige una credencial distinta para MS-04: `MS04_AUDIT_API_TOKEN` en el entorno de MS-01, más contexto firmado del autor. Genera un valor aleatorio fuera del repositorio con el procedimiento de `.env.example`; vacía deja ese ingreso bloqueado. La emisión de acciones reales de agentes y su configuración en MS-04 corresponden a 005. No se habilita demo ni se crean cuentas de prueba automáticamente en la base externa.
+
 ### Puertos
 
 Todos los puertos se publican solo en `127.0.0.1` y pueden cambiarse en `.env`.

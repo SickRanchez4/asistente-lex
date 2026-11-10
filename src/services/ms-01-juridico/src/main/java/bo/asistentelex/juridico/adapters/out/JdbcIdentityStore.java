@@ -38,9 +38,10 @@ public class JdbcIdentityStore implements Accounts, Sessions {
 	}
 
 	public void create(Session session) {
-		jdbc.update("INSERT INTO juridico.sessions(token_hash, account_id, created_at, last_activity_at, expires_at) VALUES (?, ?, ?, ?, ?)",
-				session.tokenHash(), UUID.fromString(session.accountId()), Timestamp.from(session.createdAt()),
-				Timestamp.from(session.lastActivityAt()), Timestamp.from(session.expiresAt()));
+		int inserted = jdbc.update("INSERT INTO juridico.sessions(token_hash, account_id, created_at, last_activity_at, expires_at) SELECT ?, id, ?, ?, ? FROM juridico.accounts WHERE id = ? AND enabled FOR SHARE",
+				session.tokenHash(), Timestamp.from(session.createdAt()), Timestamp.from(session.lastActivityAt()),
+				Timestamp.from(session.expiresAt()), UUID.fromString(session.accountId()));
+		if (inserted != 1) throw new IllegalStateException("La cuenta ya no permite crear sesiones.");
 	}
 
 	public Optional<Session> find(String tokenHash) {

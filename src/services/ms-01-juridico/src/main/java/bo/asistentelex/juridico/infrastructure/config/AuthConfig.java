@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import bo.asistentelex.juridico.application.AuthService;
+import bo.asistentelex.juridico.application.AdministrationService;
+import bo.asistentelex.juridico.application.ports.out.AdministrationPorts;
 import bo.asistentelex.juridico.application.ports.out.IdentityPorts.*;
 
 @Configuration
@@ -44,5 +46,10 @@ public class AuthConfig {
 	@Bean
 	AuthService authService(Accounts accounts, Sessions sessions, Passwords passwords, Tokens tokens, Audit audit) {
 		return new AuthService(accounts, sessions, passwords, tokens, audit, Clock.systemUTC());
+	}
+
+	@Bean
+	AdministrationService administrationService(AdministrationPorts.Store store, AdministrationPorts.Events events, Passwords passwords, AuthService auth) {
+		return new AdministrationService(store, events, passwords, auth, Clock.systemUTC());
 	}
 }

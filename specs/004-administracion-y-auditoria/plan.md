@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado el 2026-11-08. Implementación de las capacidades propias y verificación por capas realizadas; integración con acciones reales de 005 y aceptación autenticada de extremo a extremo pendientes. Evidencia en las [tareas](./tasks.md).
 
 ## Resumen técnico
 
@@ -35,6 +35,10 @@ Restablecer contraseña es operación separada, sin consultar hash anterior, cor
 - Definir filtros combinables por tipo, período y usuario y paginación; acordar límites temporales inclusivos/exclusivos y zona con 002.
 - Categorías de acceso, inexistente, validación, conflicto e indisponibilidad según 002. No ofrecer operaciones de modificar/eliminar eventos.
 - La información de valores anteriores/nuevos de parámetros debe excluir secretos. Acordar qué parámetros son auditables antes de aceptar configuraciones sensibles.
+
+Contratos vigentes: [SDL administrativo](../../src/gateway/src/schema/admin.graphql) y [OpenAPI MS-01](../../src/services/ms-01-juridico/contracts/openapi.yaml). Cuentas ordenadas por correo único y cursor; páginas de 25 por defecto, máximo 100. Eventos por índices DynamoDB `by-date`, `by-type` o `by-user`, con `Limit` acotado y filtros combinables. Puede haber páginas vacías con continuación; el cursor está vinculado a los filtros. Fechas RFC3339 con zona: inicio inclusivo y final exclusivo, normalizados a UTC y presentados en Bolivia.
+
+Recepción de agentes: `/audit/events` exige una credencial exclusiva `MS04_AUDIT_API_TOKEN`, además del autor firmado vigente. `AGENT_ACTION` acepta solo cambios de configuración/habilitación de `penalista` o `civilista`, con identificador y fecha originales estables. El reenvío idéntico no duplica el registro; cambiar su contenido no se reconoce como entrega. La emisión después de una acción real se integrará en 005; no se ejecutan cambios de agentes en 004.
 
 ## Persistencia y migraciones
 
@@ -76,12 +80,16 @@ El desarrollador valida sin crear archivos de testing ni documentos adicionales;
 | 12. Auditoría caída | Cambio aplicado permanece y se informa resultado parcial, sin éxito global ni reversión inventada. |
 | 13. Parámetros cerrados | Solo mensaje/correo permitidos, valores anteriores/nuevos auditados cuando hay disponibilidad. |
 
-El desarrollador comprobará interrupción de auditoría y resultado parcial acordado. Ninguna comprobación de comportamiento se ejecuta en este ajuste documental.
+Se ejecutaron 79 comprobaciones temporales sobre los casos de uso y adaptadores reales: PostgreSQL externo dentro de una transacción revertida y una tabla DynamoDB aislada eliminada al terminar. Incluyen fallo real de conexión del cliente de auditoría, conservación del cambio dentro de la transacción y ausencia del evento fallido en el listado. No equivalen a una prueba de commit seguida de fallo en el recorrido GraphQL autenticado de producción.
+
+Se verificaron 13 comprobaciones de HTTP/resolvers (8 contra el despliegue y 5 con propietario simulado), rechazo REST de propiedades no permitidas, compilaciones MS-01/Gateway/Angular/Shell, typechecks Node 26 y contrato OpenAPI con referencias. En navegador se verificaron rutas anónimas reales; formularios, confirmaciones, proyección pública y estados de fallo usaron respuestas simuladas que se retiraron al finalizar. Revisadas capturas de escritorio y móvil sin desbordamiento de página. No se crearon archivos de testing en el repositorio ni cuentas persistentes de prueba.
 
 ## Decisiones
 
 - Reutilizar stack, UI, identidad y migraciones de las specs base; no una consola administrativa separada.
 - La excepción de auditoría y el alcance mínimo constan en el [ADR 0004](../../docs/decisions/0004-integraciones-minimas-del-mvp.md): cambio aplicado sin evento se comunica como parcial.
+- PostgreSQL: V3 crea una fila cerrada de parámetros en `juridico`. Suspensión e invalidación de sesiones se confirman juntas; restablecer contraseña también invalida sesiones. La creación de sesión bloquea la fila de cuenta durante la inserción para no conservar una sesión creada en carrera con una suspensión.
+- Auditoría se intenta después de que retorna el adaptador transaccional, sin reintentos del cambio. Angular distingue aplicado/parcial/no confirmado y no oculta un cambio confirmado si falla el refresco posterior. La proyección pública solo incluye mensaje y contacto; el Shell usa texto, no HTML.
 
 ## Riesgos y preguntas abiertas
 

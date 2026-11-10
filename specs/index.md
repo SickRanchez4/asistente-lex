@@ -6,7 +6,7 @@
 | 001 | Experiencia y UI compartida | En progreso | [spec](./001-experiencia-y-ui-compartida/spec.md) | [plan](./001-experiencia-y-ui-compartida/plan.md) | [tasks](./001-experiencia-y-ui-compartida/tasks.md) |
 | 002 | Gateway y contratos base | En progreso | [spec](./002-gateway-y-contratos-base/spec.md) | [plan](./002-gateway-y-contratos-base/plan.md) | [tasks](./002-gateway-y-contratos-base/tasks.md) |
 | 003 | Autenticación y acceso | En progreso | [spec](./003-autenticacion-y-acceso/spec.md) | [plan](./003-autenticacion-y-acceso/plan.md) | [tasks](./003-autenticacion-y-acceso/tasks.md) |
-| 004 | Administración y auditoría | Lista | [spec](./004-administracion-y-auditoria/spec.md) | [plan](./004-administracion-y-auditoria/plan.md) | [tasks](./004-administracion-y-auditoria/tasks.md) |
+| 004 | Administración y auditoría | En progreso | [spec](./004-administracion-y-auditoria/spec.md) | [plan](./004-administracion-y-auditoria/plan.md) | [tasks](./004-administracion-y-auditoria/tasks.md) |
 | 005 | Configuración de agentes | Lista | [spec](./005-configuracion-de-agentes/spec.md) | [plan](./005-configuracion-de-agentes/plan.md) | [tasks](./005-configuracion-de-agentes/tasks.md) |
 | 006 | Personas | Lista | [spec](./006-personas/spec.md) | [plan](./006-personas/plan.md) | [tasks](./006-personas/tasks.md) |
 | 007 | Expedientes y ciclo de vida | Lista | [spec](./007-expedientes-y-ciclo-de-vida/spec.md) | [plan](./007-expedientes-y-ciclo-de-vida/plan.md) | [tasks](./007-expedientes-y-ciclo-de-vida/tasks.md) |

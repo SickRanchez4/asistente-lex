@@ -1,0 +1,86 @@
+type AdminAccount {
+  id: ID!
+  name: String!
+  email: String!
+  enabled: Boolean!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
+type AdminAccountPage {
+  items: [AdminAccount!]!
+  pageInfo: PageInfo!
+}
+
+type ApplicationSettings {
+  globalMessage: String!
+  supportEmail: String!
+}
+
+enum ApplicationSettingKey {
+  GLOBAL_MESSAGE
+  SUPPORT_EMAIL
+}
+
+enum AuditEventType {
+  LOGIN
+  LOGIN_FAILED
+  LOGOUT
+  ACCESS_DENIED
+  PASSWORD_CHANGED
+  ADMIN_CHANGE
+  AGENT_ACTION
+  AI_ACTION
+}
+
+type AuditEvent {
+  id: ID!
+  type: AuditEventType!
+  date: String!
+  userId: ID
+  result: String!
+  operation: String
+  targetId: ID
+  parameter: ApplicationSettingKey
+  previousValue: String
+  newValue: String
+  agentId: ID
+}
+
+type AuditEventPage {
+  items: [AuditEvent!]!
+  pageInfo: PageInfo!
+}
+
+input AuditFilter {
+  type: AuditEventType
+  from: String
+  until: String
+  userId: ID
+}
+
+type AdminChangeResult {
+  applied: Boolean!
+  auditRecorded: Boolean!
+  category: String
+  message: String
+  account: AdminAccount
+  settings: ApplicationSettings
+}
+
+extend type Query {
+  adminAccounts(first: Int = 25, after: String): AdminAccountPage!
+  adminAccount(id: ID!): AdminAccount!
+  applicationSettings: ApplicationSettings!
+  adminAuditEvents(filter: AuditFilter, first: Int = 25, after: String): AuditEventPage!
+}
+
+extend type Mutation {
+  createLawyerAccount(name: String!, email: String!, password: String!): AdminChangeResult!
+  setLawyerAccountEnabled(id: ID!, enabled: Boolean!): AdminChangeResult!
+  resetLawyerPassword(id: ID!, password: String!): AdminChangeResult!
+  updateApplicationSetting(key: ApplicationSettingKey!, value: String!): AdminChangeResult!
+}

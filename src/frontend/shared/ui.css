@@ -75,6 +75,25 @@ body { margin: 0; }
 .al-skip-link:focus-visible { outline: 3px solid var(--al-focus); outline-offset: 3px; }
 .al-header :focus-visible { outline-color: var(--al-gold); }
 
+.al-admin-tabs { border-bottom: 1px solid var(--al-border); padding-bottom: 0.75rem; margin-bottom: 1.5rem; }
+#al-global-message { white-space: pre-wrap; }
+.al-admin-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 2rem; align-items: start; }
+.al-admin-form { max-width: 640px; min-width: 0; }
+.al-admin-form fieldset, .al-filter-grid { border: 0; padding: 0; margin: 0; min-width: 0; }
+.al-admin-form form + form, .al-admin-detail { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--al-border); }
+.al-admin-data { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.5rem 1rem; }
+.al-admin-data dd { margin: 0; }
+.al-table-scroll { width: 100%; overflow-x: auto; }
+.al-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+.al-table th, .al-table td { border-bottom: 1px solid var(--al-border); padding: 0.75rem 0.5rem; vertical-align: top; overflow-wrap: anywhere; min-width: 90px; max-width: 340px; }
+.al-table th { background: var(--al-surface); }
+.al-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 1rem; align-items: end; }
+.al-filter-grid .al-field { margin: 0; }
+
+@media (max-width: 900px) {
+  .al-admin-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (max-width: 640px) {
   .al-page, .al-header-inner { padding-inline: 1rem; }
   .al-header-inner { flex-direction: column; align-items: flex-start; gap: 0.5rem; }

@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -43,10 +44,13 @@ class InternalAuthFilter extends OncePerRequestFilter {
 	private final InternalAuthProperties properties;
 
 	private final JsonMapper jsonMapper;
+	private final String ms04AuditToken;
 
-	InternalAuthFilter(InternalAuthProperties properties, JsonMapper jsonMapper) {
+	InternalAuthFilter(InternalAuthProperties properties, JsonMapper jsonMapper,
+			@Value("${asistentelex.internal.ms04-audit-token:}") String ms04AuditToken) {
 		this.properties = properties;
 		this.jsonMapper = jsonMapper;
+		this.ms04AuditToken = ms04AuditToken;
 	}
 
 	@Override
@@ -59,8 +63,10 @@ class InternalAuthFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		request.removeAttribute(VerifiedIdentity.REQUEST_ATTRIBUTE);
 		String authorization = request.getHeader("Authorization");
-		if (this.properties.apiToken().isEmpty() || authorization == null || !authorization.startsWith(BEARER_PREFIX)
-				|| !constantTimeEquals(authorization.substring(BEARER_PREFIX.length()), this.properties.apiToken())) {
+		String expectedToken = "POST".equals(request.getMethod()) && "/audit/events".equals(request.getRequestURI())
+				? this.ms04AuditToken : this.properties.apiToken();
+		if (expectedToken.isEmpty() || authorization == null || !authorization.startsWith(BEARER_PREFIX)
+				|| !constantTimeEquals(authorization.substring(BEARER_PREFIX.length()), expectedToken)) {
 			reject(response);
 			return;
 		}

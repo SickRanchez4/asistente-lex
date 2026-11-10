@@ -1,0 +1,98 @@
+<main id="al-admin-content" class="al-page" tabindex="-1">
+  <h1>Administración</h1>
+  <nav class="al-nav al-admin-tabs" aria-label="Administración">
+    <a href="/admin/cuentas" [attr.aria-current]="tab() === 'cuentas' ? 'page' : null" (click)="navigate($event, 'cuentas')">Cuentas</a>
+    <a href="/admin/parametros" [attr.aria-current]="tab() === 'parametros' ? 'page' : null" (click)="navigate($event, 'parametros')">Parámetros</a>
+    <a href="/admin/auditoria" [attr.aria-current]="tab() === 'auditoria' ? 'page' : null" (click)="navigate($event, 'auditoria')">Auditoría</a>
+  </nav>
+  @if (feedback(); as notice) { <al-status-notice [feedback]="notice" /> }
+  @if (errors.feedback(); as notice) { <al-status-notice [feedback]="notice" /> }
+  @if (loading()) { <p role="status">Cargando...</p> }
+  @if (tab() === 'cuentas') {
+    <div class="al-admin-layout">
+      <section aria-labelledby="accounts-heading">
+        <div class="al-toolbar"><h2 id="accounts-heading">Cuentas de abogados</h2><button class="al-button al-button--secondary" type="button" [disabled]="busy() || loading()" (click)="reload()">Actualizar</button></div>
+        <div class="al-table-scroll" tabindex="0" role="region" aria-label="Cuentas de abogados">
+          <table class="al-table"><thead><tr><th>Nombre</th><th>Correo</th><th>Estado</th><th>Cuenta</th></tr></thead>
+            <tbody>@for (account of accounts(); track account.id) {
+              <tr><td>{{ account.name }}</td><td>{{ account.email }}</td><td>{{ account.enabled ? 'Activa' : 'Suspendida' }}</td>
+                <td><button class="al-button al-button--secondary" type="button" [disabled]="busy() || loading()" (click)="detail(account.id)" [attr.aria-label]="'Ver cuenta de ' + account.name">Ver</button></td></tr>
+            } @empty { @if (!loading()) { <tr><td colspan="4">No hay cuentas en esta página.</td></tr> } }</tbody>
+          </table>
+        </div>
+        <div class="al-toolbar" aria-label="Páginas de cuentas">
+          <button type="button" class="al-button al-button--secondary" aria-label="Página anterior" title="Página anterior" [disabled]="pageNumber() === 1 || loading() || busy()" (click)="turn(-1)">&larr;</button>
+          <span>Página {{ pageNumber() }}</span>
+          <button type="button" class="al-button al-button--secondary" aria-label="Página siguiente" title="Página siguiente" [disabled]="!more() || loading() || busy()" (click)="turn(1)">&rarr;</button>
+        </div>
+        @if (selected(); as account) {
+          <section class="al-admin-detail" aria-labelledby="detail-heading">
+            <h2 id="detail-heading">{{ account.name }}</h2>
+            <dl class="al-admin-data"><dt>Correo</dt><dd>{{ account.email }}</dd><dt>Estado</dt><dd>{{ account.enabled ? 'Activa' : 'Suspendida' }}</dd><dt>Identificador</dt><dd>{{ account.id }}</dd></dl>
+            <button type="button" class="al-button" [disabled]="busy() || loading()" (click)="confirmation.set('enabled')">{{ account.enabled ? 'Suspender cuenta' : 'Reactivar cuenta' }}</button>
+            <form (submit)="beginReset($event)" class="al-admin-form"><h3>Restablecer contraseña</h3><fieldset [disabled]="busy() || loading()">
+              <div class="al-field"><label for="reset-password">Nueva contraseña</label><input id="reset-password" name="password" class="al-input" type="password" autocomplete="new-password" required /></div>
+              <div class="al-field"><label for="reset-confirm">Repetir contraseña</label><input id="reset-confirm" name="confirmation" class="al-input" type="password" autocomplete="new-password" required /></div>
+              <button class="al-button" type="submit">Restablecer contraseña</button>
+            </fieldset></form>
+          </section>
+        }
+      </section>
+      <section class="al-admin-form" aria-labelledby="create-heading"><h2 id="create-heading">Crear cuenta de abogado</h2>
+        <form (submit)="create($event)"><fieldset [disabled]="busy() || loading()">
+          <div class="al-field"><label for="create-name">Nombre completo</label><input id="create-name" class="al-input" name="name" autocomplete="name" maxlength="200" required /></div>
+          <div class="al-field"><label for="create-email">Correo electrónico</label><input id="create-email" class="al-input" name="email" type="email" autocomplete="email" maxlength="254" required /></div>
+          <div class="al-field"><label for="create-password">Contraseña inicial</label><input id="create-password" class="al-input" name="password" type="password" autocomplete="new-password" required /></div>
+          <button class="al-button" type="submit">{{ busy() ? 'Guardando...' : 'Crear cuenta' }}</button>
+        </fieldset></form>
+      </section>
+    </div>
+  }
+  @if (tab() === 'parametros') {
+    <section class="al-admin-form" aria-labelledby="settings-heading"><h2 id="settings-heading">Parámetros generales</h2>
+      <button class="al-button al-button--secondary" type="button" [disabled]="busy() || loading()" (click)="reload()">Actualizar</button>
+      <form (submit)="saveSetting($event, 'GLOBAL_MESSAGE')"><fieldset [disabled]="busy() || loading()">
+        <div class="al-field"><label for="global-message">Mensaje global</label><textarea id="global-message" class="al-input" name="value" rows="4" maxlength="1000" [value]="settings().globalMessage"></textarea></div>
+        <button class="al-button" type="submit">Guardar mensaje</button>
+      </fieldset></form>
+      <form (submit)="saveSetting($event, 'SUPPORT_EMAIL')"><fieldset [disabled]="busy() || loading()">
+        <div class="al-field"><label for="support-email">Correo de soporte</label><input id="support-email" class="al-input" name="value" type="email" maxlength="254" [value]="settings().supportEmail" /></div>
+        <button class="al-button" type="submit">Guardar contacto</button>
+      </fieldset></form>
+    </section>
+  }
+  @if (tab() === 'auditoria') {
+    <section aria-labelledby="audit-heading"><h2 id="audit-heading">Eventos de auditoría</h2>
+      <form (submit)="filter($event)"><fieldset class="al-filter-grid" [disabled]="busy() || loading()">
+        <div class="al-field"><label for="audit-type">Tipo</label><select class="al-input" id="audit-type" name="type"><option value="">Todos</option>@for (option of eventTypes; track option[0]) { <option [value]="option[0]">{{ option[1] }}</option> }</select></div>
+        <div class="al-field"><label for="audit-from">Desde (hora local)</label><input class="al-input" id="audit-from" name="from" type="datetime-local" /></div>
+        <div class="al-field"><label for="audit-until">Hasta (exclusivo)</label><input class="al-input" id="audit-until" name="until" type="datetime-local" /></div>
+        <div class="al-field"><label for="audit-user">Usuario (ID)</label><input class="al-input" id="audit-user" name="userId" maxlength="36" /></div>
+        <button class="al-button" type="submit">Filtrar</button>
+      </fieldset></form>
+      <div class="al-toolbar"><button type="button" class="al-button al-button--secondary" [disabled]="loading()" (click)="reload()">Actualizar</button><span>Fechas de eventos: Bolivia</span></div>
+      <div class="al-table-scroll" tabindex="0" role="region" aria-label="Eventos de auditoría">
+        <table class="al-table"><thead><tr><th>Fecha</th><th>Tipo y operación</th><th>Autor</th><th>Resultado</th><th>Detalle</th></tr></thead>
+          <tbody>@for (event of events(); track event.id) {
+            <tr><td>{{ eventDate(event.date) }}</td><td>{{ typeLabel(event.type) }} @if (event.operation) { <div>{{ event.operation }}</div> }</td><td>{{ event.userId || 'No identificado' }}</td><td>{{ event.result }}</td>
+              <td>@if (event.targetId) { <div>Cuenta: {{ event.targetId }}</div> } @if (event.agentId) { <div>Agente: {{ event.agentId }}</div> }
+                @if (event.parameter) { <div>{{ event.parameter }}</div><div>Anterior: {{ event.previousValue || '(vacío)' }}</div><div>Nuevo: {{ event.newValue || '(vacío)' }}</div> }
+                <details><summary>Referencia</summary>{{ event.id }}</details></td></tr>
+          } @empty { @if (!loading()) { <tr><td colspan="5">No hay coincidencias en esta página.</td></tr> } }</tbody>
+        </table>
+      </div>
+      <div class="al-toolbar" aria-label="Páginas de auditoría">
+        <button type="button" class="al-button al-button--secondary" aria-label="Página anterior" title="Página anterior" [disabled]="pageNumber() === 1 || loading()" (click)="turn(-1)">&larr;</button>
+        <span>Página {{ pageNumber() }}</span>
+        <button type="button" class="al-button al-button--secondary" aria-label="Página siguiente" title="Página siguiente" [disabled]="!more() || loading()" (click)="turn(1)">&rarr;</button>
+      </div>
+    </section>
+  }
+  @if (selected(); as account) {
+    <al-confirmation-dialog controlId="admin-confirm" [open]="confirmation() !== null" [pending]="busy()"
+      [title]="confirmation() === 'password' ? 'Restablecer contraseña' : account.enabled ? 'Suspender cuenta' : 'Reactivar cuenta'"
+      [confirmLabel]="confirmation() === 'password' ? 'Restablecer' : account.enabled ? 'Suspender' : 'Reactivar'"
+      [consequences]="confirmation() === 'password' ? 'Se reemplazará la contraseña y se cerrarán las sesiones de esta cuenta. No se enviará correo.' : account.enabled ? 'Se cerrarán sus sesiones y no podrá iniciar sesión. Sus datos se conservarán.' : 'La cuenta podrá volver a iniciar sesión con su contraseña vigente.'"
+      (cancel)="cancel()" (confirm)="confirm()" />
+  }
+</main>

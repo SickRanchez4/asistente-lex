@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada el 2026-11-08; implementadas las capacidades propias de 004 y verificación por capas registrada en las [tareas](./tasks.md). La aceptación final queda pendiente de una acción real de agentes de 005 y del recorrido autenticado completo contra el despliegue; no se declara completa.
 
 ## Fuente y trazabilidad
 

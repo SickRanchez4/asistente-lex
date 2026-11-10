@@ -11,6 +11,141 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /public/settings:
+    get:
+      summary: Proyección pública cerrada, solo mensaje global y correo de soporte.
+      security:
+        - serviceToken: []
+      responses:
+        '200':
+          description: Ambos valores opcionales se representan como cadenas vacías.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationSettings'
+  /admin/accounts:
+    get:
+      summary: Lista exclusivamente cuentas Abogado; exige Administrador vigente.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+      responses:
+        '200':
+          description: Página ordenada por correo único, sin hashes ni contenido jurídico.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/AdminAccount' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
+    post:
+      summary: Crea Abogado activo; no acepta rol ni estado del cliente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, email, password]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                email: { type: string, format: email, maxLength: 254 }
+                password: { type: string, description: Entre 1 y 72 bytes UTF-8. }
+      responses:
+        '200': { $ref: '#/components/responses/AdminChange' }
+  /admin/accounts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/AccountId'
+    get:
+      summary: Consulta una cuenta Abogado; inexistente o de otro rol devuelve NOT_FOUND.
+      responses:
+        '200':
+          description: Solo datos de cuenta.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminAccount' }
+  /admin/accounts/{id}/enabled:
+    parameters:
+      - $ref: '#/components/parameters/AccountId'
+    put:
+      summary: Suspende o reactiva; suspensión e invalidación de sesiones son una transacción.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [enabled]
+              properties:
+                enabled: { type: boolean }
+      responses:
+        '200': { $ref: '#/components/responses/AdminChange' }
+  /admin/accounts/{id}/password:
+    parameters:
+      - $ref: '#/components/parameters/AccountId'
+    put:
+      summary: Restablece contraseña propia de la cuenta sin devolver ni auditar el secreto.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [password]
+              properties:
+                password: { type: string, description: Entre 1 y 72 bytes UTF-8. }
+      responses:
+        '200': { $ref: '#/components/responses/AdminChange' }
+  /admin/settings/{key}:
+    parameters:
+      - name: key
+        in: path
+        required: true
+        schema: { type: string, enum: [GLOBAL_MESSAGE, SUPPORT_EMAIL] }
+    put:
+      summary: Actualiza parámetro cerrado; captura anterior/nuevo en la misma transacción.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [value]
+              properties:
+                value: { type: string, maxLength: 1000 }
+      responses:
+        '200': { $ref: '#/components/responses/AdminChange' }
+  /admin/audit-events:
+    get:
+      summary: Solo lectura; query DynamoDB acotada, nunca scan ilimitado.
+      description: |
+        Fechas RFC3339 con zona, normalizadas a UTC. from inclusivo, until exclusivo.
+        first 1..100 (25 por defecto). Cursor opaco ligado a filtros; una página puede
+        estar vacía y tener continuación si el filtro descarta los registros evaluados.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - { name: type, in: query, schema: { type: string, enum: [LOGIN, LOGIN_FAILED, LOGOUT, ACCESS_DENIED, PASSWORD_CHANGED, ADMIN_CHANGE, AGENT_ACTION, AI_ACTION] } }
+        - { name: userId, in: query, schema: { type: string, format: uuid } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: until, in: query, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: Página con atributos públicos del evento y pageInfo; no existe edición/borrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/AuditEvent' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
   /auth/login:
     post:
       summary: Valida credenciales y crea una sesión opaca de servidor.
@@ -88,7 +223,15 @@ paths:
           $ref: '#/components/responses/AuthResult'
   /audit/events:
     post:
-      summary: Recepción idempotente; usuario del contexto firmado y permiso de cuenta vigente.
+      summary: Recepción de MS-04; autor firmado vigente y reenvío idempotente sin duplicar cambios.
+      security:
+        - ms04AuditToken: []
+          userContext: []
+      description: |
+        MS-04 usa MS04_AUDIT_API_TOKEN, distinta del token de Gateway a MS-01.
+        AGENT_ACTION requiere Administrador, resultado SUCCESS, operation, agentId y date
+        originales y estables en cada reenvío. No recibe instrucciones ni conversaciones.
+        El reenvío solo intenta registrar; nunca reejecuta el cambio del agente.
       requestBody:
         required: true
         content:
@@ -98,11 +241,29 @@ paths:
               required: [eventId, type, result]
               properties:
                 eventId: { type: string, pattern: '^[a-zA-Z0-9-]{1,100}$' }
-                type: { type: string, enum: [ACCESS_DENIED, ADMIN_CHANGE, AI_ACTION] }
+                type: { type: string, enum: [ACCESS_DENIED, AGENT_ACTION, AI_ACTION] }
                 result: { type: string, enum: [SUCCESS, REJECTED, PARTIAL_FAILURE] }
+                operation: { type: string, enum: [AGENT_CONFIGURATION_CHANGED, AGENT_ENABLED, AGENT_DISABLED] }
+                agentId: { type: string, enum: [penalista, civilista] }
+                date: { type: string, format: date-time }
       responses:
         '200':
-          $ref: '#/components/responses/AuthResult'
+          description: |
+            AGENT_ACTION devuelve applied/auditRecorded/category/message (AdminChange).
+            AI_ACTION y ACCESS_DENIED devuelven success/auditRecorded/category/message (AuthResult).
+            Un duplicado idéntico es reconocido; contenido distinto con la misma referencia
+            no se considera registrado y se comunica PARTIAL_FAILURE.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [auditRecorded]
+                properties:
+                  applied: { type: boolean }
+                  success: { type: boolean }
+                  auditRecorded: { type: boolean }
+                  category: { type: [string, 'null'] }
+                  message: { type: [string, 'null'] }
   /health:
     get:
       summary: Comprobación técnica de PostgreSQL y DynamoDB.
@@ -113,6 +274,58 @@ paths:
         '503':
           $ref: '../../contracts/common.yaml#/components/responses/Health'
 components:
+  parameters:
+    AccountId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    First:
+      name: first
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    After:
+      name: after
+      in: query
+      schema: { type: string, maxLength: 4096 }
+  schemas:
+    AdminAccount:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, enabled]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        enabled: { type: boolean }
+    ApplicationSettings:
+      type: object
+      additionalProperties: false
+      required: [globalMessage, supportEmail]
+      properties:
+        globalMessage: { type: string, maxLength: 1000 }
+        supportEmail: { type: string, maxLength: 254 }
+    PageInfo:
+      type: object
+      required: [hasNextPage, endCursor]
+      properties:
+        hasNextPage: { type: boolean }
+        endCursor: { type: [string, 'null'] }
+    AuditEvent:
+      type: object
+      required: [id, type, date, result]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        date: { type: string, format: date-time }
+        userId: { type: [string, 'null'] }
+        result: { type: string }
+        operation: { type: [string, 'null'] }
+        targetId: { type: [string, 'null'] }
+        parameter: { type: [string, 'null'], enum: [GLOBAL_MESSAGE, SUPPORT_EMAIL, null] }
+        previousValue: { type: [string, 'null'] }
+        newValue: { type: [string, 'null'] }
+        agentId: { type: [string, 'null'] }
   requestBodies:
     SessionToken:
       required: true
@@ -124,6 +337,23 @@ components:
             properties:
               token: { type: string }
   responses:
+    AdminChange:
+      description: |
+        applied=true confirma el cambio. Si falla DynamoDB después del commit,
+        auditRecorded=false y category=PARTIAL_FAILURE; no repetir el cambio.
+        Errores de acceso/validación/inexistente/conflicto usan Error común y HTTP 4xx.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [applied, auditRecorded]
+            properties:
+              applied: { type: boolean }
+              auditRecorded: { type: boolean }
+              category: { type: [string, 'null'] }
+              message: { type: [string, 'null'] }
+              account: { oneOf: [{ $ref: '#/components/schemas/AdminAccount' }, { type: 'null' }] }
+              settings: { oneOf: [{ $ref: '#/components/schemas/ApplicationSettings' }, { type: 'null' }] }
     AuthResult:
       description: |
         Resultado explícito, también para credenciales inválidas o suspensión. Un 401
@@ -150,6 +380,10 @@ components:
                   role: { type: string, enum: [ABOGADO, ADMINISTRADOR] }
                   name: { type: string }
   securitySchemes:
+    ms04AuditToken:
+      type: http
+      scheme: bearer
+      description: Credencial exclusiva MS-04 a MS-01, configurada fuera del código como MS04_AUDIT_API_TOKEN.
     serviceToken:
       $ref: '../../contracts/common.yaml#/components/securitySchemes/serviceToken'
     userContext:

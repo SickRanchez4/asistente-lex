@@ -1,5 +1,6 @@
 import { addErrorHandler, navigateToUrl, registerApplication, start, triggerAppChange, type LifeCycles } from 'single-spa';
 import { startAuthentication, type SessionState } from './session';
+import { startPublicSettings } from './settings';
 
 let session: SessionState = { status: 'pending' };
 
@@ -77,6 +78,7 @@ addErrorHandler(() => {
 
 updatePresentation();
 start();
+startPublicSettings();
 startAuthentication((next) => {
   session = next;
   if (session.status === 'authenticated' && window.location.pathname === '/') {
