@@ -1,0 +1,21 @@
+enum ActuationType { HEARING FILING DECISION NOTIFICATION OTHER }
+enum NotePrivacy { OWNER_ONLY }
+input ActuationInput { type: ActuationType! date: String! description: String! }
+input ActuationFilter { type: ActuationType fromDate: String toDate: String }
+input PrivateNoteInput { text: String! }
+type Actuation { id: ID! type: ActuationType! date: String! description: String! version: Int! }
+type PrivateNote { id: ID! text: String! date: String! version: Int! privacy: NotePrivacy! }
+type ActuationPage { items: [Actuation!]! pageInfo: PageInfo! }
+type PrivateNotePage { items: [PrivateNote!]! pageInfo: PageInfo! }
+extend type Query {
+  actuations(caseId: ID!, first: Int! = 25, after: String, filter: ActuationFilter): ActuationPage!
+  actuation(caseId: ID!, id: ID!): Actuation!
+  privateNotes(caseId: ID!, first: Int! = 25, after: String, search: String): PrivateNotePage!
+  privateNote(caseId: ID!, id: ID!): PrivateNote!
+}
+extend type Mutation {
+  createActuation(caseId: ID!, input: ActuationInput!): Actuation!
+  updateActuation(caseId: ID!, id: ID!, input: ActuationInput!, expectedVersion: Int!): Actuation!
+  createPrivateNote(caseId: ID!, input: PrivateNoteInput!): PrivateNote!
+  updatePrivateNote(caseId: ID!, id: ID!, input: PrivateNoteInput!, expectedVersion: Int!): PrivateNote!
+}

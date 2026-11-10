@@ -2,6 +2,9 @@
 .al-case-details dt { font-weight: 600; }
 .al-case-details dd { margin: 0; overflow-wrap: anywhere; }
 .al-case-description { white-space: pre-wrap; }
+.al-record-list { list-style: none; margin: 1rem 0; padding: 0; min-width: 0; }
+.al-record-list > li { padding: 1rem 0; border-bottom: 1px solid var(--al-border); }
+.al-record-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .al-participant-choice { display: flex; align-items: baseline; gap: .75rem; min-width: 10rem; cursor: pointer; }
 .al-participant-choice input { flex: 0 0 auto; }
 @media (max-width: 40rem) { .al-case-details { grid-template-columns: minmax(0, 1fr); gap: .25rem; } .al-case-details dd { margin-bottom: .75rem; } }

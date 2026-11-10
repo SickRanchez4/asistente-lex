@@ -5,6 +5,7 @@ import { feedbackForError, type Feedback, type CaseState } from '../../shared/pr
 import { AgentSelect, ConfirmationDialog, ReadOnlyNotice, StatusNotice, TextField } from './ui';
 import { useAvailableAgents } from './agents';
 import Participants from './participants';
+import CaseRecords from './case-records';
 
 type State = 'OPEN' | 'CLOSED' | 'ARCHIVED';
 type Action = 'CLOSE' | 'REOPEN' | 'ARCHIVE' | 'UNARCHIVE';
@@ -164,6 +165,7 @@ export default function Cases() {
         {(item.state === 'OPEN' ? ['CLOSE'] as const : item.state === 'CLOSED' ? ['REOPEN', 'ARCHIVE'] as const : ['UNARCHIVE'] as const).map(action => <button key={action} className={`al-button ${action === 'ARCHIVE' ? 'al-button--danger' : 'al-button--secondary'}`} disabled={pending || uncertain || (item.archiving && action !== 'ARCHIVE')} onClick={() => action === 'ARCHIVE' ? setArchive(item) : void change(action, item)}>{item.archiving && action === 'ARCHIVE' ? 'Reintentar archivo' : ACTIONS[action]}</button>)}
       </div>
       <Participants key={item.id} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
+      <CaseRecords key={`records:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
       <History key={`${item.id}:${item.version}`} id={item.id} revision={revision} />
     </>}
     <ConfirmationDialog id="case-archive-confirmation" open={archive !== null} title="Archivar expediente" consequences="Se eliminaran de forma irreversible todas las conversaciones, sus intercambios y estados. Desarchivar no las recupera. Los participantes, actuaciones y documentos no se eliminan." confirmLabel="Eliminar conversaciones y archivar" pending={pending} onCancel={() => setArchive(null)} onConfirm={() => { if (archive) void change('ARCHIVE', archive); }} />

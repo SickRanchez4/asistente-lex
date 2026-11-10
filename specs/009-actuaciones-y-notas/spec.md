@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08. Implementación propietaria verificada el 2026-11-09: C01–C11 cumplidos; C12 parcial, pendiente de exclusión en consumidores reales de 011/012. La copia offline se integra en 013; ver [tareas](./tasks.md).
 
 ## Fuente y trazabilidad
 
@@ -75,17 +75,17 @@ Si se mezclan, la cronología pierde claridad y existe el riesgo de exponer info
 
 ## Criterios de aceptación
 
-- [ ] Dado un expediente Abierto, cuando el abogado registra una actuación con tipo, fecha y descripción, entonces aparece en la cronología en el orden de su fecha.
-- [ ] Dada una actuación con datos incompletos, cuando se intenta registrar, entonces se rechaza indicando los datos faltantes.
-- [ ] Dada una actuación registrada, cuando el abogado la corrige en un expediente Abierto, entonces se muestra el valor corregido y se conservan los valores anteriores con fecha y autor.
-- [ ] Dadas varias actuaciones, cuando el abogado filtra por tipo o rango de fechas, entonces obtiene solo las que cumplen el filtro.
-- [ ] Dado un expediente Abierto, cuando el abogado registra una nota, entonces aparece con su fecha en las notas y no en la cronología jurídica.
-- [ ] Dado un expediente Cerrado o Archivado, cuando se intenta registrar o corregir una actuación o nota, entonces MS-01 lo rechaza aunque la solicitud no pase por la interfaz.
-- [ ] Dado un expediente en cualquier estado, cuando el abogado consulta actuaciones y notas, entonces puede verlas.
-- [ ] Dado el contrato que expone notas, cuando lo consume otra capacidad, entonces las notas están identificadas como contenido privado.
-- [ ] Dados dos abogados A y B, cuando A intenta consultar actuaciones o notas de B, entonces la solicitud se rechaza sin revelar su contenido.
-- [ ] Dado un administrador, cuando intenta consultar actuaciones o notas, entonces recibe "no autorizado".
-- [ ] Dada una actuación futura, cuando se intenta registrar o corregir, entonces MS-01 la rechaza según la fecha de Bolivia.
+- [x] Dado un expediente Abierto, cuando el abogado registra una actuación con tipo, fecha y descripción, entonces aparece en la cronología en el orden de su fecha.
+- [x] Dada una actuación con datos incompletos, cuando se intenta registrar, entonces se rechaza indicando los datos faltantes.
+- [x] Dada una actuación registrada, cuando el abogado la corrige en un expediente Abierto, entonces se muestra el valor corregido y se conservan los valores anteriores con fecha y autor.
+- [x] Dadas varias actuaciones, cuando el abogado filtra por tipo o rango de fechas, entonces obtiene solo las que cumplen el filtro.
+- [x] Dado un expediente Abierto, cuando el abogado registra una nota, entonces aparece con su fecha en las notas y no en la cronología jurídica.
+- [x] Dado un expediente Cerrado o Archivado, cuando se intenta registrar o corregir una actuación o nota, entonces MS-01 lo rechaza aunque la solicitud no pase por la interfaz.
+- [x] Dado un expediente en cualquier estado, cuando el abogado consulta actuaciones y notas, entonces puede verlas.
+- [x] Dado el contrato que expone notas, cuando lo consume otra capacidad, entonces las notas están identificadas como contenido privado.
+- [x] Dados dos abogados A y B, cuando A intenta consultar actuaciones o notas de B, entonces la solicitud se rechaza sin revelar su contenido.
+- [x] Dado un administrador, cuando intenta consultar actuaciones o notas, entonces recibe "no autorizado".
+- [x] Dada una actuación futura, cuando se intenta registrar o corregir, entonces MS-01 la rechaza según la fecha de Bolivia.
 - [ ] Dado un consumo de fuentes para IA o informes, cuando se prepara el contexto, entonces no contiene notas; corregir una nota no crea historial de versiones.
 
 ## Dependencias

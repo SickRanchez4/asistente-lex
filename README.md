@@ -31,7 +31,7 @@ src/
     └── ms-04-ia/          Python / FastAPI
 ```
 
-Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría, personas, participantes y la capacidad propietaria de expedientes; archivo integrado y operaciones económicas continúan pendientes de sus specs.
+Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría, personas, participantes, actuaciones, notas privadas y la capacidad propietaria de expedientes; archivo integrado y operaciones económicas continúan pendientes de sus specs.
 
 ## Requisitos previos
 
@@ -217,6 +217,18 @@ La preparación explícita de MS-01 mostrada en Personas aplica también V6: `ju
 REST `/cases/{caseId}/participants` ofrece GET/POST y `/{id}` PUT/DELETE; DELETE exige `expectedVersion` como parámetro de consulta. GraphQL publica `participants`, `linkParticipant`, `updateParticipant` y `unlinkParticipant`. Las respuestas de Persona contienen solo ID, tipo y nombre; no documento, contacto o cuenta. Administrador y otras cuentas no acceden.
 
 **Límite actual:** C01–C09 verificadas. La conservación del contratante y sus condiciones en un servicio real (C10) requiere 014; no se crearon tablas económicas ni un servicio ficticio para cerrar esa aceptación. El estado Archivado usado para verificar 008 no acredita el borrado de conversaciones todavía pendiente de 011. Ver [tareas de 008](specs/008-participantes/tasks.md).
+
+### Actuaciones y notas
+
+La ficha en `/abogado/expedientes` presenta Cronología jurídica y Notas personales (privadas) por separado. Actuaciones requieren tipo cerrado, fecha civil no futura respecto de Bolivia y descripción; se ordenan por fecha/ID ascendente con filtros de tipo y período inclusivo. Las correcciones conservan anterior/nuevo/fecha/autor atómicamente. No se eliminan registros ni se ofrece edición del historial.
+
+Las notas tienen texto vigente y fecha de servidor inmutable, búsqueda literal sin distinguir mayúsculas y orden descendente. REST y GraphQL devuelven `privacy: OWNER_ONLY`; Gateway valida la marca. Corregir no conserva textos anteriores: la versión técnica solo detecta concurrencia. No se registran notas en auditoría, errores o logs ni se envían a proveedores IA. Solo el abogado propietario activo consulta; Administrador y otras cuentas no acceden.
+
+Ambas entidades se consultan con conexión en cualquier estado; registrar/corregir exige Abierto también en MS-01. Las cuatro escrituras bloquean primero la fila de expediente y se serializan con el cierre. Los formularios conservan datos ante rechazo/conflicto; una escritura incierta no se reenvía automáticamente y exige consulta. La desconexión oculta las notas remotas, sin crear una copia local.
+
+La preparación explícita de MS-01 mostrada en Personas aplica también V7: `juridico.actuations`, `juridico.actuation_corrections` y `juridico.private_notes`, con pertenencia compuesta e índices. REST publica GET/POST `/cases/{caseId}/actuations` y `/private-notes`, y GET/PUT de sus IDs. GraphQL expone consultas, altas y correcciones separadas; las correcciones requieren `expectedVersion`. Sin API de borrado ni historial de notas.
+
+**Límite actual:** C01–C11 verificadas; C12 parcial. La marca privada y la separación no acreditan todavía la exclusión de notas de contextos reales de IA/informes (011/012); la copia offline propia corresponde a 013. Archivado controlado sin chats solo acredita reglas de 009, no el archivo integrado de 007/011. Ver [tareas de 009](specs/009-actuaciones-y-notas/tasks.md).
 
 ### Puertos
 

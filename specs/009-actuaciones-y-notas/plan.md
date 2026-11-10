@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado por el responsable el 2026-11-08. Implementación propietaria verificada el 2026-11-09; pendientes las aceptaciones integradas con 011/012/013, detalladas en [tareas](./tasks.md).
 
 ## Resumen técnico
 
@@ -75,8 +75,20 @@ Responsabilidad del desarrollador, sin crear archivos de testing. Comprobar UI, 
 
 Verificar también ausencia de contenido de notas en errores/logs. Marcar pendientes dependientes de 011/012/013 en las tareas.
 
+### Resultado de ejecución
+
+- MS-01 implementa dominio sin framework, puertos, aplicación, adaptador JDBC y REST; Gateway valida proyecciones cerradas y React separa cronología/notas dentro de la ficha. V7 aplicada mediante preparación explícita; no hay migración automática al arrancar.
+- Pasaron 22 comprobaciones de dominio con reloj inyectado, 137 con PostgreSQL/JDBC real y 115 REST/GraphQL reales. Incluyen rollback por fallo del historial, versiones obsoletas, aislamiento por cuenta/rol, estado autoritativo, paginación 25 + 2 y serialización de las cuatro escrituras frente a cierre en ambos órdenes.
+- Navegador: altas/correcciones, fecha futura, filtros inclusivos y rango inválido, búsqueda literal, paginación independiente, consulta en los tres estados y conflictos reales por cierre/corrección concurrente. Fallos controlados de lectura/transporte no se confunden con vacío ni disparan reenvío; formularios conservados hasta consultar. Sin conexión no se exponen notas remotas ni escritura. Capturas a 1366 × 900 y 390 × 844 sin desbordamientos, incluido texto largo; clave React diferenciada para evitar duplicar Participantes al refrescar.
+- Tipos en Node 26 de Gateway, Shell, Abogado y Admin, SDL combinado y OpenAPI con referencias resueltas válidos; compilación/despliegue de MS-01, Gateway, Abogado y Shell correctos. Marcador privado ausente de logs MS-01/Gateway/MS-04 y de errores verificados, sin imprimirlos. Datos temporales eliminados y demos conservadas; sin archivos de testing en el repositorio ni llamadas al proveedor IA.
+- C08 acredita la marca `OWNER_ONLY` consumida por Gateway/React, no la exclusión futura para cliente. C12 solo acredita la corrección sin historial de notas; falta consumo real de fuentes en 011/012. Lectura propietaria separada preparada para 013, sin implementar almacenamiento offline. Archivado controlado sin conversaciones acredita reglas de 009, no el archivo integrado pendiente de 007/011.
+
 ## Decisiones
 
+- Fecha de actuaciones: cadena civil estricta `AAAA-MM-DD`, validada con reloj inyectable y zona `America/La_Paz`, sin conversión desde UTC. Cronología ascendente por fecha e ID; filtros por tipo y rango inclusivo. Descripción obligatoria hasta 10000 caracteres, incluidos saltos de línea.
+- Notas: contratos separados `/cases/{caseId}/private-notes` y GraphQL `privateNotes`/`privateNote`, con `privacy: OWNER_ONLY`. Texto obligatorio hasta 20000 caracteres; búsqueda literal por subcadena sin distinguir mayúsculas, hasta 200 caracteres. Fecha de registro asignada por servidor e inmutable; orden descendente por fecha e ID.
+- Páginas de 1 a 100 y cursores ligados a cuenta, expediente y filtros/búsqueda. Correcciones con versión técnica optimista propia, sin incrementar la versión del expediente. Una versión técnica de nota no crea registros históricos de texto.
+- Las escrituras bloquean primero la fila de expediente, igual que 008, y comprueban Abierto en la misma transacción. Correcciones de actuaciones conservan anterior y nuevo con fecha/autor; las de notas solo sobrescriben el texto vigente, sin auditarlo ni enviarlo a otros servicios. No hay eliminación ni API de historial de correcciones en esta entrega.
 - Separar entidades y contratos; reutilizar las herramientas de MS-01, sin ADR por CRUD ordinario.
 - Registrar respuestas de privacidad y fechas antes de integrar consumidores; una decisión de uso de datos por IA requiere coordinación con 011 y aprobación.
 

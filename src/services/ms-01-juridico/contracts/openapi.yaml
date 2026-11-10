@@ -11,6 +11,160 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /cases/{caseId}/actuations:
+    parameters:
+      - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Cronologia juridica propia, sin notas, en cualquier estado. Cache-Control no-store.
+      description: Fecha civil ascendente e ID para desempate; rango inclusivo. Cursor ligado a cuenta, expediente y filtros. Solo Abogado propietario vigente.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - { name: type, in: query, schema: { $ref: '#/components/schemas/ActuationType' } }
+        - { name: fromDate, in: query, schema: { type: string, format: date } }
+        - { name: toDate, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Cronologia de actuaciones, nunca notas personales.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Actuation' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
+        '400': { $ref: '#/components/responses/CaseRecordError' }
+        '401': { $ref: '#/components/responses/CaseRecordError' }
+        '403': { $ref: '#/components/responses/CaseRecordError' }
+        '404': { $ref: '#/components/responses/CaseRecordError' }
+        '503': { $ref: '#/components/responses/CaseRecordError' }
+    post:
+      summary: Registrar hecho juridico en Abierto; fecha no futura respecto de America/La_Paz.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ActuationInput' }
+      responses:
+        '200': { $ref: '#/components/responses/Actuation' }
+        '400': { $ref: '#/components/responses/CaseRecordError' }
+        '401': { $ref: '#/components/responses/CaseRecordError' }
+        '403': { $ref: '#/components/responses/CaseRecordError' }
+        '404': { $ref: '#/components/responses/CaseRecordError' }
+        '409': { $ref: '#/components/responses/CaseRecordError' }
+        '503': { $ref: '#/components/responses/CaseRecordError' }
+  /cases/{caseId}/actuations/{id}:
+    parameters:
+      - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Actuacion vigente propia, sin notas ni historial interno. Cache-Control no-store.
+      responses:
+        '200': { $ref: '#/components/responses/Actuation' }
+        '400': { $ref: '#/components/responses/CaseRecordError' }
+        '401': { $ref: '#/components/responses/CaseRecordError' }
+        '403': { $ref: '#/components/responses/CaseRecordError' }
+        '404': { $ref: '#/components/responses/CaseRecordError' }
+        '503': { $ref: '#/components/responses/CaseRecordError' }
+    put:
+      summary: Corregir en Abierto con version; anterior y nuevo se guardan atomicamente con fecha y autor.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [input, expectedVersion]
+              properties:
+                input: { $ref: '#/components/schemas/ActuationInput' }
+                expectedVersion: { type: integer, minimum: 1 }
+      responses:
+        '200': { $ref: '#/components/responses/Actuation' }
+        '400': { $ref: '#/components/responses/CaseRecordError' }
+        '401': { $ref: '#/components/responses/CaseRecordError' }
+        '403': { $ref: '#/components/responses/CaseRecordError' }
+        '404': { $ref: '#/components/responses/CaseRecordError' }
+        '409': { $ref: '#/components/responses/CaseRecordError' }
+        '503': { $ref: '#/components/responses/CaseRecordError' }
+  /cases/{caseId}/private-notes:
+    parameters:
+      - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Notas privadas solo para propietario con conexion; nunca fuente de IA ni de informes. Cache-Control no-store.
+      description: Orden por fecha de registro e ID descendentes. Busqueda literal por subcadena de texto sin distinguir mayusculas; cursor ligado a cuenta, expediente y busqueda. Consumidor offline de 013 debe preservar alcance propietario; no hay exportacion publica.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - { name: search, in: query, schema: { type: string, maxLength: 200 } }
+      responses:
+        '200':
+          description: Contenido privado OWNER_ONLY; no incluir en contexto de IA ni informes de ningun tipo.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/PrivateNote' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
+        '400': { $ref: '#/components/responses/CaseRecordError' }
+        '401': { $ref: '#/components/responses/CaseRecordError' }
+        '403': { $ref: '#/components/responses/CaseRecordError' }
+        '404': { $ref: '#/components/responses/CaseRecordError' }
+        '503': { $ref: '#/components/responses/CaseRecordError' }
+    post:
+      summary: Registrar nota privada en Abierto; fecha asignada por servidor, no modificable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PrivateNoteInput' }
+      responses:
+        '200': { $ref: '#/components/responses/PrivateNote' }
+        '400': { $ref: '#/components/responses/CaseRecordError' }
+        '401': { $ref: '#/components/responses/CaseRecordError' }
+        '403': { $ref: '#/components/responses/CaseRecordError' }
+        '404': { $ref: '#/components/responses/CaseRecordError' }
+        '409': { $ref: '#/components/responses/CaseRecordError' }
+        '503': { $ref: '#/components/responses/CaseRecordError' }
+  /cases/{caseId}/private-notes/{id}:
+    parameters:
+      - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Nota vigente OWNER_ONLY, solo propietario con conexion. Cache-Control no-store.
+      responses:
+        '200': { $ref: '#/components/responses/PrivateNote' }
+        '400': { $ref: '#/components/responses/CaseRecordError' }
+        '401': { $ref: '#/components/responses/CaseRecordError' }
+        '403': { $ref: '#/components/responses/CaseRecordError' }
+        '404': { $ref: '#/components/responses/CaseRecordError' }
+        '503': { $ref: '#/components/responses/CaseRecordError' }
+    put:
+      summary: Corregir texto privado en Abierto; CAS tecnico sin historial de versiones ni auditoria con texto.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [input, expectedVersion]
+              properties:
+                input: { $ref: '#/components/schemas/PrivateNoteInput' }
+                expectedVersion: { type: integer, minimum: 1 }
+      responses:
+        '200': { $ref: '#/components/responses/PrivateNote' }
+        '400': { $ref: '#/components/responses/CaseRecordError' }
+        '401': { $ref: '#/components/responses/CaseRecordError' }
+        '403': { $ref: '#/components/responses/CaseRecordError' }
+        '404': { $ref: '#/components/responses/CaseRecordError' }
+        '409': { $ref: '#/components/responses/CaseRecordError' }
+        '503': { $ref: '#/components/responses/CaseRecordError' }
   /cases/{caseId}/participants:
     parameters:
       - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
@@ -638,6 +792,43 @@ components:
       in: query
       schema: { type: string, maxLength: 4096 }
   schemas:
+    ActuationType:
+      type: string
+      enum: [HEARING, FILING, DECISION, NOTIFICATION, OTHER]
+    ActuationInput:
+      type: object
+      additionalProperties: false
+      required: [type, date, description]
+      properties:
+        type: { $ref: '#/components/schemas/ActuationType' }
+        date: { type: string, format: date, description: Fecha civil AAAA-MM-DD no futura respecto de Bolivia America/La_Paz. }
+        description: { type: string, minLength: 1, maxLength: 10000, pattern: '\S' }
+    Actuation:
+      type: object
+      additionalProperties: false
+      required: [id, type, date, description, version]
+      properties:
+        id: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/ActuationType' }
+        date: { type: string, format: date }
+        description: { type: string, minLength: 1, maxLength: 10000 }
+        version: { type: integer, minimum: 1 }
+    PrivateNoteInput:
+      type: object
+      additionalProperties: false
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 20000, pattern: '\S' }
+    PrivateNote:
+      type: object
+      additionalProperties: false
+      required: [id, text, date, version, privacy]
+      properties:
+        id: { type: string, format: uuid }
+        text: { type: string, minLength: 1, maxLength: 20000 }
+        date: { type: string, format: date-time, description: Fecha de registro del servidor; se conserva al corregir. }
+        version: { type: integer, minimum: 1, description: Control de concurrencia tecnico; no hay historial de textos de notas. }
+        privacy: { type: string, const: OWNER_ONLY, description: Contenido privado; prohibido como fuente de IA o informes. }
     ParticipantInput:
       type: object
       additionalProperties: false
@@ -797,6 +988,34 @@ components:
             properties:
               token: { type: string }
   responses:
+    Actuation:
+      description: Actuacion juridica vigente propia, sin notas personales.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Actuation' }
+    PrivateNote:
+      description: Nota vigente privada OWNER_ONLY, sin versiones anteriores.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PrivateNote' }
+    CaseRecordError:
+      description: Error seguro sin contenido de notas o actuaciones. NOT_FOUND indistinguible para registro/caso ajeno o ausente; CONFLICT ante version o estado. Ningun cambio parcial.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [category, message]
+            properties:
+              category: { type: string, enum: [VALIDATION, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, SERVICE_UNAVAILABLE] }
+              message: { type: string }
+              fields:
+                type: array
+                items:
+                  type: object
+                  required: [field, message]
+                  properties:
+                    field: { type: string }
+                    message: { type: string }
     Participant:
       description: Participacion vigente, sin cuenta ni contenido privado de Persona.
       content:
