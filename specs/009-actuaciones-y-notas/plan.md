@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Plan aprobado por el responsable el 2026-11-08. Implementación propietaria verificada el 2026-11-09; pendientes las aceptaciones integradas con 011/012/013, detalladas en [tareas](./tasks.md).
+En progreso. Plan aprobado por el responsable el 2026-11-08. Implementación propietaria verificada el 2026-11-09; C01–C12 confirmados con consumidores reales 011/012 el 2026-11-10. Permanece pendiente la integración de copia propia con 013, detallada en [tareas](./tasks.md).
 
 ## Resumen técnico
 
@@ -81,7 +81,7 @@ Verificar también ausencia de contenido de notas en errores/logs. Marcar pendie
 - Pasaron 22 comprobaciones de dominio con reloj inyectado, 137 con PostgreSQL/JDBC real y 115 REST/GraphQL reales. Incluyen rollback por fallo del historial, versiones obsoletas, aislamiento por cuenta/rol, estado autoritativo, paginación 25 + 2 y serialización de las cuatro escrituras frente a cierre en ambos órdenes.
 - Navegador: altas/correcciones, fecha futura, filtros inclusivos y rango inválido, búsqueda literal, paginación independiente, consulta en los tres estados y conflictos reales por cierre/corrección concurrente. Fallos controlados de lectura/transporte no se confunden con vacío ni disparan reenvío; formularios conservados hasta consultar. Sin conexión no se exponen notas remotas ni escritura. Capturas a 1366 × 900 y 390 × 844 sin desbordamientos, incluido texto largo; clave React diferenciada para evitar duplicar Participantes al refrescar.
 - Tipos en Node 26 de Gateway, Shell, Abogado y Admin, SDL combinado y OpenAPI con referencias resueltas válidos; compilación/despliegue de MS-01, Gateway, Abogado y Shell correctos. Marcador privado ausente de logs MS-01/Gateway/MS-04 y de errores verificados, sin imprimirlos. Datos temporales eliminados y demos conservadas; sin archivos de testing en el repositorio ni llamadas al proveedor IA.
-- C08 acredita la marca `OWNER_ONLY` consumida por Gateway/React, no la exclusión futura para cliente. C12 solo acredita la corrección sin historial de notas; falta consumo real de fuentes en 011/012. Lectura propietaria separada preparada para 013, sin implementar almacenamiento offline. Archivado controlado sin conversaciones acredita reglas de 009, no el archivo integrado pendiente de 007/011.
+- C08 acredita la marca `OWNER_ONLY` consumida por Gateway/React; 012 comprobó además la proyección cerrada de cliente desde MS-01. C12 se completó con consumidores reales de chat/informes y cuerpo OpenAI inspeccionado en memoria, sin notas; la corrección sin historial ya estaba verificada. Lectura propietaria separada preparada para 013, sin implementar almacenamiento offline. La evidencia adicional de archivo integrado pertenece a 011, no al Archivado controlado original de 009.
 
 ## Decisiones
 

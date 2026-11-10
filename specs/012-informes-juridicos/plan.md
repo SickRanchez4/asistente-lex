@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+Completa. Plan aprobado por el responsable el 2026-11-08; implementación y verificación local de T01–T04 y C01–C14 completadas el 2026-11-10. Ver [registro de ejecución](./tasks.md). Sin commit ni push de esta entrega.
 
 ## Resumen técnico
 
@@ -113,9 +113,18 @@ La exclusión se concreta con las fuentes permitidas de la spec. Todas las verif
 - MS-02 coordina y conserva; MS-04 solo propone contenido. Reutilizar proveedor y almacenamiento existentes.
 - PDF narrativo, fuentes de cliente y Base64 quedan acordados; usar renderizador mantenido compatible con MS-02 durante implementación, sin añadir formatos alternativos. Alcance mínimo en el [ADR 0004](../../docs/decisions/0004-integraciones-minimas-del-mvp.md).
 - Convenciones CSV compartidas con 016, sin un servicio de exportación adicional.
+- Renderizador mantenido `pdfkit` 0.20.2 y tipos 0.17.7, instalados con versiones exactas. PDF A4 con Helvetica y verificación de páginas antes de publicar; un resumen que excede una página se rechaza, no se reintenta ni recorta. Caracteres fuera de Latin-1/puntuación admitida producen error explícito; no se sustituyen glifos silenciosamente. Máximo 40 páginas y 10 MiB por PDF.
+- V2 de MS-02 crea `documental.reports` separada de `files`; reutiliza migraciones con checksum y preparación explícita. PDF en subdirectorio `reports` del almacenamiento MS-02. STAGING nunca aparece en lecturas; COMPLETE conserva PDF, secciones, tabla tipada, fuentes y agente real. No guarda copia de fuentes ni contenido de informes en MS-04.
+- `requestId` y huella de entrada se reservan antes de la propuesta. Repetir una solicitud completada devuelve el mismo resultado sin proveedor; distinta entrada o solicitud no confirmada exige consulta. La limpieza bloquea la fila y nunca elimina bytes de COMPLETE, incluso si se perdió la confirmación de publicación.
+- Limpieza técnica individual mediante `REPORTS_CLEANUP=true` y UUID de informe: solo STAGING de más de 15 minutos. No es una operación del Abogado ni una eliminación de informes históricos. Fallos durante limpieza quedan no publicables, sin afirmar éxito.
+- Fuentes suficientes: al menos un participante, una actuación filtrada o texto PDF autorizado. Filtros cerrados de tipo/fechas y hasta diez PDF explícitos, nunca para CLIENT. Exceso de fuentes/contexto falla sin truncamiento. MS-04 vuelve a consultar propietarios y exige igualdad del contexto recibido antes de llamar al proveedor.
+- Captura vigente del agente y herramientas: `CASE_LEGAL_DATA` para la base jurídica, y `CASE_PDF_TEXT` cuando se eligieron PDF. OpenAI devuelve esquema JSON estricto con secciones obligatorias, tabla tipada y referencias limitadas al registro autorizado; no recibe herramientas libres, SQL ni comandos ejecutables. Rechazo/truncamiento/error no activa fallback ni reintento.
+- CSV usa BOM UTF-8 y comillas en todos los campos. Cabeceras/textos potencialmente interpretables como fórmulas reciben un apóstrofo; un apóstrofo inicial se duplica para conservar reversibilidad. No altera la tabla original ni protege importes negativos como si fueran texto. Fechas/decimales coinciden con la tabla React/PDF.
+- Contratos de 013: GET paginado `/cases/{caseId}/reports` como manifiesto de completados, detalle por ID y `/{id}/content`/`/{id}/csv` Base64. Incluyen fecha/tipo/agente; exigen propietario vigente también en Archivado. Esta entrega no implementa copia offline.
 
 ## Riesgos y preguntas abiertas
 
 - Un aviso de revisión no garantiza calidad jurídica; se mantiene responsabilidad profesional y nunca se envía al cliente automáticamente.
 - Fuente insuficiente, contexto excesivo o PDF que no cabe en una página produce error, no truncado ni informe completado falso.
 - Sin preguntas funcionales abiertas; no se reintenta generación automáticamente tras resultado incierto.
+- Verificación local con PostgreSQL/MongoDB externos y datos exclusivamente sintéticos; no acredita condiciones de tratamiento de datos reales por OpenAI, calidad jurídica ni disponibilidad de producción. El renderizador rechaza caracteres no representables y no incorpora OCR ni fuentes Unicode adicionales.

@@ -14,6 +14,7 @@ import { createParticipantResolvers } from './resolvers/participants.ts';
 import { createCaseRecordResolvers } from './resolvers/case-records.ts';
 import { createDocumentResolvers } from './resolvers/documents.ts';
 import { createConversationResolvers } from './resolvers/conversations.ts';
+import { createReportResolvers } from './resolvers/reports.ts';
 import { formatGraphQLError } from './errors.ts';
 import { createResolvers } from './resolvers/platform.ts';
 import { typeDefs } from './schema/schema.ts';
@@ -29,11 +30,12 @@ const participantResolvers = createParticipantResolvers(config);
 const caseRecordResolvers = createCaseRecordResolvers(config);
 const documentResolvers = createDocumentResolvers(config);
 const conversationResolvers = createConversationResolvers(config);
+const reportResolvers = createReportResolvers(config);
 
 const server = new ApolloServer<GatewayContext>({
   typeDefs,
-  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query, ...adminResolvers.Query, ...agentResolvers.Query, ...peopleResolvers.Query, ...caseResolvers.Query, ...participantResolvers.Query, ...caseRecordResolvers.Query, ...documentResolvers.Query, ...conversationResolvers.Query },
-    Mutation: { ...authResolvers.Mutation, ...adminResolvers.Mutation, ...agentResolvers.Mutation, ...peopleResolvers.Mutation, ...caseResolvers.Mutation, ...participantResolvers.Mutation, ...caseRecordResolvers.Mutation, ...documentResolvers.Mutation, ...conversationResolvers.Mutation } },
+  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query, ...adminResolvers.Query, ...agentResolvers.Query, ...peopleResolvers.Query, ...caseResolvers.Query, ...participantResolvers.Query, ...caseRecordResolvers.Query, ...documentResolvers.Query, ...conversationResolvers.Query, ...reportResolvers.Query },
+    Mutation: { ...authResolvers.Mutation, ...adminResolvers.Mutation, ...agentResolvers.Mutation, ...peopleResolvers.Mutation, ...caseResolvers.Mutation, ...participantResolvers.Mutation, ...caseRecordResolvers.Mutation, ...documentResolvers.Mutation, ...conversationResolvers.Mutation, ...reportResolvers.Mutation } },
   includeStacktraceInErrorResponses: false,
   formatError: formatGraphQLError,
 });

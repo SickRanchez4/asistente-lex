@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Plan aprobado el 2026-11-08; implementación entregada y desplegada localmente el 2026-11-10. T01/T02/T04 completas y T03 implementada con aceptación integrada pendiente de informes de 012: 14/16 criterios confirmados, C07 pendiente y C15 parcial. Ver [evidencia y límites](./tasks.md).
+Completa. Plan aprobado el 2026-11-08; T01–T04 entregadas y desplegadas localmente el 2026-11-10. La verificación con informes realmente guardados de 012 cerró C07/C15 y T03: 16/16 criterios confirmados. Ver [evidencia y límites](./tasks.md).
 
 ## Resumen técnico
 
@@ -117,4 +117,4 @@ Verificar aviso de jurisdicción/revisión, fuentes privadas y ausencia de conte
 - PDF sin texto o exceso de contexto del modelo se comunica como limitación/error, sin inventar lectura ni omitir fuentes silenciosamente.
 - Concurrencia diseñada para instancia local única, no réplicas; el desarrollador comprueba archivo y respuestas tardías.
 - Sin preguntas funcionales abiertas.
-- C07 y la parte de informes de C15 no se cierran hasta existir informes guardados de 012. La whitelist y el rechazo de referencias inventadas están comprobados, pero no sustituyen ese escenario integrado.
+- C07 y la parte de informes de C15 se cerraron durante 012 con informes realmente guardados, fuentes REST y petición efectiva de respuesta nueva inspeccionada en memoria. La evidencia está en tareas de ambas funcionalidades; no se infiere de la whitelist solamente.

@@ -49,7 +49,7 @@ function PdfPreview({content}:{content:Content}) {
   },[content,page,zoom]);
   return <><div className="al-toolbar"><button className="al-button al-button--secondary" disabled={loading||page<=1} onClick={()=>setPage(value=>value-1)}>Pagina PDF anterior</button><span>Pagina {page} de {total||'...'}</span><button className="al-button al-button--secondary" disabled={loading||page>=total} onClick={()=>setPage(value=>value+1)}>Pagina PDF siguiente</button><label htmlFor="pdf-zoom">Zoom</label><select className="al-input" id="pdf-zoom" value={zoom} onChange={event=>setZoom(Number(event.target.value))}>{[50,75,100,125,150,200].map(value=><option key={value} value={value}>{value}%</option>)}</select></div>{loading&&<p role="status">Abriendo PDF...</p>}{error?<p role="alert">No se pudo visualizar esta pagina del PDF.</p>:<div className="al-document-canvas"><canvas ref={canvas} aria-label={`Pagina ${page} del PDF`} /></div>}</>;
 }
-function Preview({content,onClose}:{content:Content;onClose:()=>void}) {
+export function Preview({content,onClose}:{content:Content;onClose:()=>void}) {
   const [url,setUrl]=useState<string|null>(null);
   useEffect(()=>{const next=URL.createObjectURL(new Blob([bytes(content)],{type:content.contentType}));setUrl(next);return ()=>URL.revokeObjectURL(next);},[content]);
   const heading=useRef<HTMLHeadingElement>(null);

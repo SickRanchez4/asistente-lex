@@ -13,8 +13,8 @@
 | 008 | Participantes | En progreso | [spec](./008-participantes/spec.md) | [plan](./008-participantes/plan.md) | [tasks](./008-participantes/tasks.md) |
 | 009 | Actuaciones y notas | En progreso | [spec](./009-actuaciones-y-notas/spec.md) | [plan](./009-actuaciones-y-notas/plan.md) | [tasks](./009-actuaciones-y-notas/tasks.md) |
 | 010 | Documentos y fotografías | Completa | [spec](./010-documentos-y-fotografias/spec.md) | [plan](./010-documentos-y-fotografias/plan.md) | [tasks](./010-documentos-y-fotografias/tasks.md) |
-| 011 | Asistencia jurídica IA | En progreso | [spec](./011-asistencia-juridica-ia/spec.md) | [plan](./011-asistencia-juridica-ia/plan.md) | [tasks](./011-asistencia-juridica-ia/tasks.md) |
-| 012 | Informes jurídicos | Lista | [spec](./012-informes-juridicos/spec.md) | [plan](./012-informes-juridicos/plan.md) | [tasks](./012-informes-juridicos/tasks.md) |
+| 011 | Asistencia jurídica IA | Completa | [spec](./011-asistencia-juridica-ia/spec.md) | [plan](./011-asistencia-juridica-ia/plan.md) | [tasks](./011-asistencia-juridica-ia/tasks.md) |
+| 012 | Informes jurídicos | Completa | [spec](./012-informes-juridicos/spec.md) | [plan](./012-informes-juridicos/plan.md) | [tasks](./012-informes-juridicos/tasks.md) |
 | 013 | Expedientes offline | Lista | [spec](./013-expedientes-offline/spec.md) | [plan](./013-expedientes-offline/plan.md) | [tasks](./013-expedientes-offline/tasks.md) |
 | 014 | Servicios y honorarios | Lista | [spec](./014-servicios-y-honorarios/spec.md) | [plan](./014-servicios-y-honorarios/plan.md) | [tasks](./014-servicios-y-honorarios/tasks.md) |
 | 015 | Cobros y gastos | Lista | [spec](./015-cobros-y-gastos/spec.md) | [plan](./015-cobros-y-gastos/plan.md) | [tasks](./015-cobros-y-gastos/tasks.md) |

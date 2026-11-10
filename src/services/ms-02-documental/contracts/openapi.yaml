@@ -11,6 +11,59 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /cases/{caseId}/reports:
+    parameters: [{ $ref: '#/components/parameters/CaseId' }]
+    get:
+      summary: Historico inmutable completo, separado de files y file-sources; manifiesto para 013.
+      parameters:
+        - { name: first, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: after, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: 'items con id,caseId,requestId,kind,createdAt,size,title,agent; pageInfo con hasNextPage/endCursor. Orden fecha/ID descendente. No incluye STAGING.', content: { application/json: { schema: { type: object } } } }
+        default: { $ref: '#/components/responses/Error' }
+    post:
+      summary: Generar PDF completo en OPEN/CLOSED; presupuesto total 60000 ms. Sin regeneracion automatica.
+      description: requestId unico por cuenta/expediente y huella de entrada; repetir confirmado retorna el mismo informe, entrada distinta o STAGING da conflicto. Si se pierde confirmacion consultar solicitud/historico. CLIENT excluye documentos desde origen. STAGING nunca publicable, COMPLETE inmutable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [requestId, kind]
+              properties:
+                requestId: { type: string, format: uuid }
+                kind: { type: string, enum: [EXECUTIVE, CLIENT, NATURAL] }
+                agentId: { type: [string, 'null'], enum: [civilista, penalista, null] }
+                question: { type: [string, 'null'], maxLength: 8000 }
+                documentIds: { type: [array, 'null'], maxItems: 10, items: { type: string, format: uuid } }
+                filter: { type: [object, 'null'], additionalProperties: false, properties: { actuationType: { type: [string, 'null'], enum: [HEARING, FILING, DECISION, NOTIFICATION, OTHER, null] }, fromDate: { type: [string, 'null'], format: date }, toDate: { type: [string, 'null'], format: date } } }
+      responses:
+        '200': { description: Informe confirmado, content: { application/json: { schema: { $ref: '#/components/schemas/SavedReport' } } } }
+        default: { $ref: '#/components/responses/Error' }
+  /cases/{caseId}/reports/requests/{requestId}:
+    parameters: [{ $ref: '#/components/parameters/CaseId' }, { name: requestId, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      summary: Recuperar resultado confirmado sin regenerar; 404 ausente y 409 no confirmado.
+      responses:
+        '200': { description: Informe confirmado, content: { application/json: { schema: { $ref: '#/components/schemas/SavedReport' } } } }
+        default: { $ref: '#/components/responses/Error' }
+  /cases/{caseId}/reports/{reportId}:
+    parameters: [{ $ref: '#/components/parameters/CaseId' }, { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      summary: Informe guardado autorizado en cualquier estado, incluido ARCHIVED. Sin PUT/PATCH/DELETE.
+      responses:
+        '200': { description: Informe completo, content: { application/json: { schema: { $ref: '#/components/schemas/SavedReport' } } } }
+        default: { $ref: '#/components/responses/Error' }
+  /cases/{caseId}/reports/{reportId}/{format}:
+    parameters: [{ $ref: '#/components/parameters/CaseId' }, { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }, { name: format, in: path, required: true, schema: { type: string, enum: [content, csv] } }]
+    get:
+      summary: PDF o CSV Base64 guardados, sin regenerar; contenido autorizado para 013.
+      description: CSV UTF-8 BOM, punto y coma, comillas escapadas, dd/MM/yyyy y coma decimal sin miles. TEXT/cabeceras con formula potencial reciben apostrofo protector; apostrofo inicial se duplica. Tabla original permanece intacta. Solo si hay tabla; CSV no es formato narrativo.
+      responses:
+        '200': { description: Contenido protegido, content: { application/json: { schema: { $ref: '#/components/schemas/Content' } } } }
+        default: { $ref: '#/components/responses/Error' }
   /health:
     get:
       summary: Comprobación técnica de PostgreSQL y del almacenamiento de archivos.
@@ -123,6 +176,28 @@ paths:
         default: { $ref: '#/components/responses/Error' }
 components:
   schemas:
+    SavedReport:
+      type: object
+      additionalProperties: false
+      required: [id, caseId, requestId, kind, createdAt, size, title, sections, table, sources, agent]
+      properties:
+        id: { type: string, format: uuid }
+        caseId: { type: string, format: uuid }
+        requestId: { type: string, format: uuid }
+        kind: { type: string, enum: [EXECUTIVE, CLIENT, NATURAL] }
+        createdAt: { type: string, format: date-time }
+        size: { type: integer, minimum: 1, maximum: 10485760 }
+        title: { type: string, maxLength: 180 }
+        sections: { type: array, minItems: 1, maxItems: 12, items: { type: object, required: [heading, body], properties: { heading: { type: string, maxLength: 150 }, body: { type: string, maxLength: 12000 } }, additionalProperties: false } }
+        table:
+          type: [object, 'null']
+          additionalProperties: false
+          required: [columns, rows]
+          properties:
+            columns: { type: array, minItems: 1, maxItems: 12, items: { type: object, required: [key, label, type], properties: { key: { type: string }, label: { type: string }, type: { type: string, enum: [TEXT, DATE, AMOUNT, NUMBER, BOOLEAN] } }, additionalProperties: false } }
+            rows: { type: array, maxItems: 200, items: { type: array, items: { type: string, maxLength: 2000 } } }
+        sources: { type: array, items: { type: object, required: [id, kind, label], properties: { id: { type: string }, kind: { type: string, enum: [CASE, PDF] }, label: { type: string } }, additionalProperties: false } }
+        agent: { type: object, required: [id, name], properties: { id: { type: string, enum: [civilista, penalista] }, name: { type: string } }, additionalProperties: false }
     File:
       type: object
       additionalProperties: false

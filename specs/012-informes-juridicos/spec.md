@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+Completa. Aprobada por el responsable el 2026-11-08; T01–T04 implementadas, desplegadas localmente y verificadas el 2026-11-10. C01–C14 confirmados con informes OpenAI reales sobre datos sintéticos, PDF de una página, fuentes, CSV, permisos, fallos y navegador. Ver [evidencia y límites](./tasks.md). Sin commit ni push de esta entrega.
 
 ## Fuente y trazabilidad
 
@@ -79,20 +79,20 @@ Los informes se generan coordinando tres servicios: MS-02 reúne las fuentes y c
 
 ## Criterios de aceptación
 
-- [ ] Dado un expediente con información suficiente, cuando el abogado solicita un resumen ejecutivo, entonces se genera, se guarda con su fecha y tipo y se le presenta.
-- [ ] Dado un expediente con notas personales, cuando el abogado genera un informe para cliente, entonces el informe no contiene el contenido de esas notas.
-- [ ] Dado un informe para cliente generado, cuando se presenta, entonces se indica que requiere revisión del abogado.
-- [ ] Dada una consulta en lenguaje natural, cuando el abogado genera un reporte, entonces se basa solo en fuentes y filtros autorizados de su cuenta.
-- [ ] Dadas fuentes insuficientes o un fallo de MS-01 o MS-04, cuando se solicita un informe, entonces se informa el error y no se guarda ningún informe como completado.
-- [ ] Dados informes guardados, cuando el abogado los consulta, entonces ve su fecha y tipo y puede descargarlos.
-- [ ] Dado un informe guardado, cuando se genera un nuevo informe o una respuesta de IA, entonces el informe guardado no se usa como fuente.
-- [ ] Dado un informe guardado, cuando el abogado consulta los documentos del expediente, entonces el informe no aparece entre ellos.
-- [ ] Dado un resultado tabular, cuando el abogado lo exporta, entonces obtiene un CSV con los mismos datos.
-- [ ] Dados dos abogados A y B, cuando A intenta consultar o descargar un informe de B, entonces se rechaza.
-- [ ] Dado un administrador, cuando intenta consultar informes, entonces recibe "no autorizado".
-- [ ] Dado un expediente Archivado, cuando se intenta generar, entonces se rechaza; los informes previos siguen descargables como PDF.
-- [ ] Dado un resumen ejecutivo generado, cuando se renderiza su PDF, entonces ocupa exactamente una página sin contenido cortado.
-- [ ] Dada una solicitud de editar o eliminar un informe guardado, cuando se revisa el contrato, entonces no existe una operación que lo permita.
+- [x] Dado un expediente con información suficiente, cuando el abogado solicita un resumen ejecutivo, entonces se genera, se guarda con su fecha y tipo y se le presenta.
+- [x] Dado un expediente con notas personales, cuando el abogado genera un informe para cliente, entonces el informe no contiene el contenido de esas notas.
+- [x] Dado un informe para cliente generado, cuando se presenta, entonces se indica que requiere revisión del abogado.
+- [x] Dada una consulta en lenguaje natural, cuando el abogado genera un reporte, entonces se basa solo en fuentes y filtros autorizados de su cuenta.
+- [x] Dadas fuentes insuficientes o un fallo de MS-01 o MS-04, cuando se solicita un informe, entonces se informa el error y no se guarda ningún informe como completado.
+- [x] Dados informes guardados, cuando el abogado los consulta, entonces ve su fecha y tipo y puede descargarlos.
+- [x] Dado un informe guardado, cuando se genera un nuevo informe o una respuesta de IA, entonces el informe guardado no se usa como fuente.
+- [x] Dado un informe guardado, cuando el abogado consulta los documentos del expediente, entonces el informe no aparece entre ellos.
+- [x] Dado un resultado tabular, cuando el abogado lo exporta, entonces obtiene un CSV con los mismos datos.
+- [x] Dados dos abogados A y B, cuando A intenta consultar o descargar un informe de B, entonces se rechaza.
+- [x] Dado un administrador, cuando intenta consultar informes, entonces recibe "no autorizado".
+- [x] Dado un expediente Archivado, cuando se intenta generar, entonces se rechaza; los informes previos siguen descargables como PDF.
+- [x] Dado un resumen ejecutivo generado, cuando se renderiza su PDF, entonces ocupa exactamente una página sin contenido cortado.
+- [x] Dada una solicitud de editar o eliminar un informe guardado, cuando se revisa el contrato, entonces no existe una operación que lo permita.
 
 ## Dependencias
 

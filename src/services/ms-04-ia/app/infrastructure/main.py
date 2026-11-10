@@ -11,6 +11,7 @@ from pymongo.errors import PyMongoError
 
 from app.adapters.inbound.agents import router as agents_router
 from app.adapters.inbound.conversations import router as conversations_router
+from app.adapters.inbound.reports import router as reports_router
 from app.application.conversations import ChatCoordination
 from app.domain.agents import AgentFailure
 from app.infrastructure.config import Settings
@@ -83,6 +84,7 @@ def create_app() -> FastAPI:
 
     app.include_router(agents_router)
     app.include_router(conversations_router)
+    app.include_router(reports_router)
 
     @app.get("/health")
     async def health(request: Request) -> JSONResponse:

@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Aprobada por el responsable el 2026-11-08. Implementación propietaria verificada el 2026-11-09: C01–C11 cumplidos; C12 parcial, pendiente de exclusión en consumidores reales de 011/012. La copia offline se integra en 013; ver [tareas](./tasks.md).
+En progreso. Aprobada por el responsable el 2026-11-08. Implementación propietaria verificada el 2026-11-09; C01–C12 confirmados tras comprobar exclusión de notas en consumidores reales de 011/012 el 2026-11-10. T03 conserva pendiente su integración de copia propia con 013; ver [tareas](./tasks.md).
 
 ## Fuente y trazabilidad
 
@@ -86,7 +86,7 @@ Si se mezclan, la cronología pierde claridad y existe el riesgo de exponer info
 - [x] Dados dos abogados A y B, cuando A intenta consultar actuaciones o notas de B, entonces la solicitud se rechaza sin revelar su contenido.
 - [x] Dado un administrador, cuando intenta consultar actuaciones o notas, entonces recibe "no autorizado".
 - [x] Dada una actuación futura, cuando se intenta registrar o corregir, entonces MS-01 la rechaza según la fecha de Bolivia.
-- [ ] Dado un consumo de fuentes para IA o informes, cuando se prepara el contexto, entonces no contiene notas; corregir una nota no crea historial de versiones.
+- [x] Dado un consumo de fuentes para IA o informes, cuando se prepara el contexto, entonces no contiene notas; corregir una nota no crea historial de versiones.
 
 ## Dependencias
 

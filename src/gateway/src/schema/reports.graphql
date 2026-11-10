@@ -1,0 +1,12 @@
+enum LegalReportKind { EXECUTIVE CLIENT NATURAL }
+enum ReportColumnType { TEXT DATE AMOUNT NUMBER BOOLEAN }
+input ReportFilterInput { actuationType: ActuationType fromDate: String toDate: String }
+input GenerateLegalReportInput { requestId: ID! kind: LegalReportKind! agentId: ID question: String documentIds: [ID!] filter: ReportFilterInput }
+type ReportSection { heading: String! body: String! }
+type ReportColumn { key: String! label: String! type: ReportColumnType! }
+type ReportTable { columns: [ReportColumn!]! rows: [[String!]!]! }
+type LegalReport { id: ID! caseId: ID! requestId: ID! kind: LegalReportKind! createdAt: String! size: Int! title: String! agent: ChatAgent! sources: [ChatSource!]! sections: [ReportSection!]! table: ReportTable }
+type LegalReportSummary { id: ID! caseId: ID! requestId: ID! kind: LegalReportKind! createdAt: String! size: Int! title: String! agent: ChatAgent! }
+type LegalReportPage { items: [LegalReportSummary!]! pageInfo: PageInfo! }
+extend type Query { legalReports(caseId: ID!, first: Int = 25, after: String): LegalReportPage! legalReport(caseId: ID!, id: ID!): LegalReport! legalReportByRequest(caseId: ID!, requestId: ID!): LegalReport! legalReportContent(caseId: ID!, id: ID!, csv: Boolean = false): CaseFileContent! }
+extend type Mutation { generateLegalReport(caseId: ID!, input: GenerateLegalReportInput!): LegalReport! }

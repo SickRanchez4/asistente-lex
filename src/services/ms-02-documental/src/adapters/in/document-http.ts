@@ -9,7 +9,7 @@ import { loadConfig } from '../../infrastructure/config.ts';
 import { authenticateInternalRequest } from '../../infrastructure/security/internal-auth.ts';
 
 const MAX_BODY_BYTES=14_680_064;
-async function body(request: Request, deadline: number): Promise<Record<string,unknown>> {
+export async function body(request: Request, deadline: number): Promise<Record<string,unknown>> {
   if (request.headers.get('content-type')?.split(';')[0].trim()!=='application/json') invalid('file','Se requiere JSON.');
   const declared=request.headers.get('content-length');
   if (declared && (!/^\d+$/.test(declared)||Number(declared)>MAX_BODY_BYTES)) invalid('file','El cuerpo supera el limite de transferencia.');

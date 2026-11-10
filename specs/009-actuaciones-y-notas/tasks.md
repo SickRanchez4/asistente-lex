@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Spec y plan aprobados el 2026-11-08. Ejecución verificada el 2026-11-09: 009-T01 y 009-T02 completas; 009-T03 implementada en su alcance propietario, con aceptación integrada pendiente de 011/012/013. C01–C11 verificados; C12 parcial.
+En progreso. Spec y plan aprobados el 2026-11-08. Ejecución propietaria verificada el 2026-11-09: 009-T01 y 009-T02 completas. C01–C12 confirmados tras la verificación de consumidores reales 011/012 el 2026-11-10; 009-T03 conserva pendiente solo la integración de copia propia con 013.
 
 ## Lista de trabajo
 
@@ -29,7 +29,8 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C12 siguen el orde
   - **Evidencia/validación:** nota con fecha fuera de cronología, corrección sin versiones, escritura no abierta rechazada y otros roles/cuentas sin texto privado. Comprobar exclusión real de contexto con 011/012 y presencia en copia propia con 013 al integrarlas.
   - **Cobertura:** C05, C06, C07, C08, C09, C10, C12.
   - **Resultado propietario verificado:** entidad/endpoints/consultas/listado separados, `privacy: OWNER_ONLY` validada por Gateway y recibida en React, búsqueda literal sin distinguir mayúsculas, fecha de servidor inmutable y solo texto vigente. Versión técnica para concurrencia sin historial de texto; no eliminación, auditoría de contenido, almacenamiento en navegador ni envío a proveedores. Conexión obligatoria; corrección concurrente y escritura no Abierto rechazadas. Errores y logs comprobados sin contenido privado.
-  - **Pendiente integrado:** verificar con 011/012 reales que ningún contexto de chat/informe recibe notas y con 013 que la copia propia las incluye con autorización. No existen aún esos consumidores; la marca privada, la ausencia actual de llamadas IA y los datos sintéticos no sustituyen esa evidencia. No se amplió alcance a esas specs.
+  - **Integración IA verificada:** 011/012 reales prepararon contextos de chat/todas las variantes de informe sin notas, con notas sintéticas identificables presentes en MS-01 y cuerpo OpenAI inspeccionado en memoria. C12 confirmada; no solo marca privada o ausencia de llamadas.
+  - **Pendiente integrado:** con 013, verificar que la copia propia incluye notas con autorización. No se implementó copia offline ni se cierra esa parte de T03.
 
 ## Evidencia de ejecución
 
@@ -41,7 +42,7 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C12 siguen el orde
 ## Verificación de aceptación
 
 - [ ] El desarrollador revisa los 12 criterios de la [spec](./spec.md), incluyendo contexto IA sin notas y fecha de Bolivia.
-  - Revisados los 12: C01–C11 verificados; C12 parcial por exclusión aún no demostrable con 011/012. Fecha de Bolivia y ausencia de historial de notas comprobadas.
+  - Revisados los 12: C01–C12 verificados, incluida exclusión real en 011/012. Fecha de Bolivia y ausencia de historial de notas comprobadas; T03 mantiene la integración offline de 013.
 - [ ] Ejecutar validaciones del [plan](./plan.md), sin crear archivos de testing ni registros que contengan notas.
   - Ejecutadas las validaciones del alcance propio, sin archivos de testing en el repositorio ni logs con notas; quedan las integraciones documentadas de 009-T03.
 - [x] Actualizar spec, plan e [índice](../index.md); la marca privada por sí sola no demuestra exclusión en consumidores.

@@ -16,6 +16,9 @@ export interface ServiceConfig {
   ms01Url: string;
   ms01ApiToken: string;
   fileTransferTimeoutMs: number;
+  ms04Url: string;
+  ms04ApiToken: string;
+  aiBudgetMs: number;
 }
 
 export function loadConfig(): ServiceConfig {
@@ -42,5 +45,8 @@ export function loadConfig(): ServiceConfig {
     ms01Url: env.MS01_URL ?? 'http://ms-01-juridico:8081',
     ms01ApiToken: env.MS01_API_TOKEN ?? '',
     fileTransferTimeoutMs: Number(env.FILE_TRANSFER_TIMEOUT_MS ?? 60000),
+    ms04Url: env.MS04_URL ?? 'http://ms-04-ia:8084',
+    ms04ApiToken: env.MS04_API_TOKEN ?? '',
+    aiBudgetMs: Number(env.AI_BUDGET_MS ?? 60000),
   };
 }

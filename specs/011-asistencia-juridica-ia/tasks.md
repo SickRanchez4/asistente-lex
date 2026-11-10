@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Spec y plan aprobados el 2026-11-08. Implementación de las cuatro tareas entregada y desplegada localmente el 2026-11-10. T01/T02/T04 completas; T03 permanece abierta solo por la comprobación integrada con informes realmente guardados de 012. C01–C06, C08–C14 y C16 confirmados (14/16); C07 pendiente y C15 parcial. Sin commit ni push.
+Completa. Spec y plan aprobados el 2026-11-08. T01–T04 entregadas y desplegadas localmente el 2026-11-10; C01–C16 confirmados. La entrega de 012 cerró T03/C07/C15 con informes realmente guardados y una petición nueva de chat inspeccionada. La implementación original de 011 fue publicada en `0773190`; esta actualización de evidencia no añade commit ni push.
 
 ## Lista de trabajo
 
@@ -21,14 +21,14 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C16 siguen el orde
   - **Evidencia/validación:** respuesta posterior usa el nuevo agente, historial anterior intacto y expediente sin cambios. Con el toggle real de 005-T03, nueva consulta rechazada y pregunta iniciada puede terminar salvo archivo.
   - **Cobertura:** C01, C03, C04, C05, C13.
 
-- [ ] **011-T03. Analizar fuentes del caso mostrando referencias autorizadas.**
+- [x] **011-T03. Analizar fuentes del caso mostrando referencias autorizadas.**
   - **Valor/entrega:** selección/contexto de análisis de un documento concreto o expediente completo, referencias visibles y verificadas contra fuentes realmente utilizadas; reutilizar manejadores internos de 011-T01, sin volver a implementarlos. Sin normativa web, MCP, OCR, fotografías, notas, informes guardados o ERP.
   - **Depende de:** 011-T01, 011-T02, [006-T02](../006-personas/tasks.md), [008-T01](../008-participantes/tasks.md), [009-T01](../009-actuaciones-y-notas/tasks.md), [009-T03](../009-actuaciones-y-notas/tasks.md), [010-T02](../010-documentos-y-fotografias/tasks.md) y [002-T03](../002-gateway-y-contratos-base/tasks.md).
-  - **Evidencia/validación:** pregunta sobre PDF extraíble usa y cita ese PDF; fuentes ajenas/referencias inventadas excluidas. PDF sin texto se informa como no analizable; notas reales no llegan a OpenAI. Repetir comprobación de ausencia de informes al existir 012.
+  - **Evidencia/validación:** pregunta sobre PDF extraíble usa y cita ese PDF; fuentes ajenas/referencias inventadas excluidas. PDF sin texto se informa como no analizable; notas reales no llegan a OpenAI. Ausencia de informes comprobada durante 012 con informes realmente guardados.
   - **Cobertura:** C06, C07, C08, C11, C12, C15.
   - [x] Tres manejadores reales, proyección jurídica cerrada y PDF autorizado con texto; referencias limitadas al registro de fuentes leídas, sin aceptar citas inventadas.
   - [x] Respuesta OpenAI real sobre PDF desde React/GraphQL con referencia visible; PDF sin texto informa limitación antes del proveedor. Nota, contacto y fotografía reales ausentes del cuerpo saliente inspeccionado con transporte controlado.
-  - [ ] Repetir con informes guardados de 012: comprobar ausencia en contexto, herramientas y referencias (C07 y parte de C15). La exclusión estructural actual no acredita ese escenario futuro.
+  - [x] Con informes guardados de 012, respuesta nueva del adaptador real y fuentes REST: contexto, herramientas y referencias sin informes (C07 y parte de C15). Peticiones efectivas inspeccionadas en memoria, no solo exclusión estructural.
 
 - [x] **011-T04. Eliminar todos los chats del expediente sin permitir respuestas que los restauren.**
   - **Valor/entrega:** REST interno autenticado de eliminación completa/repetible de conversaciones, intercambios y estados; coordinación local de generación para descartar resultados anteriores al borrado y admisión compatible con marca de archivo de MS-01. Sin recuperar trabajos externos tras reinicio.
@@ -39,8 +39,8 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C16 siguen el orde
 
 ## Verificación de aceptación
 
-- [x] El desarrollador revisa los 16 criterios de la [spec](./spec.md), incluida eliminación con archivo real, fuentes e intercambios concurrentes; registra C07 pendiente y C15 parcial, sin declararlos aceptados.
-- [x] Ejecutar validaciones disponibles del [plan](./plan.md), sin archivos de testing en el repositorio ni envío de datos reales al proveedor. Escenario de informes pendiente de 012.
+- [x] El desarrollador revisa los 16 criterios de la [spec](./spec.md), incluida eliminación con archivo real, fuentes e intercambios concurrentes; C07/C15 confirmados con la integración real de 012.
+- [x] Ejecutar validaciones disponibles del [plan](./plan.md), sin archivos de testing en el repositorio ni envío de datos reales al proveedor. Escenario de informes verificado en 012.
 - [x] Actualizar spec, plan e [índice](../index.md); tener un adaptador OpenAI no acredita privacidad, fuentes o archivo.
 
 ## Registro de verificación
@@ -52,9 +52,10 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C16 siguen el orde
 - **77 comprobaciones del recorrido desplegado:** Shell → GraphQL → MS-04 → propietarios MS-01/MS-02 y OpenAI. Respuesta real Civilista y posterior Penalista conservando intercambio/agente anterior; agente inicial intacto, conversaciones independientes, Abierto/Cerrado, paginación 25+2 sin duplicados, cursor de otro expediente rechazado, autorización propietaria y sin cuenta de autoridad elegida por cliente.
 - **Configuración real de 005:** toggles administrativos, consulta nueva deshabilitada rechazada, alternativa explícita, ambos deshabilitados y pregunta admitida que termina con su captura original. Modelo inexistente configurado temporalmente: error real de OpenAI, sin sustitución ni intercambio; modelo/instrucciones/herramientas y disponibilidad originales restaurados. Las revisiones aplicadas permanecen como historial administrativo, no se borran para ocultar la prueba.
 - **Archivo real de 007:** varias conversaciones e intercambios borrados antes de confirmar Archivado; desarchivo a Cerrado sin conversaciones previas y documentos intactos. Recibo durable repetido conserva una conversación creada después. Otras 4 comprobaciones verificaron archivo durante respuesta controlada y descarte sin recreación; 4 comprobaron fallo SQL limitado al fixture después del borrado, conservación de Cerrado/marca y bloqueo; 2 confirmaron reintento sin transición duplicada. El fallo temporal fue retirado. No se acredita coordinación de réplicas ni toda la aceptación restante de 007.
-- **Fuentes y privacidad:** participante y actuación reales incluidos; nota, teléfono y fotografía sintéticos excluidos. Cuerpo OpenAI construido con esas fuentes inspeccionado en memoria con transporte controlado: sin notas, contactos, imágenes ni base64. Herramienta rechazó fotografía como PDF y documento de otro expediente de la misma cuenta. Identidad aún firmada de una cuenta suspendida fue rechazada contra MS-01. Informes reales siguen pendientes de 012.
+- **Fuentes y privacidad:** participante y actuación reales incluidos; nota, teléfono y fotografía sintéticos excluidos. Cuerpo OpenAI construido con esas fuentes inspeccionado en memoria con transporte controlado: sin notas, contactos, imágenes ni base64. Herramienta rechazó fotografía como PDF y documento de otro expediente de la misma cuenta. Identidad aún firmada de una cuenta suspendida fue rechazada contra MS-01. La entrega de 012 comprobó además informes realmente guardados.
 - **Navegador:** respuesta OpenAI real sobre PDF con fuente visible y entrada vacía solo al confirmar. Indisponibilidad controlada conservó borrador, un único envío, ningún intercambio nuevo y consulta explícita; PDF real sin texto conservó pregunta e historial. Cambio de agente e independencia de borradores, agente deshabilitado visible/no seleccionable y alternativa explícita sin cambiar expediente. Archivado sin chat; desconexión oculta historial remoto, sin persistencia local. Interceptor retirado y sesión cerrada.
 - **Presentación:** capturas de escritorio 1366×900 y móvil 390×844; sin desbordamientos de página, texto o controles del chat. Móvil usa una columna; agente, respuesta completa y fuente legibles, sin solapamientos.
 - **Contratos y construcción:** SDL compuesto válido y OpenAPI 3.1 de MS-04 con referencias resueltas; typechecks Gateway/React en Node 26, sintaxis/imports Python y ejecución en Python 3.15. Imágenes MS-04/Gateway/Abogado/Shell construidas y desplegadas. Aprovisionamiento explícito de índices sin sobrescribir revisiones; sin dependencias nuevas ni migraciones SQL de MS-01.
 - **Limpieza:** 13 binarios y metadatos documentales, conversaciones/generaciones/recibos de las tres cuentas sintéticas, relaciones jurídicas, expedientes, sesiones y cuentas eliminados. Ambas demos conservadas; configuración privada sin cambios y verificadores fuera del repositorio. Revisión final de secretos, contenido en logs y formato registrada antes del informe.
-- **Límite de cierre:** T03 implementada, pero C07 y parte de C15 requieren informes realmente guardados de 012. No se implementó 012 ni se creó un informe ficticio para cambiar el estado a Completa. Alerta previa de la imagen base `node:26-alpine` (1 crítica/7 altas) fuera del alcance, sin cambio de `FROM` ni remediación acreditada.
+- **Integración de 012:** con informes OpenAI/PDF/tabla realmente guardados en MS-02, seis comprobaciones adicionales construyeron una respuesta nueva del adaptador real de chat con revisión vigente y fuentes REST. Las dos peticiones efectivas incluyeron el contexto autorizado y llamadas a herramientas cerradas; no incluyeron IDs/contenido de informes, notas, fotografías o contacto. Referencia final solo al expediente leído. T03 y C07/C15 confirmados; no se acredita uso de informes por estar prohibido en el prompt solamente.
+- **Límite de cierre:** las garantías siguen siendo locales y no certifican calidad jurídica, privacidad contractual del proveedor o réplicas. Alerta previa de la imagen base `node:26-alpine` (1 crítica/7 altas) fuera del alcance, sin cambio de `FROM` ni remediación acreditada.

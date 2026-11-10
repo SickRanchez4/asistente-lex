@@ -11,6 +11,21 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /cases/{caseId}/report-sources:
+    get:
+      summary: Proyeccion juridica cerrada para informes, nunca notas ni contacto.
+      description: CLIENT excluye descripcion interna y detalle de participacion desde origen. Solo propietario vigente. Hasta 1000 participantes/actuaciones; exceso explicito, sin truncar.
+      parameters:
+        - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: audience, in: query, required: true, schema: { type: string, enum: [CLIENT, INTERNAL] } }
+        - { name: type, in: query, schema: { type: string, enum: [HEARING, FILING, DECISION, NOTIFICATION, OTHER] } }
+        - { name: fromDate, in: query, schema: { type: string, format: date } }
+        - { name: toDate, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: caseData (code,title,area,state y description solo INTERNAL), participants (name,role), actuations (type,date,description). No documentos ni informes guardados.
+          content: { application/json: { schema: { type: object, required: [caseId, caseData, participants, actuations], properties: { caseId: { type: string, format: uuid }, caseData: { type: object }, participants: { type: array, items: { type: object } }, actuations: { type: array, items: { type: object } } } } } }
+        default: { $ref: '#/components/responses/CaseRecordError' }
   /cases/{caseId}/actuations:
     parameters:
       - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }

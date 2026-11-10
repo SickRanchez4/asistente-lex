@@ -8,6 +8,7 @@ import Participants from './participants';
 import CaseRecords from './case-records';
 import CaseDocuments from './case-documents';
 import CaseConversations from './case-conversations';
+import CaseReports from './case-reports';
 
 type State = 'OPEN' | 'CLOSED' | 'ARCHIVED';
 type Action = 'CLOSE' | 'REOPEN' | 'ARCHIVE' | 'UNARCHIVE';
@@ -169,6 +170,7 @@ export default function Cases() {
       <Participants key={item.id} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
       <CaseRecords key={`records:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
       <CaseDocuments key={`documents:${item.id}`} caseId={item.id} state={STATES[item.state]} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
+      <CaseReports key={`reports:${item.id}:${item.state}:${item.archiving}`} caseId={item.id} initialAgentId={item.initialAgentId} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />
       {item.state !== 'ARCHIVED' && !item.archiving && <CaseConversations key={`chat:${item.id}`} caseId={item.id} initialAgentId={item.initialAgentId} pending={pending || uncertain} onRefreshCase={() => open(item.id)} />}
       <History key={`${item.id}:${item.version}`} id={item.id} revision={revision} />
     </>}

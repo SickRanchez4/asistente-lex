@@ -12,6 +12,48 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /cases/{caseId}/report-proposal:
+    post:
+      summary: Proponer informe completo sin persistirlo ni consultar informes anteriores.
+      description: Solo propietario vigente, OPEN/CLOSED sin archivo pendiente. Revalida contexto cerrado contra MS01/MS02; CLIENT no admite PDF. Captura agente inicial o alternativa explicita habilitada, sin fallback. Presupuesto restante de 60000 ms, JSON completo sin streaming/reintento.
+      parameters:
+        - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [kind, context]
+              properties:
+                kind: { type: string, enum: [EXECUTIVE, CLIENT, NATURAL] }
+                agentId: { type: [string, 'null'], enum: [civilista, penalista, null] }
+                question: { type: string, maxLength: 8000 }
+                filter: { type: object, properties: { actuationType: { type: [string, 'null'] }, fromDate: { type: [string, 'null'], format: date }, toDate: { type: [string, 'null'], format: date } }, additionalProperties: false }
+                context: { type: object, required: [legal, pdfs], properties: { legal: { type: object }, pdfs: { type: array, maxItems: 10, items: { type: object } } }, additionalProperties: false }
+      responses:
+        '200':
+          description: Propuesta validada con title, sections (heading/body), table tipada o null, sourceIds autorizados y agent real; sin ID de informe ni escritura en MongoDB.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [title, sections, table, sourceIds, agent]
+                properties:
+                  title: { type: string, maxLength: 180 }
+                  sections: { type: array, minItems: 1, maxItems: 12, items: { type: object, required: [heading, body], properties: { heading: { type: string, maxLength: 150 }, body: { type: string, maxLength: 12000 } }, additionalProperties: false } }
+                  table:
+                    type: [object, 'null']
+                    additionalProperties: false
+                    required: [columns, rows]
+                    properties:
+                      columns: { type: array, minItems: 1, maxItems: 12, items: { type: object, required: [key, label, type], properties: { key: { type: string }, label: { type: string }, type: { type: string, enum: [TEXT, DATE, AMOUNT, NUMBER, BOOLEAN] } }, additionalProperties: false } }
+                      rows: { type: array, maxItems: 200, items: { type: array, items: { type: string, maxLength: 2000 } } }
+                  sourceIds: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+                  agent: { type: object, required: [id, name], properties: { id: { type: string, enum: [civilista, penalista] }, name: { type: string } }, additionalProperties: false }
+        default: { $ref: '#/components/responses/ChatError' }
   /cases/{caseId}/conversations:
     parameters: [{ $ref: '#/components/parameters/ChatCaseId' }]
     get:

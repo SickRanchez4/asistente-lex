@@ -228,7 +228,7 @@ Ambas entidades se consultan con conexión en cualquier estado; registrar/correg
 
 La preparación explícita de MS-01 mostrada en Personas aplica también V7: `juridico.actuations`, `juridico.actuation_corrections` y `juridico.private_notes`, con pertenencia compuesta e índices. REST publica GET/POST `/cases/{caseId}/actuations` y `/private-notes`, y GET/PUT de sus IDs. GraphQL expone consultas, altas y correcciones separadas; las correcciones requieren `expectedVersion`. Sin API de borrado ni historial de notas.
 
-**Límite actual:** C01–C11 verificadas; C12 parcial. En 011 se comprobó exclusión de una nota real sintética del contexto OpenAI; siguen pendientes informes de 012 y la copia offline propia de 013. El Archivado controlado usado originalmente en 009 no acredita por sí solo archivo integrado; este tiene evidencia adicional en 011. Ver [tareas de 009](specs/009-actuaciones-y-notas/tasks.md).
+**Límite actual:** C01–C12 verificadas, incluida exclusión de notas reales sintéticas de contextos efectivos de chat/informes en 011/012. T03 mantiene pendiente la copia offline propia de 013. El Archivado controlado usado originalmente en 009 no acredita por sí solo archivo integrado; este tiene evidencia adicional en 011. Ver [tareas de 009](specs/009-actuaciones-y-notas/tasks.md).
 
 ### Documentos y fotografías
 
@@ -236,7 +236,7 @@ La ficha de expediente incluye archivos existentes PDF/JPEG/PNG, uno por operaci
 
 MS-02 comprueba identidad vigente, pertenencia y estado en MS-01: adjuntar, reclasificar y eliminar requieren Abierto; consultar y visualizar están permitidos en cualquier estado. Si MS-01 no responde, no autoriza. Los binarios no son públicos y no se accede por nombre de disco. Los filtros son solo de metadatos; PDF.js visualiza PDF y el visor de imágenes no expone EXIF. La descarga conserva los bytes y metadatos originales de fotografías.
 
-Preparación explícita de V1 de MS-02, después del bootstrap PostgreSQL y antes de usar archivos; no se ejecuta al arrancar:
+Preparación explícita de migraciones de MS-02 (V1 documental y V2 informes), después del bootstrap PostgreSQL; no se ejecuta al arrancar:
 
 ```powershell
 docker compose run --rm --no-deps -e DOCUMENTS_PREPARE=true --entrypoint node ms-02-documental src/infrastructure/prepare-documents.ts
@@ -252,7 +252,7 @@ docker compose run --rm --no-deps -e DOCUMENTS_CLEANUP=true --entrypoint node ms
 
 Las transferencias usan el plazo configurable `GATEWAY_FILE_TRANSFER_TIMEOUT_MS` de la raíz (60 segundos por defecto); en ejecución directa MS-02 usa `FILE_TRANSFER_TIMEOUT_MS`, `MS01_URL` y `MS01_API_TOKEN`. PostgreSQL usa SQL calificado, migraciones con checksum y TLS verificado. La [decisión de consistencia](specs/010-documentos-y-fotografias/decisions/0001-consistencia-y-migraciones.md) detalla fallos y límites entre almacenes.
 
-**Estado:** T01–T03 y C01–C13 verificados; [evidencia de 010](specs/010-documentos-y-fotografias/tasks.md). REST publica archivos y fuentes autorizadas, más texto PDF con estado explícito NO_TEXT cuando no existe texto extraíble, sin OCR. El consumidor IA y archivo de chats tienen evidencia integrada en 011; informes/offline siguen pendientes en 012/013. En la entrega original de 010 no se llamó al proveedor IA.
+**Estado:** T01–T03 y C01–C13 verificados; [evidencia de 010](specs/010-documentos-y-fotografias/tasks.md). REST publica archivos y fuentes autorizadas, más texto PDF con estado explícito NO_TEXT cuando no existe texto extraíble, sin OCR. Consumidor IA/archivo de chats e informes tienen evidencia integrada en 011/012; offline sigue pendiente de 013. En la entrega original de 010 no se llamó al proveedor IA.
 
 ### Asistencia jurídica IA
 
@@ -277,7 +277,39 @@ MongoDB conserva intercambios completos con un append atómico/versionado; no pe
 
 Archivar elimina todas las conversaciones/intercambios y descarta respuestas anteriores por generación. Los recibos técnicos durables no contienen preguntas ni respuestas; repetir un intento antiguo no borra chats nuevos tras desarchivar. El plazo total de pregunta incluye autenticación, fuentes, OpenAI y persistencia; una confirmación incierta se consulta antes de repetir.
 
-**Estado:** implementación de T01–T04 entregada; T01/T02/T04 verificadas y T03 pendiente solo de aceptación integrada con informes guardados de 012. C01–C06, C08–C14 y C16 confirmados (14/16); C07 pendiente y C15 parcial. Hubo respuestas OpenAI reales con datos exclusivamente sintéticos, archivo integrado y navegador de escritorio/móvil. [Evidencia y límites](specs/011-asistencia-juridica-ia/tasks.md). No enviar datos reales sin condiciones de tratamiento adecuadas; esta verificación local no las acredita.
+**Estado:** T01–T04 y C01–C16 confirmados. La entrega de 012 verificó exclusión con informes realmente guardados en contexto, herramientas y referencias de respuesta nueva, cerrando T03/C07/C15. Hubo respuestas OpenAI reales con datos exclusivamente sintéticos, archivo integrado y navegador de escritorio/móvil. [Evidencia y límites](specs/011-asistencia-juridica-ia/tasks.md). No enviar datos reales sin condiciones de tratamiento adecuadas; esta verificación local no las acredita.
+
+### Informes jurídicos
+
+La ficha ofrece resumen ejecutivo de exactamente una página PDF, informe claro para cliente y consulta natural de un solo expediente propio con filtros de actuaciones y tabla tipada cuando corresponde. Solo se genera con conexión en Abierto/Cerrado, sin archivo pendiente. Usa agente inicial habilitado o alternativa explícita; no hay fallback ni reintento automático. Aviso de revisión profesional en UI/PDF, sin aprobación obligatoria ni envío al cliente.
+
+MS-02 obtiene fuentes de MS-01, MS-04 las revalida y propone con OpenAI/esquema estricto, y MS-02 renderiza/guarda solo el resultado completo. CLIENT recibe desde origen ficha básica, nombres/roles y actuaciones, sin documentos, notas, descripción interna, identificación/contacto o detalle privado. Las demás variantes admiten hasta diez PDF seleccionados con texto extraíble. Ninguna usa notas, fotografías, informes previos, OCR ni SQL/comandos del modelo. Fuentes insuficientes o contexto excesivo fallan explícitamente sin truncamiento.
+
+Para actualizar un entorno existente, prepara MS-01 y MS-02 expresamente después de construir las imágenes. MS-01 conserva sus migraciones existentes; MS-02 aplica V2 con checksum, sin modificar V1:
+
+```powershell
+docker compose build ms-01-juridico ms-02-documental ms-04-ia gateway abogado
+docker compose run --rm --no-deps -e AUTH_PREPARE=true ms-01-juridico
+docker compose run --rm --no-deps -e DOCUMENTS_PREPARE=true --entrypoint node ms-02-documental src/infrastructure/prepare-documents.ts
+docker compose --profile app up -d --no-deps ms-01-juridico ms-02-documental ms-04-ia gateway abogado shell
+docker compose restart shell
+```
+
+Compose configura MS-02 con `MS01_URL`/`MS01_API_TOKEN`, `MS04_URL`/`MS04_API_TOKEN` y `AI_BUDGET_MS`, usando las credenciales ya existentes. En ejecución directa completa esas variables en el entorno de MS-02; OpenAI permanece solo en MS-04. El presupuesto total se inicia antes de autenticar en Gateway y se propaga: `GATEWAY_AI_BUDGET_MS`, 60000 ms por defecto. No cambiar el entorno privado ni aprovisionar las demos para migrar.
+
+V2 crea `documental.reports`; PDF en `reports` dentro de `ms02-files`, separado de documentos. STAGING nunca se publica; COMPLETE conserva fecha/tipo, contenido/tabla/fuentes/agente y PDF inmutables. PDFKit 0.20.2 usa A4/Helvetica: resumen que no cabe en una página, más de 40 páginas/10 MiB o caracteres fuera de la fuente admitida producen error sin recortar ni reemplazar glifos. No hay edición/eliminación por aplicación.
+
+Ante respuesta incierta, consulta por `requestId` o histórico antes de generar otro. La misma solicitud confirmada devuelve el informe guardado sin llamar al proveedor; entrada distinta o STAGING produce conflicto. Un operador puede limpiar un UUID técnico identificado, solo STAGING de más de 15 minutos, nunca COMPLETE:
+
+```powershell
+docker compose run --rm --no-deps -e REPORTS_CLEANUP=true --entrypoint node ms-02-documental src/infrastructure/cleanup-report.ts ID_DEL_INFORME
+```
+
+Histórico, detalle, PDF y CSV son del propietario vigente, también en Archivado; Administrador y otras cuentas no acceden. La descarga lee bytes/tabla guardados, nunca regenera. CSV UTF-8 con BOM, `;`, cabeceras/comillas escapadas, `dd/MM/yyyy` y coma decimal sin miles. Texto/cabeceras interpretables como fórmulas reciben un apóstrofo y el apóstrofo inicial se duplica; la tabla original no cambia, tampoco los importes negativos. El aviso de protección aparece junto a la tabla.
+
+GraphQL publica `generateLegalReport`, `legalReports`, `legalReport`, `legalReportByRequest` y `legalReportContent(csv: true/false)`. REST `/cases/{caseId}/reports` entrega manifiesto paginado de completados; `/{id}`, `/{id}/content`, `/{id}/csv` y `/requests/{requestId}` permiten lectura/recuperación protegidas. Son contratos para 013, no una copia offline implementada; sin conexión la UI oculta informes remotos y bloquea generación.
+
+**Estado:** T01–T04 y C01–C14 confirmados con PostgreSQL/binarios, OpenAI real sobre datos sintéticos, fallos parciales/confirmación perdida y navegador escritorio/móvil. [Evidencia y límites](specs/012-informes-juridicos/tasks.md). Fixtures eliminadas y demos conservadas. Sin certificación de calidad jurídica, tratamiento de datos reales, réplicas o producción; se mantiene la alerta previa de imagen base fuera de alcance.
 
 ### Puertos
 

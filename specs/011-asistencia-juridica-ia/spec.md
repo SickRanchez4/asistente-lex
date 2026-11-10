@@ -2,7 +2,7 @@
 
 ## Estado
 
-En progreso. Aprobada por el responsable el 2026-11-08. Implementación de T01–T04 entregada y desplegada localmente el 2026-11-10; T01/T02/T04 verificadas. De los 16 criterios, 14 confirmados; C07 pendiente y C15 parcial hasta comprobar exclusión con informes realmente guardados de 012. No se amplía esta entrega a implementar informes.
+Completa. Aprobada por el responsable el 2026-11-08. T01–T04 entregadas y desplegadas localmente el 2026-11-10; C01–C16 confirmados. La entrega de 012 comprobó con informes realmente guardados su ausencia en contexto, herramientas y referencias de una respuesta nueva, cerrando C07/C15 y T03. Ver [evidencia](./tasks.md).
 
 ## Fuente y trazabilidad
 
@@ -90,7 +90,7 @@ Las conversaciones contienen información confidencial, deben vincularse a un ex
 - [x] Dado un chat con historial, cuando el abogado cambia de agente y envía otra pregunta, entonces el historial se conserva, la nueva respuesta indica el nuevo agente y el agente inicial del expediente no cambia.
 - [x] Dado un agente deshabilitado, cuando se intenta seleccionarlo o enviarle una consulta directamente a MS-04, entonces se rechaza.
 - [x] Dada una pregunta sobre un documento del expediente, cuando el agente responde usando ese documento, entonces la respuesta muestra la fuente.
-- [ ] Dado un expediente con informes guardados, cuando el agente responde, entonces ninguna fuente es un informe guardado.
+- [x] Dado un expediente con informes guardados, cuando el agente responde, entonces ninguna fuente es un informe guardado.
 - [x] Dada la IA temporalmente no disponible, cuando el abogado envía una pregunta, entonces se informa el error y no se muestra una respuesta.
 - [x] Dado un expediente con conversaciones, cuando MS-01 solicita su eliminación, entonces se eliminan todas, la operación lo confirma y repetirla no produce error.
 - [x] Dado un expediente desarchivado, cuando el abogado abre el chat, entonces no ve conversaciones previas.
@@ -98,10 +98,10 @@ Las conversaciones contienen información confidencial, deben vincularse a un ex
 - [x] Dado un administrador, cuando intenta consultar conversaciones, entonces recibe "no autorizado".
 - [x] Dadas varias conversaciones del mismo expediente, cuando se consulta o cambia agente en una, entonces las otras conservan su historial y agente activo.
 - [x] Dado un fallo o timeout de IA, cuando termina, entonces la pregunta permanece en el cuadro de entrada y no aparece un intercambio incompleto en el historial.
-- [ ] Dado un PDF sin texto, cuando se solicita analizarlo, entonces se informa la limitación sin OCR ni procesamiento visual; notas, fotografías e informes no llegan al proveedor.
+- [x] Dado un PDF sin texto, cuando se solicita analizarlo, entonces se informa la limitación sin OCR ni procesamiento visual; notas, fotografías e informes no llegan al proveedor.
 - [x] Dada una respuesta pendiente al archivar, cuando llega, entonces no se publica ni recrea el historial borrado.
 
-C15: PDF sin texto, notas y fotografías comprobados con fuentes reales y cuerpo saliente inspeccionado en memoria. Falta su parte de informes, compartida con C07; no se fabricaron informes para cerrar esa aceptación. Evidencia y límites en [tareas](./tasks.md).
+C15: PDF sin texto, notas y fotografías comprobados con fuentes reales y cuerpo saliente inspeccionado en memoria. La entrega de 012 añadió la comprobación con informes reales guardados, compartida con C07. Evidencia y límites en [tareas](./tasks.md).
 
 ## Dependencias
 
