@@ -1,10 +1,16 @@
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from time import monotonic
 
+import httpx
 from fastapi import FastAPI, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pymongo import AsyncMongoClient
+from pymongo.errors import PyMongoError
 
+from app.adapters.inbound.agents import router as agents_router
+from app.domain.agents import AgentFailure
 from app.infrastructure.config import Settings
 from app.infrastructure.health import check_health
 from app.infrastructure.internal_auth import (
@@ -24,11 +30,16 @@ def create_app() -> FastAPI:
             host=settings.mongo_uri.get_secret_value(),
             serverSelectionTimeoutMS=settings.health_check_timeout_ms,
             connectTimeoutMS=settings.health_check_timeout_ms,
+            timeoutMS=10000,
+            tz_aware=True,
         )
         app.state.mongo_client = client
+        app.state.settings = settings
+        app.state.http_client = httpx.AsyncClient(follow_redirects=False)
         try:
             yield
         finally:
+            await app.state.http_client.aclose()
             await client.close()
 
     app = FastAPI(title="ms-04-ia", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
@@ -37,6 +48,7 @@ def create_app() -> FastAPI:
     # Los manejadores leen la identidad verificada en request.state.identity.
     @app.middleware("http")
     async def authenticate(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        request.state.started_at = monotonic()
         request.state.identity = None
         if request.url.path == "/health" and request.method == "GET":
             return await call_next(request)
@@ -49,7 +61,24 @@ def create_app() -> FastAPI:
         if not authenticated:
             return JSONResponse(status_code=401, content=UNAUTHENTICATED_BODY)
         request.state.identity = identity
-        return await call_next(request)
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    @app.exception_handler(AgentFailure)
+    async def agent_failure(_request: Request, error: AgentFailure) -> JSONResponse:
+        statuses = {"VALIDATION": 400, "UNAUTHENTICATED": 401, "FORBIDDEN": 403, "NOT_FOUND": 404, "CONFLICT": 409}
+        return JSONResponse(status_code=statuses.get(error.category, 503), content={"category": error.category, "message": error.message})
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_failure(_request: Request, _error: RequestValidationError) -> JSONResponse:
+        return JSONResponse(status_code=400, content={"category": "VALIDATION", "message": "Datos de agente no validos."})
+
+    @app.exception_handler(PyMongoError)
+    async def persistence_failure(_request: Request, _error: PyMongoError) -> JSONResponse:
+        return JSONResponse(status_code=503, content={"category": "SERVICE_UNAVAILABLE", "message": "No se pudo confirmar la operacion del agente. Consulta su estado antes de continuar."})
+
+    app.include_router(agents_router)
 
     @app.get("/health")
     async def health(request: Request) -> JSONResponse:

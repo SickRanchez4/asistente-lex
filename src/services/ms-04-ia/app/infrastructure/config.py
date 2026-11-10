@@ -13,3 +13,8 @@ class Settings(BaseSettings):
     # Vacíos: el servicio rechaza toda llamada interna.
     internal_api_token: SecretStr = SecretStr("")
     user_context_signing_key: SecretStr = SecretStr("")
+    ms01_url: str = "http://ms-01-juridico:8081"
+    ms04_audit_api_token: SecretStr = SecretStr("")
+    agent_initial_model: str = ""
+    agents_prepare: bool = False
+    openai_api_key: SecretStr = SecretStr("")

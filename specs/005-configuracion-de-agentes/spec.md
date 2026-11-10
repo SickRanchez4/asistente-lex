@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08. Catálogo, configuración, historial, disponibilidad y emisor de auditoría implementados y verificados por capas. Pendientes aceptación autenticada completa, auditoría con credencial configurada y flujos consumidores de 007/011; no se declara completa.
 
 ## Fuente y trazabilidad
 

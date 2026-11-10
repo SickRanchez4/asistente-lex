@@ -1,0 +1,62 @@
+enum AgentTool {
+  CASE_LEGAL_DATA
+  CASE_PDF_LIST
+  CASE_PDF_TEXT
+}
+
+type AvailableAgent {
+  id: ID!
+  name: String!
+  specialty: String!
+  enabled: Boolean!
+  unavailableReason: String
+}
+
+type AgentConfiguration {
+  id: ID!
+  name: String!
+  specialty: String!
+  enabled: Boolean!
+  revision: ID!
+  instructions: String!
+  model: String!
+  tools: [AgentTool!]!
+  authorId: ID
+  occurredAt: String!
+}
+
+type AgentRevision {
+  current: AgentConfiguration!
+  previous: AgentConfiguration
+}
+
+type AgentHistoryPage {
+  items: [AgentRevision!]!
+  pageInfo: PageInfo!
+}
+
+type AgentChangeResult {
+  applied: Boolean!
+  auditRecorded: Boolean!
+  category: String
+  message: String!
+  agent: AgentConfiguration!
+}
+
+input AgentConfigurationInput {
+  expectedRevision: ID!
+  instructions: String!
+  model: String!
+  tools: [AgentTool!]!
+}
+
+extend type Query {
+  availableAgents: [AvailableAgent!]!
+  adminAgents: [AgentConfiguration!]!
+  adminAgentHistory(id: ID!, first: Int = 20, after: String): AgentHistoryPage!
+}
+
+extend type Mutation {
+  updateAgentConfiguration(id: ID!, input: AgentConfigurationInput!): AgentChangeResult!
+  setAgentEnabled(id: ID!, expectedRevision: ID!, enabled: Boolean!): AgentChangeResult!
+}

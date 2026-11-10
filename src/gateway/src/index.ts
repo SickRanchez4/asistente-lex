@@ -7,6 +7,7 @@ import { loadConfig } from './config/config.ts';
 import { createContextFactory, type GatewayContext } from './context.ts';
 import { createAuthResolvers } from './resolvers/auth.ts';
 import { createAdminResolvers } from './resolvers/admin.ts';
+import { createAgentResolvers } from './resolvers/agents.ts';
 import { formatGraphQLError } from './errors.ts';
 import { createResolvers } from './resolvers/platform.ts';
 import { typeDefs } from './schema/schema.ts';
@@ -15,11 +16,12 @@ const config = loadConfig();
 const platformResolvers = createResolvers(config);
 const authResolvers = createAuthResolvers(config);
 const adminResolvers = createAdminResolvers(config);
+const agentResolvers = createAgentResolvers(config);
 
 const server = new ApolloServer<GatewayContext>({
   typeDefs,
-  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query, ...adminResolvers.Query },
-    Mutation: { ...authResolvers.Mutation, ...adminResolvers.Mutation } },
+  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query, ...adminResolvers.Query, ...agentResolvers.Query },
+    Mutation: { ...authResolvers.Mutation, ...adminResolvers.Mutation, ...agentResolvers.Mutation } },
   includeStacktraceInErrorResponses: false,
   formatError: formatGraphQLError,
 });

@@ -4,10 +4,12 @@
     <a href="/admin/cuentas" [attr.aria-current]="tab() === 'cuentas' ? 'page' : null" (click)="navigate($event, 'cuentas')">Cuentas</a>
     <a href="/admin/parametros" [attr.aria-current]="tab() === 'parametros' ? 'page' : null" (click)="navigate($event, 'parametros')">Parámetros</a>
     <a href="/admin/auditoria" [attr.aria-current]="tab() === 'auditoria' ? 'page' : null" (click)="navigate($event, 'auditoria')">Auditoría</a>
+    <a href="/admin/agentes" [attr.aria-current]="tab() === 'agentes' ? 'page' : null" (click)="navigate($event, 'agentes')">Agentes</a>
   </nav>
   @if (feedback(); as notice) { <al-status-notice [feedback]="notice" /> }
   @if (errors.feedback(); as notice) { <al-status-notice [feedback]="notice" /> }
   @if (loading()) { <p role="status">Cargando...</p> }
+  @if (tab() === 'agentes') { <al-agent-administration /> }
   @if (tab() === 'cuentas') {
     <div class="al-admin-layout">
       <section aria-labelledby="accounts-heading">

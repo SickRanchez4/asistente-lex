@@ -5,17 +5,18 @@ import { UiErrorHandler } from './ui-error-handler';
 import { GraphqlFailure, requestGraphql } from '../../../shared/graphql';
 import { feedbackForError, feedbackForOutcome, type Feedback, type ErrorCategory } from '../../../shared/presentation';
 import { formatEventDateTime } from '../../../shared/formats';
+import { AgentAdministration } from './agents';
 
 interface Account { id: string; name: string; email: string; enabled: boolean }
 interface Settings { globalMessage: string; supportEmail: string }
 interface Page<T> { items: T[]; pageInfo: { endCursor: string | null; hasNextPage: boolean } }
 interface AuditEvent { id: string; type: string; date: string; userId: string | null; result: string; operation: string | null; targetId: string | null; parameter: string | null; previousValue: string | null; newValue: string | null; agentId: string | null }
 interface Change { applied: boolean; auditRecorded: boolean; category: string | null; message: string | null; account: Account | null; settings: Settings | null }
-type Tab = 'cuentas' | 'parametros' | 'auditoria';
+type Tab = 'cuentas' | 'parametros' | 'auditoria' | 'agentes';
 const accountFields = 'id name email enabled';
 const changeFields = `applied auditRecorded category message account { ${accountFields} } settings { globalMessage supportEmail }`;
 
-@Component({ selector: 'al-root', imports: [StatusNotice, ConfirmationDialog], templateUrl: './app.html' })
+@Component({ selector: 'al-root', imports: [StatusNotice, ConfirmationDialog, AgentAdministration], templateUrl: './app.html' })
 export class App implements OnDestroy {
   readonly errors = inject(UiErrorHandler);
   readonly tab = signal<Tab>('cuentas');
@@ -54,7 +55,7 @@ export class App implements OnDestroy {
   }
   private async openPath(): Promise<void> {
     const path = location.pathname.split('/')[2];
-    const next: Tab = path === 'parametros' || path === 'auditoria' ? path : 'cuentas';
+    const next: Tab = path === 'parametros' || path === 'auditoria' || path === 'agentes' ? path : 'cuentas';
     if (next !== this.tab() || !this.readVersion) {
       this.tab.set(next); this.selected.set(null); this.feedback.set(null); this.resetPages();
       await this.reload();
@@ -81,6 +82,7 @@ export class App implements OnDestroy {
   async reload(): Promise<void> {
     const version = ++this.readVersion;
     this.loading.set(true); this.more.set(false);
+    if (this.tab() === 'agentes') { this.loading.set(false); return; }
     const after = this.cursors[this.pageNumber() - 1];
     try {
       if (this.tab() === 'cuentas') {

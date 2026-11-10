@@ -89,6 +89,11 @@ body { margin: 0; }
 .al-table th { background: var(--al-surface); }
 .al-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 1rem; align-items: end; }
 .al-filter-grid .al-field { margin: 0; }
+.al-agent-tools { display: grid; gap: 0.75rem; margin-block: 1.5rem !important; }
+.al-agent-tools legend { font-weight: 600; margin-bottom: 0.75rem; }
+.al-agent-tools label, .al-agent-switch { display: flex; align-items: center; gap: 0.65rem; min-height: 44px; }
+.al-agent-tools input, .al-agent-switch input { flex: 0 0 20px; width: 20px; height: 20px; accent-color: var(--al-ink); }
+.al-agent-instructions { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; max-width: 100%; }
 
 @media (max-width: 900px) {
   .al-admin-layout { grid-template-columns: minmax(0, 1fr); }

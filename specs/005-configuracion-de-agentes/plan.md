@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado por el responsable el 2026-11-08. Implementadas las capacidades propias de MS-04, Gateway, Angular y selector React. Evidencia por capas registrada en tasks; aceptación integrada con 007/011 pendiente.
 
 ## Resumen técnico
 
@@ -80,6 +80,13 @@ Comprobar además ediciones concurrentes y fallas al conservar historial. Las ve
 
 ## Decisiones
 
+- Contratos ejecutables: [REST MS-04](../../src/services/ms-04-ia/contracts/openapi.yaml) y [GraphQL](../../src/gateway/src/schema/agents.graphql). `GET /agents` es proyección mínima para consumidores internos; `GET /agents/{id}/availability` rechaza deshabilitados con `CONFLICT`. El Gateway exige sesión para esa proyección. `GET /admin/agents`, historial paginado y los dos `PUT` administrativos exigen contexto firmado de Administrador en MS-04 y guarda previa en Gateway. DTO cerrados; sin crear/eliminar agentes ni editar/eliminar revisiones.
+- [AgentService](../../src/services/ms-04-ia/app/application/agents.py) controla validación, permisos, conflicto y publicación. `capture_for_question` es la entrada interna que 011 deberá usar al admitir una pregunta: valida disponibilidad y entrega una instantánea inmutable con política fija de Bolivia, fuentes autorizadas y revisión profesional, separada de las instrucciones editables. No es un endpoint de chat ni resuelve todavía el archivo prioritario de 007.
+- [MongoAgents](../../src/services/ms-04-ia/app/adapters/outbound/mongo_agents.py) usa `agents_v1` y `agent_revisions_v1` en `MONGO_DB`, confirmación de escritura `majority`, identificadores únicos `_id` y compare-and-set del puntero. Las revisiones no enlazadas por conflicto o falla no aparecen en el historial aplicado. Cursores HMAC con separación de propósito y agente, páginas de 1 a 100 y cadena sin truncamiento. Instantes normalizados a milisegundos antes de persistir: el evento conserva fecha e identificador tras releer MongoDB.
+- Preparación explícita: `python -m app.infrastructure.prepare_agents`, con `AGENTS_PREPARE=true` y `AGENT_INITIAL_MODEL` requerido. La preparación v1 no se ejecuta al arrancar ni modifica revisiones existentes. Ambos agentes iniciales se aprovisionaron en el MongoDB externo configurado, habilitados y con las tres herramientas internas. El responsable eligió `gpt-4o-mini` para este entorno; no se fija el modelo en el dominio ni se sustituye un modelo editado por el inicial.
+- `OPENAI_API_KEY` se recibe como secreto del entorno de MS-04, nunca en DTO, historial ni navegador. En esta spec no se invoca OpenAI: la ejecución, las herramientas jurídicas reales y el error real de modelo inválido/no autorizado/incompatible se comprobarán en 011, sin fallback silencioso.
+- [HttpAgentAudit](../../src/services/ms-04-ia/app/adapters/outbound/agent_audit.py) envía `AGENT_ACTION` a MS-01 con la credencial exclusiva `MS04_AUDIT_API_TOKEN`, contexto firmado recibido del autor, correlación y presupuesto restante. `eventId` es la revisión publicada; operaciones cerradas `AGENT_CONFIGURATION_CHANGED`, `AGENT_ENABLED`, `AGENT_DISABLED`. No envía instrucciones, modelo, herramientas ni conversaciones. Sin reintentos, cola ni rollback; credencial vacía, rechazo, fallo de red o respuesta no confirmada producen cambio aplicado/parcial.
+- Angular incorpora `/admin/agentes`, formulario cerrado, confirmación y advertencia al deshabilitar el último agente. Tras conflicto o transporte incierto exige consultar estado antes de otra edición; fallar la lectura de historial no oculta el parcial. React reutiliza el selector compartido y `useAvailableAgents`, actualiza por foco/canal/sondeo y no cambia automáticamente una selección deshabilitada. No se implementan flujos de 007/011 para aparentar integración.
 - Mantener stack aprobado y usar MongoDB/PyMongo existentes; no crear otro servicio de catálogo.
 - OpenAI, modelo libre y herramientas internas sin MCP constan en la spec y el [ADR 0004](../../docs/decisions/0004-integraciones-minimas-del-mvp.md).
 - Auditoría multiservicio reutiliza la decisión de 004; no definir una garantía distinta aquí.
@@ -91,3 +98,4 @@ Comprobar además ediciones concurrentes y fallas al conservar historial. Las ve
 - No crear servidor MCP, conectores personales, Google Drive o editor de conexiones: están diferidos.
 - Revisiones con compare-and-set evitan sobrescribir una edición concurrente sin exigir réplica/transacciones MongoDB.
 - Sin preguntas funcionales abiertas; el desarrollador verifica integración e historial.
+- En el entorno local `OPENAI_API_KEY` y `MS04_AUDIT_API_TOKEN` quedaron vacías para que el responsable configure sus secretos fuera del repositorio. La segunda debe coincidir en MS-01 y MS-04; mientras esté vacía, cambios de agentes devuelven parcial y no se acredita un evento real consultable de extremo a extremo en 004.

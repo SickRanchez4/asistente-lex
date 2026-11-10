@@ -21,9 +21,304 @@ paths:
           $ref: '../../contracts/common.yaml#/components/responses/Health'
         '503':
           $ref: '../../contracts/common.yaml#/components/responses/Health'
+  /agents:
+    get:
+      summary: Catalogo minimo. Contexto opcional para consumidores internos MS-01; credencial obligatoria.
+      security:
+        - serviceToken: []
+      responses:
+        '200':
+          description: Exactamente Penalista y Civilista, sin configuracion privada.
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 2
+                maxItems: 2
+                items:
+                  $ref: '#/components/schemas/AvailableAgent'
+        '401':
+          $ref: '../../contracts/common.yaml#/components/responses/Unauthenticated'
+        '503':
+          $ref: '../../contracts/common.yaml#/components/responses/ServiceUnavailable'
+  /agents/{id}/availability:
+    get:
+      summary: Valida disponibilidad vigente para nuevas operaciones; no reserva ni ejecuta preguntas.
+      security:
+        - serviceToken: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '200':
+          description: Agente habilitado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableAgent'
+        '401':
+          $ref: '../../contracts/common.yaml#/components/responses/Unauthenticated'
+        '404':
+          $ref: '../../contracts/common.yaml#/components/responses/NotFound'
+        '409':
+          $ref: '../../contracts/common.yaml#/components/responses/Conflict'
+        '503':
+          $ref: '../../contracts/common.yaml#/components/responses/ServiceUnavailable'
+  /admin/agents:
+    get:
+      summary: Configuracion vigente de ambos agentes; solo Administrador con identidad verificada.
+      responses:
+        '200':
+          description: Configuraciones sin secretos ni conversaciones.
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 2
+                maxItems: 2
+                items:
+                  $ref: '#/components/schemas/Configuration'
+        '401':
+          $ref: '../../contracts/common.yaml#/components/responses/Unauthenticated'
+        '403':
+          $ref: '../../contracts/common.yaml#/components/responses/Forbidden'
+        '503':
+          $ref: '../../contracts/common.yaml#/components/responses/ServiceUnavailable'
+  /admin/agents/{id}/configuration:
+    put:
+      summary: Publica revision mediante compare-and-set; audita sin incluir instrucciones en el evento.
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Change'
+        '400':
+          $ref: '../../contracts/common.yaml#/components/responses/Validation'
+        '401':
+          $ref: '../../contracts/common.yaml#/components/responses/Unauthenticated'
+        '403':
+          $ref: '../../contracts/common.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: '../../contracts/common.yaml#/components/responses/NotFound'
+        '409':
+          $ref: '../../contracts/common.yaml#/components/responses/Conflict'
+        '503':
+          $ref: '../../contracts/common.yaml#/components/responses/ServiceUnavailable'
+  /admin/agents/{id}/enabled:
+    put:
+      summary: Cambia disponibilidad con revision esperada. Permite ambos deshabilitados y no cancela trabajo iniciado.
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnabledInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/Change'
+        '400':
+          $ref: '../../contracts/common.yaml#/components/responses/Validation'
+        '401':
+          $ref: '../../contracts/common.yaml#/components/responses/Unauthenticated'
+        '403':
+          $ref: '../../contracts/common.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: '../../contracts/common.yaml#/components/responses/NotFound'
+        '409':
+          $ref: '../../contracts/common.yaml#/components/responses/Conflict'
+        '503':
+          $ref: '../../contracts/common.yaml#/components/responses/ServiceUnavailable'
+  /admin/agents/{id}/history:
+    get:
+      summary: Cadena aplicada paginada; cursor firmado ligado al agente, sin revisiones no publicadas.
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+        - name: first
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: after
+          in: query
+          schema:
+            type: string
+            maxLength: 1000
+      responses:
+        '200':
+          description: Historial con anterior y nuevo, autor y fecha.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/History'
+        '400':
+          $ref: '../../contracts/common.yaml#/components/responses/Validation'
+        '401':
+          $ref: '../../contracts/common.yaml#/components/responses/Unauthenticated'
+        '403':
+          $ref: '../../contracts/common.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: '../../contracts/common.yaml#/components/responses/NotFound'
+        '503':
+          $ref: '../../contracts/common.yaml#/components/responses/ServiceUnavailable'
 components:
   securitySchemes:
     serviceToken:
       $ref: '../../contracts/common.yaml#/components/securitySchemes/serviceToken'
     userContext:
       $ref: '../../contracts/common.yaml#/components/securitySchemes/userContext'
+  parameters:
+    AgentId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [penalista, civilista]
+  schemas:
+    AgentTool:
+      type: string
+      enum: [CASE_LEGAL_DATA, CASE_PDF_LIST, CASE_PDF_TEXT]
+    AvailableAgent:
+      type: object
+      additionalProperties: false
+      required: [id, name, specialty, enabled, unavailableReason]
+      properties:
+        id:
+          type: string
+          enum: [penalista, civilista]
+        name:
+          type: string
+        specialty:
+          type: string
+        enabled:
+          type: boolean
+        unavailableReason:
+          type: [string, 'null']
+    Configuration:
+      type: object
+      additionalProperties: false
+      required: [id, name, specialty, enabled, revision, instructions, model, tools, authorId, occurredAt]
+      properties:
+        id:
+          type: string
+          enum: [penalista, civilista]
+        name:
+          type: string
+        specialty:
+          type: string
+        enabled:
+          type: boolean
+        revision:
+          type: string
+          format: uuid
+        instructions:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        model:
+          type: string
+          minLength: 1
+          maxLength: 200
+        tools:
+          type: array
+          uniqueItems: true
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/AgentTool'
+        authorId:
+          type: [string, 'null']
+        occurredAt:
+          type: string
+          format: date-time
+    ConfigurationInput:
+      type: object
+      additionalProperties: false
+      required: [expectedRevision, instructions, model, tools]
+      properties:
+        expectedRevision:
+          type: string
+          format: uuid
+        instructions:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        model:
+          type: string
+          minLength: 1
+          maxLength: 200
+        tools:
+          type: array
+          uniqueItems: true
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/AgentTool'
+    EnabledInput:
+      type: object
+      additionalProperties: false
+      required: [expectedRevision, enabled]
+      properties:
+        expectedRevision:
+          type: string
+          format: uuid
+        enabled:
+          type: boolean
+    Change:
+      type: object
+      additionalProperties: false
+      required: [applied, auditRecorded, category, message, agent]
+      properties:
+        applied:
+          type: boolean
+        auditRecorded:
+          type: boolean
+        category:
+          type: [string, 'null']
+          enum: [PARTIAL_FAILURE, 'null']
+        message:
+          type: string
+        agent:
+          $ref: '#/components/schemas/Configuration'
+    History:
+      type: object
+      additionalProperties: false
+      required: [items, pageInfo]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            additionalProperties: false
+            required: [current, previous]
+            properties:
+              current:
+                $ref: '#/components/schemas/Configuration'
+              previous:
+                oneOf:
+                  - $ref: '#/components/schemas/Configuration'
+                  - type: 'null'
+        pageInfo:
+          type: object
+          additionalProperties: false
+          required: [hasNextPage, endCursor]
+          properties:
+            hasNextPage:
+              type: boolean
+            endCursor:
+              type: [string, 'null']
+  responses:
+    Change:
+      description: Cambio aplicado. PARTIAL_FAILURE significa auditoria no confirmada; no repetir la mutacion automaticamente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Change'

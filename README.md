@@ -147,7 +147,31 @@ Los cambios devuelven `applied` y `auditRecorded` por separado. Si el cambio se 
 
 La auditoría se consulta en páginas acotadas (25 por defecto, máximo 100), con filtros combinables por tipo/usuario y período RFC3339: inicio inclusivo, final exclusivo. Las páginas filtradas pueden estar vacías y aun tener cursor siguiente. No hay API de modificación/borrado ni TTL.
 
-La recepción `/audit/events` exige una credencial distinta para MS-04: `MS04_AUDIT_API_TOKEN` en el entorno de MS-01, más contexto firmado del autor. Genera un valor aleatorio fuera del repositorio con el procedimiento de `.env.example`; vacía deja ese ingreso bloqueado. La emisión de acciones reales de agentes y su configuración en MS-04 corresponden a 005. No se habilita demo ni se crean cuentas de prueba automáticamente en la base externa.
+La recepción `/audit/events` exige una credencial distinta para MS-04: `MS04_AUDIT_API_TOKEN` en los entornos de MS-01 y MS-04, más contexto firmado del autor. Genera un valor aleatorio fuera del repositorio con el procedimiento de `.env.example`; vacía deja ese ingreso bloqueado. MS-04 ya emite los cambios de agentes; si falta esta credencial o falla el receptor, conserva el cambio e informa parcial. No se habilita demo ni se crean cuentas de prueba automáticamente en la base externa.
+
+### Configuración de agentes
+
+El panel `/admin/agentes` permite consultar y editar Penalista y Civilista, sus instrucciones, modelo OpenAI libre, tres herramientas internas y disponibilidad, con confirmación e historial anterior/nuevo/autor/fecha. No se crean ni eliminan agentes, ni se consultan conversaciones. El Abogado ve solo nombre, especialidad y disponibilidad desde React; un agente deshabilitado sigue visible y no se selecciona automáticamente otro.
+
+Antes de usar el catálogo, define `AGENT_INITIAL_MODEL` en `.env` y ejecuta la preparación explícita:
+
+```sh
+docker compose build ms-04-ia
+docker compose run --rm --no-deps -e AGENTS_PREPARE=true ms-04-ia python -m app.infrastructure.prepare_agents
+docker compose --profile app up -d --no-deps ms-04-ia gateway admin abogado shell
+```
+
+El entorno inicial usa `gpt-4o-mini`, elegido por el responsable. Ambos agentes se aprovisionan habilitados con las tres herramientas. La preparación v1 usa `MONGO_DB`; repetirla no sobrescribe configuración ni revisiones. El arranque ordinario no aprovisiona. Sin catálogo preparado, las operaciones responden indisponibilidad, aunque la sonda técnica MongoDB pueda estar `UP`.
+
+`OPENAI_API_KEY` es un secreto del entorno de MS-04: complétala únicamente en `.env` privado cuando vayas a usar OpenAI. No aparece en GraphQL, configuración de agentes ni historial. En 005 no se llama al proveedor ni se valida la existencia del modelo: su rechazo real y el uso de herramientas pertenecen a 011, sin reemplazar silenciosamente el identificador elegido.
+
+Las herramientas tienen catálogo cerrado: `CASE_LEGAL_DATA`, `CASE_PDF_LIST`, `CASE_PDF_TEXT`. No son conexiones configurables; sus implementaciones autorizadas de expediente/PDF pertenecen a los flujos de 011 y sus propietarios. No se registran URLs, comandos, credenciales ni servidores MCP. La política de Bolivia, fuentes autorizadas y revisión profesional se conserva separada de las instrucciones editables.
+
+MS-04 expone `GET /agents` como proyección mínima y `GET /agents/{id}/availability` para consumidores internos; esta última devuelve `CONFLICT` si el agente está deshabilitado. Todas requieren la credencial de MS-04; el Gateway exige además sesión para la consulta del Abogado. 007 debe validar disponibilidad al crear un expediente y 011 debe usar `capture_for_question` dentro de MS-04 para capturar una revisión al admitir la pregunta. La interfaz no es autorización: falta integrar esos flujos y el descarte por archivo de 007.
+
+Las revisiones MongoDB son inmutables por API. Primero se inserta la revisión y después se publica el puntero mediante compare-and-set; una revisión no publicada no cuenta como historia aplicada. El historial recorre la cadena en páginas de hasta 100 con cursor firmado ligado al agente, sin truncarla ni exigir transacciones MongoDB. Un conflicto exige recargar antes de confirmar otra edición.
+
+Tras publicar, MS-04 intenta una sola entrega de `AGENT_ACTION` a MS-01, usando la revisión como ID estable y sin enviar instrucciones ni modelo. `MS04_AUDIT_API_TOKEN` debe tener el mismo valor dedicado en ambos servicios; después de configurarla en la raíz, recrea ambos con `docker compose --profile app up -d --no-deps ms-01-juridico ms-04-ia`. No reutilices la credencial del Gateway. Sin confirmación se informa `applied=true`, `auditRecorded=false`, `PARTIAL_FAILURE`; no hay cola, rollback ficticio ni reintento del cambio.
 
 ### Puertos
 

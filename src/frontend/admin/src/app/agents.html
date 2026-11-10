@@ -1,0 +1,71 @@
+<section aria-labelledby="agents-heading">
+  <div class="al-toolbar"><h2 id="agents-heading">Agentes juridicos</h2>
+    <button class="al-button al-button--secondary" type="button" title="Actualizar agentes" aria-label="Actualizar agentes" [disabled]="busy() || loading() || pending() !== null" (click)="reload()">&#8635;</button>
+  </div>
+  @if (feedback(); as notice) { <al-status-notice [feedback]="notice" /> }
+  @if (loading()) { <p role="status">Cargando agentes...</p> }
+  @if (requiresRefresh()) { <p class="al-notice" role="alert">Consulta el estado vigente con Actualizar antes de volver a modificar el agente.</p> }
+  <div class="al-toolbar" aria-label="Agente en administracion">
+    @for (agent of agents(); track agent.id) {
+      <button type="button" class="al-button al-button--secondary" [attr.aria-pressed]="selectedId() === agent.id" [disabled]="busy() || loading() || pending() !== null" (click)="select(agent.id)">
+        {{ agent.name }}: {{ agent.enabled ? 'Habilitado' : 'Deshabilitado' }}
+      </button>
+    }
+  </div>
+  @if (selected(); as agent) {
+    <section aria-labelledby="agent-detail-heading" class="al-admin-form">
+      <h3 id="agent-detail-heading">{{ agent.name }} / {{ agent.specialty }}</h3>
+      <p class="al-muted">Bolivia. Revision profesional obligatoria.</p>
+      <div class="al-toolbar">
+        <label class="al-agent-switch" for="agent-enabled"><input id="agent-enabled" type="checkbox" role="switch" [checked]="agent.enabled" [disabled]="busy() || loading() || requiresRefresh() || pending() !== null" (click)="$event.preventDefault(); beginEnabled()" /> Habilitado</label>
+      </div>
+      @if (!agent.enabled) { <p class="al-notice">Agente deshabilitado: no admite nuevas preguntas ni expedientes.</p> }
+      <form (submit)="beginConfiguration($event)"><fieldset [disabled]="busy() || loading() || requiresRefresh() || pending() !== null">
+        <div class="al-field"><label for="agent-instructions">Instrucciones</label><textarea class="al-input" id="agent-instructions" name="instructions" rows="9" maxlength="20000" required [value]="agent.instructions"></textarea></div>
+        <div class="al-field"><label for="agent-model">Modelo OpenAI</label><input class="al-input" id="agent-model" name="model" maxlength="200" autocomplete="off" required [value]="agent.model" /></div>
+        <fieldset class="al-agent-tools"><legend>Herramientas internas</legend>
+          @for (tool of tools; track tool.id) {
+            <label [for]="'tool-' + tool.id"><input [id]="'tool-' + tool.id" type="checkbox" name="tools" [value]="tool.id" [checked]="agent.tools.includes(tool.id)" /> {{ tool.label }}</label>
+          }
+        </fieldset>
+        <button type="submit" class="al-button">Guardar configuracion</button>
+      </fieldset></form>
+    </section>
+    <section class="al-admin-detail" aria-labelledby="agent-history-heading">
+      <div class="al-toolbar"><h3 id="agent-history-heading">Historial de {{ agent.name }}</h3>
+        <button type="button" class="al-button al-button--secondary" title="Actualizar historial" aria-label="Actualizar historial" [disabled]="historyLoading() || busy()" (click)="loadHistory()">&#8635;</button>
+      </div>
+      @if (historyLoading()) { <p role="status">Cargando historial...</p> }
+      @if (historyError()) { <p class="al-notice" role="alert">No se pudo consultar el historial. El resultado del ultimo cambio no se modifica.</p> }
+      <div class="al-table-scroll" tabindex="0" role="region" aria-label="Revisiones aplicadas">
+        <table class="al-table"><thead><tr><th>Fecha (Bolivia)</th><th>Autor</th><th>Cambio aplicado</th><th>Valores</th></tr></thead>
+          <tbody>@for (entry of history(); track entry.current.revision) {
+            <tr><td>{{ date(entry.current.occurredAt) }}</td><td>{{ entry.current.authorId || 'Aprovisionamiento inicial' }}</td>
+              <td>{{ entry.current.enabled ? 'Habilitado' : 'Deshabilitado' }}<div>Modelo: {{ entry.current.model }}</div></td>
+              <td><details><summary>Anterior y nuevo</summary>
+                <h4>Anterior</h4>
+                @if (entry.previous; as previous) {
+                  <p>Estado: {{ previous.enabled ? 'Habilitado' : 'Deshabilitado' }}. Modelo: {{ previous.model }}</p>
+                  <p>Herramientas: {{ toolLabels(previous.tools) }}</p><pre class="al-agent-instructions">{{ previous.instructions }}</pre>
+                } @else { <p>Sin revision anterior.</p> }
+                <h4>Nuevo</h4><p>Estado: {{ entry.current.enabled ? 'Habilitado' : 'Deshabilitado' }}. Modelo: {{ entry.current.model }}</p>
+                <p>Herramientas: {{ toolLabels(entry.current.tools) }}</p><pre class="al-agent-instructions">{{ entry.current.instructions }}</pre>
+                <p>Revision: {{ entry.current.revision }}</p>
+              </details></td></tr>
+          } @empty { @if (!historyLoading() && !historyError()) { <tr><td colspan="4">No hay revisiones en esta pagina.</td></tr> } }</tbody>
+        </table>
+      </div>
+      <div class="al-toolbar" aria-label="Paginas del historial">
+        <button class="al-button al-button--secondary" type="button" title="Pagina anterior" aria-label="Pagina anterior" [disabled]="historyPage() === 1 || historyLoading() || busy()" (click)="turn(-1)">&larr;</button>
+        <span>Pagina {{ historyPage() }}</span>
+        <button class="al-button al-button--secondary" type="button" title="Pagina siguiente" aria-label="Pagina siguiente" [disabled]="!more() || historyLoading() || busy()" (click)="turn(1)">&rarr;</button>
+      </div>
+    </section>
+  }
+  @if (pending(); as change) {
+    <al-confirmation-dialog controlId="agent-confirm" [open]="true" [pending]="busy()"
+      [title]="change.kind === 'configuration' ? 'Guardar configuracion de ' + change.agent.name : change.agent.enabled ? 'Deshabilitar ' + change.agent.name : 'Habilitar ' + change.agent.name"
+      [confirmLabel]="change.kind === 'configuration' ? 'Guardar' : change.agent.enabled ? 'Deshabilitar' : 'Habilitar'"
+      [consequences]="consequences()" (cancel)="pending.set(null)" (confirm)="confirm()" />
+  }
+</section>

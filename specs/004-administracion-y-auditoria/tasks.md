@@ -39,6 +39,7 @@ Basadas en la [spec](./spec.md) y el [plan](./plan.md). C01–C13 siguen el orde
   - [x] Comprobados con DynamoDB real los límites de período, páginas completas sin duplicados, cursor ligado a filtros y ausencia del evento cuyo registro falló. Sin API de editar/borrar ni TTL añadido.
   - [x] Implementada recepción REST de eventos de agentes con credencial exclusiva de MS-04, autor verificado y reconocimiento de reenvío. Verificados casos de uso y almacenamiento con eventos controlados, no con una acción real de 005.
   - [ ] Configurar la credencial del emisor e integrar/verificar una modificación real de agentes en 005, con su aviso parcial y reenvío sin duplicados. No se implementó 005 para simular esta dependencia.
+  - **Avance desde 005:** emisor síncrono implementado y verificado contra receptor HTTP controlado, con identidad firmada, ID/fecha estables y aviso parcial. Falta configurar `MS04_AUDIT_API_TOKEN` y comprobar una acción administrativa real de extremo a extremo con este receptor desplegado; esta dependencia no se cierra con la simulación.
 
 ## Verificación de aceptación
 
