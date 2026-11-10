@@ -11,6 +11,98 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /auth/login:
+    post:
+      summary: Valida credenciales y crea una sesión opaca de servidor.
+      security:
+        - serviceToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, maxLength: 72 }
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthResult'
+  /auth/verify:
+    post:
+      summary: Verifica sesión y cuenta; solo actividad explícita renueva inactividad.
+      security:
+        - serviceToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, active]
+              properties:
+                token: { type: string }
+                active: { type: boolean }
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthResult'
+  /auth/logout:
+    post:
+      summary: Invalida la sesión antes de intentar registrar auditoría.
+      security:
+        - serviceToken: []
+      requestBody:
+        $ref: '#/components/requestBodies/SessionToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthResult'
+  /auth/password:
+    post:
+      summary: Cambia únicamente la contraseña de la sesión verificada; exige contraseña actual.
+      security:
+        - serviceToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, currentPassword, newPassword]
+              properties:
+                token: { type: string }
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 1, maxLength: 72 }
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthResult'
+  /auth/denial:
+    post:
+      summary: Registra denegación; obtiene usuario de sesión, no del cuerpo del cliente.
+      security:
+        - serviceToken: []
+      requestBody:
+        $ref: '#/components/requestBodies/SessionToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthResult'
+  /audit/events:
+    post:
+      summary: Recepción idempotente; usuario del contexto firmado y permiso de cuenta vigente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eventId, type, result]
+              properties:
+                eventId: { type: string, pattern: '^[a-zA-Z0-9-]{1,100}$' }
+                type: { type: string, enum: [ACCESS_DENIED, ADMIN_CHANGE, AI_ACTION] }
+                result: { type: string, enum: [SUCCESS, REJECTED, PARTIAL_FAILURE] }
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthResult'
   /health:
     get:
       summary: Comprobación técnica de PostgreSQL y DynamoDB.
@@ -21,6 +113,42 @@ paths:
         '503':
           $ref: '../../contracts/common.yaml#/components/responses/Health'
 components:
+  requestBodies:
+    SessionToken:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token]
+            properties:
+              token: { type: string }
+  responses:
+    AuthResult:
+      description: |
+        Resultado explícito, también para credenciales inválidas o suspensión. Un 401
+        se reserva para autenticación interna rechazada. Un fallo de almacén es 503
+        con Error común. auditRecorded=false no revierte login/logout ni rechazos.
+        token solo viaja a Gateway por REST y nunca al esquema GraphQL.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success, auditRecorded]
+            properties:
+              success: { type: boolean }
+              auditRecorded: { type: boolean }
+              token: { type: [string, 'null'] }
+              category: { type: [string, 'null'] }
+              message: { type: [string, 'null'] }
+              user:
+                type: [object, 'null']
+                required: [userId, accountId, role, name]
+                properties:
+                  userId: { type: string }
+                  accountId: { type: string }
+                  role: { type: string, enum: [ABOGADO, ADMINISTRADOR] }
+                  name: { type: string }
   securitySchemes:
     serviceToken:
       $ref: '../../contracts/common.yaml#/components/securitySchemes/serviceToken'

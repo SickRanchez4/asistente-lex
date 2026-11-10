@@ -1,0 +1,30 @@
+enum AccountRole {
+  ABOGADO
+  ADMINISTRADOR
+}
+
+type SessionUser {
+  userId: ID!
+  accountId: ID!
+  role: AccountRole!
+  name: String!
+}
+
+type AuthResult {
+  success: Boolean!
+  user: SessionUser
+  category: String
+  message: String
+  auditRecorded: Boolean!
+}
+
+extend type Query {
+  session: AuthResult!
+}
+
+type Mutation {
+  login(email: String!, password: String!): AuthResult!
+  logout: AuthResult!
+  changePassword(currentPassword: String!, newPassword: String!): AuthResult!
+  sessionActivity: AuthResult!
+}

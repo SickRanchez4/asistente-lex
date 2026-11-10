@@ -8,6 +8,7 @@ export interface ServiceTarget {
 }
 
 export interface GatewayConfig {
+  cookieSecure: boolean;
   port: number;
   serviceTimeoutMs: number;
   restTimeoutMs: number;
@@ -36,6 +37,7 @@ function positiveInteger(value: string | undefined, fallback: number, name: stri
 export function loadConfig(): GatewayConfig {
   const env = process.env;
   return {
+    cookieSecure: env.COOKIE_SECURE === 'true',
     port: positiveInteger(env.PORT, 4000, 'PORT'),
     serviceTimeoutMs: positiveInteger(env.SERVICE_TIMEOUT_MS, 3000, 'SERVICE_TIMEOUT_MS'),
     restTimeoutMs: positiveInteger(env.REST_TIMEOUT_MS, 10_000, 'REST_TIMEOUT_MS'),

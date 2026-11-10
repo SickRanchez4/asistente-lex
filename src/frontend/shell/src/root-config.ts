@@ -1,4 +1,7 @@
-import { addErrorHandler, navigateToUrl, registerApplication, start, type LifeCycles } from 'single-spa';
+import { addErrorHandler, navigateToUrl, registerApplication, start, triggerAppChange, type LifeCycles } from 'single-spa';
+import { startAuthentication, type SessionState } from './session';
+
+let session: SessionState = { status: 'pending' };
 
 declare global {
   interface Window {
@@ -12,13 +15,13 @@ const isApplicationPath = (pathname: string, prefix: string): boolean => pathnam
 registerApplication({
   name: '@asistente-lex/abogado',
   app: loadApplication('@asistente-lex/abogado'),
-  activeWhen: (location) => isApplicationPath(location.pathname, '/abogado'),
+  activeWhen: (location) => session.status === 'authenticated' && session.role === 'Abogado' && isApplicationPath(location.pathname, '/abogado'),
 });
 
 registerApplication({
   name: '@asistente-lex/admin',
   app: loadApplication('@asistente-lex/admin'),
-  activeWhen: (location) => isApplicationPath(location.pathname, '/admin'),
+  activeWhen: (location) => session.status === 'authenticated' && session.role === 'Administrador' && isApplicationPath(location.pathname, '/admin'),
 });
 
 const home = document.getElementById('al-inicio');
@@ -31,11 +34,21 @@ function updatePresentation(): void {
   const pathname = window.location.pathname;
   const lawyer = isApplicationPath(pathname, '/abogado');
   const admin = isApplicationPath(pathname, '/admin');
-  if (home) home.hidden = pathname !== '/';
-  if (routeError) routeError.hidden = pathname === '/' || lawyer || admin;
+  const authenticated = session.status === 'authenticated';
+  const allowed = session.status === 'authenticated' && ((lawyer && session.role === 'Abogado') || (admin && session.role === 'Administrador'));
+  if (home) home.hidden = authenticated;
+  if (routeError) {
+    routeError.hidden = !authenticated || allowed || pathname === '/cuenta' || pathname === '/';
+    const title = routeError.querySelector('h2');
+    const message = routeError.querySelector('p');
+    if (title) title.textContent = lawyer || admin ? 'Acceso no autorizado' : 'Página no disponible';
+    if (message) message.textContent = lawyer || admin ? 'No tienes permiso para acceder a esta sección.' : 'La dirección no corresponde a una vista de la plataforma.';
+  }
+  const account = document.getElementById('al-account');
+  if (account) account.hidden = !authenticated || pathname !== '/cuenta';
   if (skipLink) {
-    skipLink.setAttribute('href', lawyer ? '#al-abogado-content'
-      : admin ? '#al-admin-content' : pathname === '/' ? '#al-inicio' : '#al-route-error');
+    skipLink.setAttribute('href', !authenticated ? '#al-inicio' : pathname === '/cuenta' ? '#al-account'
+      : allowed && lawyer ? '#al-abogado-content' : allowed && admin ? '#al-admin-content' : '#al-route-error');
   }
   for (const link of navigationLinks) {
     const active = link.pathname === '/' ? pathname === '/' : pathname === link.pathname || pathname.startsWith(`${link.pathname}/`);
@@ -64,3 +77,11 @@ addErrorHandler(() => {
 
 updatePresentation();
 start();
+startAuthentication((next) => {
+  session = next;
+  if (session.status === 'authenticated' && window.location.pathname === '/') {
+    navigateToUrl(session.role === 'Abogado' ? '/abogado' : '/admin');
+  }
+  updatePresentation();
+  void triggerAppChange();
+});

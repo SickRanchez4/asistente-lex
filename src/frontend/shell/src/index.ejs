@@ -24,30 +24,32 @@
           <img src="/static/lex-ai-logo.png" alt="Lex AI" width="80" height="80" />
           <span>Asistente Lex</span>
         </a>
-        <nav class="al-nav" aria-label="Vistas técnicas de plataforma">
-          <a href="/" data-al-navigation>Inicio</a>
-          <a href="/abogado" data-al-navigation>Abogado</a>
-          <a href="/admin" data-al-navigation>Administración</a>
+        <nav id="al-session-nav" class="al-nav" aria-label="Cuenta" hidden>
+          <a id="al-workspace" href="/" data-al-navigation>Mi espacio</a>
+          <a href="/cuenta" data-al-navigation>Contraseña</a>
+          <button id="al-logout" class="al-button al-button--secondary" type="button">Cerrar sesión</button>
         </nav>
       </div>
     </header>
     <main id="al-inicio" class="al-page" tabindex="-1">
-      <p class="al-eyebrow">Plataforma de trabajo jurídico</p>
-      <h1>Asistente Lex</h1>
-      <p>Una base compartida para organizar el trabajo jurídico, documental y económico.</p>
-      <p class="al-notice">Accesos técnicos del entorno local, sin autenticación. Las secciones funcionales se incorporarán con sus specs; elegir una vista no concede un rol.</p>
-      <div class="al-grid">
-        <section class="al-card">
-          <h2>Espacio del Abogado</h2>
-          <p>Interfaz React preparada para incorporar las funcionalidades jurídicas y económicas.</p>
-          <a class="al-button" href="/abogado" data-al-navigation>Abrir vista técnica</a>
-        </section>
-        <section class="al-card">
-          <h2>Administración</h2>
-          <p>Interfaz Angular preparada para la gestión de cuentas, parámetros y agentes.</p>
-          <a class="al-button" href="/admin" data-al-navigation>Abrir vista técnica</a>
-        </section>
-      </div>
+      <div id="al-session-pending" role="status">Verificando sesión...</div>
+      <form id="al-login-form" class="al-auth-form" hidden>
+        <h1>Iniciar sesión</h1>
+        <div class="al-field"><label for="al-email">Correo electrónico</label><input id="al-email" name="email" class="al-input" type="email" autocomplete="username" maxlength="254" required /></div>
+        <div class="al-field"><label for="al-password">Contraseña</label><input id="al-password" name="password" class="al-input" type="password" autocomplete="current-password" required /></div>
+        <button class="al-button" type="submit">Entrar</button>
+      </form>
+      <button id="al-session-retry" class="al-button" type="button" hidden>Reintentar</button>
+    </main>
+    <div id="al-auth-message" class="al-page" role="status" aria-live="polite" hidden></div>
+    <main id="al-account" class="al-page" tabindex="-1" hidden>
+      <form id="al-password-form" class="al-auth-form">
+        <h1>Cambiar contraseña</h1>
+        <div class="al-field"><label for="al-current-password">Contraseña actual</label><input id="al-current-password" name="currentPassword" class="al-input" type="password" autocomplete="current-password" required /></div>
+        <div class="al-field"><label for="al-new-password">Nueva contraseña</label><input id="al-new-password" name="newPassword" class="al-input" type="password" autocomplete="new-password" required /></div>
+        <div class="al-field"><label for="al-confirm-password">Repetir nueva contraseña</label><input id="al-confirm-password" name="confirmPassword" class="al-input" type="password" autocomplete="new-password" required /></div>
+        <button class="al-button" type="submit">Guardar contraseña</button>
+      </form>
     </main>
     <section id="al-route-error" class="al-page" role="alert" tabindex="-1" hidden>
       <div class="al-status" data-kind="not-found">

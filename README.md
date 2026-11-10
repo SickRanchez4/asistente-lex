@@ -31,7 +31,7 @@ src/
     └── ms-04-ia/          Python / FastAPI
 ```
 
-Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. En esta etapa, `domain` y `application` están vacías: la plataforma base no contiene lógica de negocio.
+Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones y auditoría; las operaciones jurídicas, administrativas y económicas continúan pendientes de sus specs.
 
 ## Requisitos previos
 
@@ -86,7 +86,7 @@ Para ejecutar un componente directamente, fuera de Docker, se necesitan además 
    docker compose up -d
    ```
 
-5. O levanta los nueve contenedores del entorno completo, con el perfil `app`:
+5. Prepara identidad según la sección siguiente y levanta los nueve contenedores del entorno completo, con el perfil `app`:
 
    ```sh
    docker compose --profile app up -d --build
@@ -117,6 +117,25 @@ Configura también el TLS del cliente psql según el proveedor (`PGSSLMODE=verif
 - El administrador debe poder modificar los permisos de la base y los esquemas. Si el proveedor no permite crear bases/roles, pídele al administrador que los prepare antes de ejecutar el script.
 - **No crea tablas ni registros iniciales o demo.** La plataforma base no los necesita; las migraciones y semillas se definirán con las specs funcionales.
 - La creación de base y rol no es completamente transaccional; si un paso falla, esos recursos pueden quedar creados. La preparación de esquemas/permisos se realiza en una transacción y el script detiene la ejecución ante errores.
+
+### Preparar identidad y demo local
+
+Después de preparar el esquema PostgreSQL `juridico` y levantar DynamoDB, ejecuta desde la raíz:
+
+```sh
+docker compose --profile app build ms-01-juridico
+docker compose --profile app run --rm --no-deps -e AUTH_PREPARE=true -e AUTH_DEMO=true ms-01-juridico
+```
+
+El proceso aplica las migraciones Flyway sobre `juridico`, aprovisiona `lex-access-events-v1` y sus índices y termina. V2 corrige la ubicación de las tablas de V1 si el pooler las creó en `public`, conservando los datos y el historial. Repetirlo conserva las cuentas y contraseñas existentes. El arranque ordinario no migra ni crea tablas o cuentas. Para preparar sin demo, omite `-e AUTH_DEMO=true`.
+
+La demo pública `admi@demo.com` / `password` solo se permite con `APP_ENV=local` y preparación explícita. Si cambias su contraseña, repetir la preparación no la restablece. No existe registro público: las cuentas Abogado se incorporarán con 004.
+
+Las sesiones duran como máximo 8 horas, con 30 minutos de inactividad. Son opacas, persisten como digest en PostgreSQL y el navegador recibe únicamente una cookie HttpOnly, SameSite=Strict, limitada a `/graphql`. Configura `COOKIE_SECURE=true` al servir por HTTPS. El Shell usa `/graphql` del mismo origen, mediante nginx en Docker o proxy de desarrollo. Las solicitudes GraphQL exigen POST JSON y `X-Lex-Request: 1`; CORS por sí solo no protege frente a CSRF.
+
+MS-01 consulta las tablas con el prefijo `juridico` y comprueba la existencia del esquema sin depender de `search_path`, para admitir poolers transaccionales y proveedores que rechazan ese parámetro de inicio JDBC. La adquisición de conexiones tiene su propio límite de 10 segundos: `MS01_DB_CONNECTION_TIMEOUT_MS` en la raíz y `DB_CONNECTION_TIMEOUT_MS` en ejecución directa. TLS sigue verificando CA y hostname; este límite no sustituye los plazos del Gateway.
+
+Auditoría de mejor esfuerzo: una caída de DynamoDB no revierte un login/logout ya aplicado ni convierte un rechazo en acceso. Se comunica explícitamente como fallo de registro. Sin bloqueo de intentos, colas ni garantía de producción.
 
 ### Puertos
 
@@ -162,6 +181,7 @@ Para comprobar una caída local, detén DynamoDB (`docker compose stop dynamodb-
 ```sh
 curl -X POST http://localhost:4000/graphql \
   -H "Content-Type: application/json" \
+   -H "X-Lex-Request: 1" \
   -d '{"query":"{ platformStatus { services { name status } } }"}'
 ```
 
@@ -169,6 +189,7 @@ En PowerShell:
 
 ```powershell
 Invoke-RestMethod -Method Post -Uri http://localhost:4000/graphql -ContentType 'application/json' `
+   -Headers @{ 'X-Lex-Request' = '1' } `
   -Body '{"query":"{ platformStatus { services { name status } } }"}' | ConvertTo-Json -Depth 5
 ```
 
@@ -182,11 +203,12 @@ Cada servicio aparece como:
 
 Abre http://localhost:9000:
 
-- `/abogado` monta el microfrontend React.
-- `/admin` monta el microfrontend Angular.
-- `/` muestra el inicio de plataforma con identidad visual compartida y enlaces técnicos a ambas rutas.
+- Sin sesión, cualquier ruta muestra el acceso con correo y contraseña.
+- El rol Abogado monta React en `/abogado`; el Administrador monta Angular en `/admin`. No hay selector de rol y la otra interfaz permanece desmontada.
+- `/cuenta` permite cambiar la contraseña propia; cerrar sesión invalida el registro de servidor.
+- Una sesión pendiente o cuya verificación falla no mantiene contenido privado montado. Los sondeos no renuevan inactividad; la actividad real se comunica por separado.
 
-Estos accesos siguen sin autenticar al usuario y no conceden un rol. La navegación funcional de la spec 001 se conectará con la sesión de 003 y los destinos de cada funcionalidad.
+Las funcionalidades posteriores deben usar los guards de identidad, rol y pertenencia del Gateway y comprobar permisos en sus propietarios. El aislamiento visual no sustituye la autorización de cada recurso. El Shell emite `al-session-changed` sin secretos y `al-password-changed` para la integración posterior de 013; todavía no hay copias offline.
 
 ### Patrones UI compartidos
 
@@ -195,11 +217,11 @@ Estos accesos siguen sin autenticar al usuario y no conceden un rol. La navegaci
 - En Angular usa `controlId` para identificar el control interno; no reutilices el `id` del elemento host como identificador del campo. En React se usa `id`.
 - [formats.ts](./src/frontend/shared/formats.ts) recibe fechas civiles ISO, instantes con zona e importes como cadenas decimales exactas. Presenta `08/11/2026`, hora de Bolivia y `BOB 1.234,56`; ausencias permitidas son «Sin dato» e inválidos producen error, no cero o fecha actual.
 - [presentation.ts](./src/frontend/shared/presentation.ts) define estados de presentación, no contratos GraphQL. El consumidor traduce las categorías seguras de 002, conserva sus valores de formulario y activa `pending` antes de enviar una operación. Solo un resultado confirmado puede producir éxito; parcial o incierto no autoriza reintentar una escritura automáticamente.
-- [navigation.ts](./src/frontend/shared/navigation.ts) prepara el contexto UI de sesión y destinos por rol. No autentica, almacena credenciales ni define subrutas funcionales. Sus componentes no se conectan aún a una sesión ficticia.
+- [navigation.ts](./src/frontend/shared/navigation.ts) define el contexto UI de sesión y destinos por rol. El Shell lo alimenta con la verificación real de MS-01; no almacena credenciales ni define subrutas funcionales.
 
 Con `npm start` en los tres frontends, las rutas `/abogado` y `/admin` muestran un desplegable **Patrones compartidos · solo desarrollo**. Son ejemplos locales sin acciones de negocio, datos privados o catálogo real. La galería no se renderiza en los builds de producción.
 
-Para probar solo esta base visual no hacen falta bases ni microservicios: inicia los tres frontends con Node.js 26 y abre el Shell. Si el Node global es anterior, Angular debe ejecutarse con un runtime compatible; por ejemplo, desde su carpeta:
+Para entrar desde el Shell hacen falta Gateway, MS-01 y sus almacenes preparados. En ejecución directa, el proxy del Shell apunta a `http://localhost:4000`; puede cambiarse con `GATEWAY_URL`. Si el Node global es anterior, Angular debe ejecutarse con un runtime compatible; por ejemplo, desde su carpeta:
 
 ```powershell
 npm exec --yes --package=node@26.13.0 -- node node_modules\@angular\cli\bin\ng.js serve

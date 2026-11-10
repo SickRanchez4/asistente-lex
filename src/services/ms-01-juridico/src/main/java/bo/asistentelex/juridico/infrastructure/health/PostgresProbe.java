@@ -33,9 +33,10 @@ class PostgresProbe implements DependencyProbe {
 	@Override
 	public boolean isAvailable() {
 		try (Connection connection = this.dataSource.getConnection()) {
-			try (var statement = connection.createStatement()) {
+			try (var statement = connection.prepareStatement("SELECT schema_name FROM information_schema.schemata WHERE schema_name = ?")) {
 				statement.setQueryTimeout(this.timeoutSeconds);
-				try (var result = statement.executeQuery("SELECT current_schema()")) {
+				statement.setString(1, this.schema);
+				try (var result = statement.executeQuery()) {
 					return result.next() && this.schema.equals(result.getString(1));
 				}
 			}

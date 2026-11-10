@@ -29,6 +29,9 @@ services:
       DB_USER: ${POSTGRES_USER:?}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?}
       DB_SCHEMA: juridico
+      DB_CONNECTION_TIMEOUT_MS: ${MS01_DB_CONNECTION_TIMEOUT_MS:-10000}
+      APP_ENV: ${APP_ENV:-local}
+      AUDIT_TABLE: ${AUTH_AUDIT_TABLE:-lex-access-events-v1}
       DB_SSLMODE: ${POSTGRES_SSLMODE:-verify-full}
       DB_SSLROOTCERT: ${POSTGRES_SSLROOTCERT:-/certs/postgresql-ca.crt}
       DYNAMODB_ENDPOINT: http://dynamodb-local:8000
@@ -109,6 +112,7 @@ services:
     image: asistente-lex/gateway:dev
     environment:
       PORT: 4000
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       MS01_URL: ${GATEWAY_MS01_URL}
       MS02_URL: ${GATEWAY_MS02_URL}
       MS03_URL: ${GATEWAY_MS03_URL}
@@ -150,6 +154,8 @@ services:
 
   shell:
     profiles: [app]
+    depends_on:
+      - gateway
     build:
       context: ./src/frontend
       dockerfile: shell/Dockerfile

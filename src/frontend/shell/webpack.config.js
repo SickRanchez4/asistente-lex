@@ -54,5 +54,6 @@ export default {
     host: 'localhost',
     port: Number(process.env.PORT ?? 9000),
     historyApiFallback: true,
+    proxy: [{ context: ['/graphql'], target: process.env.GATEWAY_URL ?? 'http://localhost:4000' }],
   },
 };

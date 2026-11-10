@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado el 2026-11-08; base implementada y verificaciones parciales realizadas el 2026-11-10 (UTC). Evidencia y límites en las [tareas](./tasks.md).
 
 ## Resumen técnico
 
@@ -71,7 +71,7 @@ No hay bloqueo temporal por intentos fallidos en esta fase exclusivamente local.
 
 ## Verificación
 
-Responsabilidad del desarrollador, sin crear archivos de testing. Este trabajo solo ajusta documentos; las verificaciones de código e integración se realizarán durante implementación.
+Responsabilidad del desarrollador, sin archivos de testing en el repositorio. Se ejecutaron comprobaciones temporales del núcleo con reloj controlado, compilaciones en Docker, pruebas HTTP y navegación anónima. No sustituyen la aceptación de todos los escenarios con cuentas reales, recursos jurídicos y suspensión administrativa.
 
 | Criterio de la spec | Comprobación |
 |---|---|
@@ -96,6 +96,9 @@ Registrar verificaciones pendientes en las tareas. Los contratos de identidad de
 - Mantener el [stack aprobado](../../docs/decisions/0001-stack-y-versiones.md) y la propiedad de persistencia del ADR 0003.
 - Login, sesión y diferimiento SSO constan en el [ADR 0004](../../docs/decisions/0004-integraciones-minimas-del-mvp.md).
 - Flyway queda aprobado junto con este plan; las specs posteriores de MS-01 reutilizan la elección, sin otra herramienta por tabla.
+- Implementación: BCrypt con coste 12; token opaco aleatorio de 32 bytes almacenado como SHA-256; cookie HttpOnly, SameSite=Strict, ruta `/graphql` y Secure configurable. El sondeo no renueva actividad.
+- Preparación explícita de Flyway y auditoría, sin creación automática de demo. V1 se conserva; V2 traslada las tablas de identidad a `juridico` si el pooler ejecutó V1 en `public`, sin borrar datos. Las consultas JDBC usan nombres calificados y la sonda comprueba la existencia del esquema, no el `search_path` de una sesión.
+- El plazo de adquisición JDBC es independiente del de salud (10 segundos por defecto); TLS conserva `verify-full`. PostgreSQL y MongoDB siguen siendo externos.
 
 ## Riesgos y preguntas abiertas
 

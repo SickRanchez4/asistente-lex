@@ -4,16 +4,19 @@ import cors from 'cors';
 import express, { type ErrorRequestHandler } from 'express';
 
 import { loadConfig } from './config/config.ts';
-import { createContext, type GatewayContext } from './context.ts';
+import { createContextFactory, type GatewayContext } from './context.ts';
+import { createAuthResolvers } from './resolvers/auth.ts';
 import { formatGraphQLError } from './errors.ts';
 import { createResolvers } from './resolvers/platform.ts';
 import { typeDefs } from './schema/schema.ts';
 
 const config = loadConfig();
+const platformResolvers = createResolvers(config);
+const authResolvers = createAuthResolvers(config);
 
 const server = new ApolloServer<GatewayContext>({
   typeDefs,
-  resolvers: createResolvers(config),
+  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query }, Mutation: authResolvers.Mutation },
   includeStacktraceInErrorResponses: false,
   formatError: formatGraphQLError,
 });
@@ -35,10 +38,18 @@ app.use((request, response, next) => {
 
 app.use(
   '/graphql',
-  cors({ origin: config.corsOrigins }),
+  cors({ origin: config.corsOrigins, credentials: true, allowedHeaders: ['content-type', 'x-lex-request'] }),
+  (request, response, next) => {
+    if (request.method !== 'POST' || request.headers['x-lex-request'] !== '1' || !request.is('application/json')) {
+      response.status(403).json({ errors: [{ message: 'Solicitud no permitida.', extensions: { code: 'FORBIDDEN' } }] });
+      return;
+    }
+    response.setHeader('Cache-Control', 'no-store');
+    next();
+  },
   // El límite se aplica al cuerpo codificado, antes de interpretar el JSON.
   express.json({ limit: config.maxRequestBodyBytes }),
-  expressMiddleware(server, { context: createContext }),
+  expressMiddleware(server, { context: createContextFactory(config) }),
 );
 
 // Errores previos a GraphQL (cuerpo excesivo o JSON inválido) con el mismo formato y sin trazas.

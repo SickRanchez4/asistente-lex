@@ -9,11 +9,9 @@ import { UiErrorHandler } from './ui-error-handler';
   template: `
     <main id="al-admin-content" class="al-page" tabindex="-1">
       <p class="al-eyebrow">Administración</p>
-      <h1>Una base clara para administrar la aplicación</h1>
-      <section class="al-card">
-        <h2>Base de la interfaz Angular</h2>
-        <p>Los estados, formularios y formatos compartidos están preparados para cuentas, parámetros y agentes.</p>
-        <p class="al-muted">Vista técnica sin autenticación. La navegación administrativa se conectará cuando estén disponibles la sesión y sus pantallas reales.</p>
+      <h1>Administración</h1>
+      <section>
+        <h2>Cuenta de administración</h2>
       </section>
       @if (errors.feedback(); as feedback) { <al-status-notice [feedback]="feedback" /> }
       @if (preview) { <al-ui-preview /> }

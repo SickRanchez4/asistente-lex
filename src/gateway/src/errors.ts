@@ -104,6 +104,7 @@ export function formatGraphQLError(formatted: GraphQLFormattedError): GraphQLFor
       path: formatted.path,
       extensions: {
         code,
+        ...(typeof extensions.auditRecorded === 'boolean' ? { auditRecorded: extensions.auditRecorded } : {}),
         ...(extensions.fields ? { fields: extensions.fields } : {}),
         ...(extensions.correlationId ? { correlationId: extensions.correlationId } : {}),
       },

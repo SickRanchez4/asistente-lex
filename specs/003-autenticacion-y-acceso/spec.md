@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada el 2026-11-08; implementación base y verificación parcial registradas en las [tareas](./tasks.md). No está completa la aceptación integrada con cuentas reales y las funcionalidades dependientes.
 
 ## Fuente y trazabilidad
 
@@ -82,7 +82,7 @@ Los escenarios que esperan un evento presuponen auditoría disponible; el criter
 
 - [ ] Dado un abogado con cuenta habilitada, cuando inicia sesión con correo y contraseña, entonces accede a la interfaz React y no a la de administración.
 - [ ] Dado un administrador con cuenta habilitada, cuando inicia sesión, entonces accede a la interfaz Angular.
-- [ ] Dadas credenciales inválidas, cuando se intenta iniciar sesión, entonces el acceso se rechaza con un mensaje informativo y se registra un intento fallido.
+- [x] Dadas credenciales inválidas, cuando se intenta iniciar sesión, entonces el acceso se rechaza con un mensaje informativo y se registra un intento fallido.
 - [ ] Dada una cuenta suspendida, cuando se intenta iniciar sesión, entonces el acceso se rechaza indicando la suspensión y se registra el evento.
 - [ ] Dado un abogado autenticado, cuando invoca directamente contra el gateway una operación administrativa, entonces recibe "no autorizado" y se registra una denegación.
 - [ ] Dado un administrador autenticado, cuando invoca una operación de lectura sobre contenido de un abogado, entonces recibe "no autorizado".
