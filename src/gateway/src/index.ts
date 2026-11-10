@@ -10,6 +10,7 @@ import { createAdminResolvers } from './resolvers/admin.ts';
 import { createAgentResolvers } from './resolvers/agents.ts';
 import { createPeopleResolvers } from './resolvers/people.ts';
 import { createCaseResolvers } from './resolvers/cases.ts';
+import { createParticipantResolvers } from './resolvers/participants.ts';
 import { formatGraphQLError } from './errors.ts';
 import { createResolvers } from './resolvers/platform.ts';
 import { typeDefs } from './schema/schema.ts';
@@ -21,11 +22,12 @@ const adminResolvers = createAdminResolvers(config);
 const agentResolvers = createAgentResolvers(config);
 const peopleResolvers = createPeopleResolvers(config);
 const caseResolvers = createCaseResolvers(config);
+const participantResolvers = createParticipantResolvers(config);
 
 const server = new ApolloServer<GatewayContext>({
   typeDefs,
-  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query, ...adminResolvers.Query, ...agentResolvers.Query, ...peopleResolvers.Query, ...caseResolvers.Query },
-    Mutation: { ...authResolvers.Mutation, ...adminResolvers.Mutation, ...agentResolvers.Mutation, ...peopleResolvers.Mutation, ...caseResolvers.Mutation } },
+  resolvers: { Query: { ...platformResolvers.Query, ...authResolvers.Query, ...adminResolvers.Query, ...agentResolvers.Query, ...peopleResolvers.Query, ...caseResolvers.Query, ...participantResolvers.Query },
+    Mutation: { ...authResolvers.Mutation, ...adminResolvers.Mutation, ...agentResolvers.Mutation, ...peopleResolvers.Mutation, ...caseResolvers.Mutation, ...participantResolvers.Mutation } },
   includeStacktraceInErrorResponses: false,
   formatError: formatGraphQLError,
 });

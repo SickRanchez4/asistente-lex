@@ -10,7 +10,7 @@
 | 005 | Configuración de agentes | En progreso | [spec](./005-configuracion-de-agentes/spec.md) | [plan](./005-configuracion-de-agentes/plan.md) | [tasks](./005-configuracion-de-agentes/tasks.md) |
 | 006 | Personas | En progreso | [spec](./006-personas/spec.md) | [plan](./006-personas/plan.md) | [tasks](./006-personas/tasks.md) |
 | 007 | Expedientes y ciclo de vida | En progreso | [spec](./007-expedientes-y-ciclo-de-vida/spec.md) | [plan](./007-expedientes-y-ciclo-de-vida/plan.md) | [tasks](./007-expedientes-y-ciclo-de-vida/tasks.md) |
-| 008 | Participantes | Lista | [spec](./008-participantes/spec.md) | [plan](./008-participantes/plan.md) | [tasks](./008-participantes/tasks.md) |
+| 008 | Participantes | En progreso | [spec](./008-participantes/spec.md) | [plan](./008-participantes/plan.md) | [tasks](./008-participantes/tasks.md) |
 | 009 | Actuaciones y notas | Lista | [spec](./009-actuaciones-y-notas/spec.md) | [plan](./009-actuaciones-y-notas/plan.md) | [tasks](./009-actuaciones-y-notas/tasks.md) |
 | 010 | Documentos y fotografías | Lista | [spec](./010-documentos-y-fotografias/spec.md) | [plan](./010-documentos-y-fotografias/plan.md) | [tasks](./010-documentos-y-fotografias/tasks.md) |
 | 011 | Asistencia jurídica IA | Lista | [spec](./011-asistencia-juridica-ia/spec.md) | [plan](./011-asistencia-juridica-ia/plan.md) | [tasks](./011-asistencia-juridica-ia/tasks.md) |

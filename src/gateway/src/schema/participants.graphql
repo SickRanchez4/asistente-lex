@@ -1,0 +1,13 @@
+enum ParticipantRole { REPRESENTED_PERSON COUNTERPARTY WITNESS REPRESENTATIVE OTHER }
+input ParticipantInput { role: ParticipantRole! detail: String }
+type Participant { id: ID! person: PersonSelection! role: ParticipantRole! detail: String version: Int! }
+type ParticipantPage { items: [Participant!]! pageInfo: PageInfo! }
+type ParticipantRemoval { id: ID! removed: Boolean! }
+extend type Query {
+  participants(caseId: ID!, first: Int! = 25, after: String): ParticipantPage!
+}
+extend type Mutation {
+  linkParticipant(caseId: ID!, personId: ID!, input: ParticipantInput!): Participant!
+  updateParticipant(caseId: ID!, id: ID!, input: ParticipantInput!, expectedVersion: Int!): Participant!
+  unlinkParticipant(caseId: ID!, id: ID!, expectedVersion: Int!): ParticipantRemoval!
+}

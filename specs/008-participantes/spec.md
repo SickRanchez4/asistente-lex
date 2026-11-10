@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Aprobada por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Aprobada por el responsable el 2026-11-08. Capacidad propietaria implementada y C01–C09 verificadas; C10 pendiente de servicios reales de 014. No se declara completa la spec.
 
 ## Fuente y trazabilidad
 
@@ -59,15 +59,15 @@ Se necesita vincular personas a expedientes con un rol contextual, sin confundir
 
 ## Criterios de aceptación
 
-- [ ] Dado un expediente Abierto y una persona registrada, cuando el abogado la vincula con un rol, entonces aparece como participante con ese rol.
-- [ ] Dada una persona que participa en un expediente, cuando se vincula a otro con un rol distinto, entonces cada expediente muestra su rol correspondiente.
-- [ ] Dado un expediente Abierto, cuando el abogado cambia el rol de un participante, entonces el expediente refleja el nuevo rol.
-- [ ] Dado un expediente Abierto, cuando el abogado desvincula a un participante, entonces deja de aparecer en el expediente y la ficha de la persona permanece intacta.
-- [ ] Dado un expediente Cerrado o Archivado, cuando se intenta vincular, cambiar el rol o desvincular, entonces MS-01 lo rechaza aunque la solicitud no pase por la interfaz.
-- [ ] Dado un expediente en cualquier estado, cuando el abogado consulta sus participantes, entonces ve la lista con sus roles.
-- [ ] Dada una persona de otra cuenta o inexistente, cuando se intenta vincular, entonces se rechaza sin revelar datos de otras cuentas.
-- [ ] Dada una persona ya vinculada, cuando se intenta vincular de nuevo al mismo expediente, entonces se rechaza sin duplicar la participación.
-- [ ] Dado el rol Otro sin descripción, cuando se registra o modifica, entonces se rechaza; con descripción se acepta.
+- [x] Dado un expediente Abierto y una persona registrada, cuando el abogado la vincula con un rol, entonces aparece como participante con ese rol.
+- [x] Dada una persona que participa en un expediente, cuando se vincula a otro con un rol distinto, entonces cada expediente muestra su rol correspondiente.
+- [x] Dado un expediente Abierto, cuando el abogado cambia el rol de un participante, entonces el expediente refleja el nuevo rol.
+- [x] Dado un expediente Abierto, cuando el abogado desvincula a un participante, entonces deja de aparecer en el expediente y la ficha de la persona permanece intacta.
+- [x] Dado un expediente Cerrado o Archivado, cuando se intenta vincular, cambiar el rol o desvincular, entonces MS-01 lo rechaza aunque la solicitud no pase por la interfaz.
+- [x] Dado un expediente en cualquier estado, cuando el abogado consulta sus participantes, entonces ve la lista con sus roles.
+- [x] Dada una persona de otra cuenta o inexistente, cuando se intenta vincular, entonces se rechaza sin revelar datos de otras cuentas.
+- [x] Dada una persona ya vinculada, cuando se intenta vincular de nuevo al mismo expediente, entonces se rechaza sin duplicar la participación.
+- [x] Dado el rol Otro sin descripción, cuando se registra o modifica, entonces se rechaza; con descripción se acepta.
 - [ ] Dado un participante contratante de un servicio, cuando se desvincula en Abierto, entonces su ficha y servicio permanecen intactos.
 
 ## Dependencias

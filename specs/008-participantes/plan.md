@@ -2,7 +2,7 @@
 
 ## Estado
 
-Lista. Plan aprobado por el responsable el 2026-11-08; implementación y verificación pendientes.
+En progreso. Plan aprobado por el responsable el 2026-11-08. Implementación propietaria disponible y C01–C09 verificadas; aceptación de C10 bloqueada hasta disponer de servicios reales de 014.
 
 ## Resumen técnico
 
@@ -71,8 +71,22 @@ El desarrollador valida sin crear archivos de testing ni documentos adicionales.
 
 Comprobar además acceso de otra cuenta/Administrador, relaciones incompatibles aprobadas y concurrencia con cierre de expediente. Registrar pendientes en tareas.
 
+### Resultado de verificación
+
+- MS-01 compilado con JDK 25; Gateway, Abogado y Shell construidos con Node 26. Tipos de Gateway, Abogado, Shell y Admin y contratos OpenAPI/SDL comprobados. Sin nuevas dependencias de aplicación.
+- 75 comprobaciones con servicio y PostgreSQL reales: roles, autorización vigente, aislamiento, versiones, duplicados concurrentes, historial atómico con rollback forzado, FK de ambos extremos, paginación y cursores ligados al expediente. El bloqueo de la fila de expediente serializa cierre y escritura en ambos órdenes, sin cambios posteriores a un cierre ganador.
+- 89 comprobaciones REST/GraphQL reales: proyecciones mínimas, `no-store`, errores seguros, paginación 25+2, altas/cambios/desvinculación, consulta en los tres estados y rechazo de las tres escrituras en Cerrado/Archivado. Se corrigió el parámetro obligatorio ausente para devolver VALIDATION/400, no indisponibilidad. Persona natural y jurídica conservadas tras desvincular; nombres vigentes sin alterar roles ni relaciones.
+- Navegador: selector real paginado 25+6 y filtrado, selección conservada al paginar, Otro obligatorio, alta/cambio y confirmación de desvinculación. Cancelar no envía mutación; confirmar envía una. Cierre concurrente real conserva el formulario y bloquea reenvío hasta consultar. Fallos controlados de lectura y transporte distinguen vacío e incertidumbre; interceptores retirados. Escape y retorno de foco comprobados.
+- Capturas y comprobaciones a 1366×900 y 390×844: marca cargada, formulario y diálogo dentro del viewport, sin desbordamiento de página; la tabla desplaza dentro de su contenedor móvil.
+- V6 aplicada mediante preparación explícita. Cuentas sintéticas, participaciones, historial, expedientes, personas y sesiones eliminados; demos conservadas. Verificadores temporales fuera del repositorio, sin archivos de testing ni informes adicionales versionados. Sin llamadas a OpenAI, cambios de secretos, commit ni push.
+- Archivado se comprobó como estado persistido con fixture controlado sin conversaciones: acredita reglas de 008, no el protocolo de archivo/borrado de 007/011. C10 queda abierto: no hay servicios reales de 014 ni tablas o simulaciones de contratación creadas para aparentar su aceptación.
+
 ## Decisiones
 
+- Roles contractuales: `REPRESENTED_PERSON`, `COUNTERPARTY`, `WITNESS`, `REPRESENTATIVE`, `OTHER`. Otro exige detalle recortado no vacío (máximo 2000 caracteres, sin controles); cambiar a otro rol elimina ese detalle contextual, nunca la ficha Persona.
+- REST en `/cases/{caseId}/participants` (GET/POST) y `/{id}` (PUT/DELETE), GraphQL equivalente y proyección mínima `PersonSelection`. Páginas de 1 a 100 por UUID con cursor ligado a cuenta/expediente. Sin API ni pantalla de historial interno.
+- Cada escritura bloquea primero la fila del expediente propio con `FOR UPDATE`, comprueba Abierto y guarda relación/historial en una transacción. Comparte exclusión con las transiciones de 007 sin mantener bloqueos durante REST. Cambiar/desvincular requiere versión de participación, independiente de la versión de ficha del expediente.
+- Migración V6: participaciones e historial de cambios jurídicos propios de MS-01; claves compuestas garantizan pertenencia de Persona y expediente a la cuenta. Restricción única persona/expediente. El historial conserva antes/después, operación, fecha y autor aunque se retire la relación; sin FK que lo borre en cascada.
 - Mantener participación separada de ficha y contratación; no unificar conceptos.
 - No crear ADR para la gestión simple. Registrar respuestas funcionales y actualizar la spec tras aprobación.
 

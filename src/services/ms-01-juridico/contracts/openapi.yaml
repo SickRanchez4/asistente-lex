@@ -11,6 +11,100 @@ security:
   - serviceToken: []
     userContext: []
 paths:
+  /cases/{caseId}/participants:
+    parameters:
+      - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Participaciones del expediente propio en cualquier estado, con Persona vigente minima.
+      description: Paginas de 1 a 100 por UUID; cursor ligado a cuenta y expediente. Sin acceso al historial interno ni documento/contacto de Persona. Cache-Control no-store.
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+      responses:
+        '200':
+          description: Lista propia; vacia no significa fallo de lectura.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, pageInfo]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Participant' } }
+                  pageInfo: { $ref: '#/components/schemas/PageInfo' }
+        '400': { $ref: '#/components/responses/ParticipantError' }
+        '401': { $ref: '#/components/responses/ParticipantError' }
+        '403': { $ref: '#/components/responses/ParticipantError' }
+        '404': { $ref: '#/components/responses/ParticipantError' }
+        '503': { $ref: '#/components/responses/ParticipantError' }
+    post:
+      summary: Vincular Persona propia a expediente Abierto; unicidad persona/expediente e historial atomico.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [personId, input]
+              properties:
+                personId: { type: string, format: uuid }
+                input: { $ref: '#/components/schemas/ParticipantInput' }
+      responses:
+        '200': { $ref: '#/components/responses/Participant' }
+        '400': { $ref: '#/components/responses/ParticipantError' }
+        '401': { $ref: '#/components/responses/ParticipantError' }
+        '403': { $ref: '#/components/responses/ParticipantError' }
+        '404': { $ref: '#/components/responses/ParticipantError' }
+        '409': { $ref: '#/components/responses/ParticipantError' }
+        '503': { $ref: '#/components/responses/ParticipantError' }
+  /cases/{caseId}/participants/{id}:
+    parameters:
+      - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      summary: Cambiar un unico rol contextual en Abierto con version esperada; no cambia Persona ni servicios.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [input, expectedVersion]
+              properties:
+                input: { $ref: '#/components/schemas/ParticipantInput' }
+                expectedVersion: { type: integer, minimum: 1 }
+      responses:
+        '200': { $ref: '#/components/responses/Participant' }
+        '400': { $ref: '#/components/responses/ParticipantError' }
+        '401': { $ref: '#/components/responses/ParticipantError' }
+        '403': { $ref: '#/components/responses/ParticipantError' }
+        '404': { $ref: '#/components/responses/ParticipantError' }
+        '409': { $ref: '#/components/responses/ParticipantError' }
+        '503': { $ref: '#/components/responses/ParticipantError' }
+    delete:
+      summary: Retira solo la participacion en Abierto; conserva Persona e historial, no consulta ni modifica MS-03.
+      parameters:
+        - { name: expectedVersion, in: query, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Desvinculacion confirmada; repetir no es otra eliminacion exitosa.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [id, removed]
+                properties:
+                  id: { type: string, format: uuid }
+                  removed: { type: boolean, const: true }
+        '400': { $ref: '#/components/responses/ParticipantError' }
+        '401': { $ref: '#/components/responses/ParticipantError' }
+        '403': { $ref: '#/components/responses/ParticipantError' }
+        '404': { $ref: '#/components/responses/ParticipantError' }
+        '409': { $ref: '#/components/responses/ParticipantError' }
+        '503': { $ref: '#/components/responses/ParticipantError' }
   /cases:
     get:
       summary: Expedientes propios del Abogado vigente; filtros combinables, nunca acepta cuenta del cliente.
@@ -544,6 +638,31 @@ components:
       in: query
       schema: { type: string, maxLength: 4096 }
   schemas:
+    ParticipantInput:
+      type: object
+      additionalProperties: false
+      required: [role]
+      properties:
+        role: { type: string, enum: [REPRESENTED_PERSON, COUNTERPARTY, WITNESS, REPRESENTATIVE, OTHER] }
+        detail: { type: [string, 'null'], maxLength: 2000, description: Obligatorio y no vacio para OTHER; se recorta. En los otros roles se normaliza a null. }
+      allOf:
+        - if:
+            properties:
+              role: { const: OTHER }
+          then:
+            required: [detail]
+            properties:
+              detail: { type: string, minLength: 1, maxLength: 2000, pattern: '\S' }
+    Participant:
+      type: object
+      additionalProperties: false
+      required: [id, person, role, detail, version]
+      properties:
+        id: { type: string, format: uuid }
+        person: { $ref: '#/components/schemas/PersonSelection' }
+        role: { type: string, enum: [REPRESENTED_PERSON, COUNTERPARTY, WITNESS, REPRESENTATIVE, OTHER] }
+        detail: { type: [string, 'null'], maxLength: 2000 }
+        version: { type: integer, minimum: 1 }
     CaseInput:
       type: object
       additionalProperties: false
@@ -678,6 +797,29 @@ components:
             properties:
               token: { type: string }
   responses:
+    Participant:
+      description: Participacion vigente, sin cuenta ni contenido privado de Persona.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Participant' }
+    ParticipantError:
+      description: Error seguro; persona/participacion/expediente ajenos o ausentes son NOT_FOUND. CONFLICT ante duplicado, version o estado no editable. Sin cambios parciales.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [category, message]
+            properties:
+              category: { type: string, enum: [VALIDATION, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, SERVICE_UNAVAILABLE] }
+              message: { type: string }
+              fields:
+                type: array
+                items:
+                  type: object
+                  required: [field, message]
+                  properties:
+                    field: { type: string }
+                    message: { type: string }
     CaseFile:
       description: Ficha vigente propia, sin cuenta ni marca interna de intento.
       content:

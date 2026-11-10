@@ -13,6 +13,8 @@ import bo.asistentelex.juridico.application.AuthService;
 import bo.asistentelex.juridico.application.AdministrationService;
 import bo.asistentelex.juridico.application.PeopleService;
 import bo.asistentelex.juridico.application.CaseService;
+import bo.asistentelex.juridico.application.ParticipantService;
+import bo.asistentelex.juridico.application.ports.out.ParticipantStore;
 import bo.asistentelex.juridico.application.ports.out.CasePorts;
 import bo.asistentelex.juridico.application.ports.out.PeopleStore;
 import bo.asistentelex.juridico.application.ports.out.AdministrationPorts;
@@ -62,4 +64,7 @@ public class AuthConfig {
 
 	@Bean
 	CaseService caseService(CasePorts.Store store, CasePorts.Intelligence intelligence, AuthService auth) { return new CaseService(store, intelligence, auth); }
+
+	@Bean
+	ParticipantService participantService(ParticipantStore store, AuthService auth) { return new ParticipantService(store, auth); }
 }

@@ -31,7 +31,7 @@ src/
     └── ms-04-ia/          Python / FastAPI
 ```
 
-Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría, personas y la capacidad propietaria de expedientes; archivo integrado, participantes y operaciones económicas continúan pendientes de sus specs.
+Cada microservicio separa las capas `domain`, `application` (con sus puertos), `adapters` e `infrastructure`. MS-01 implementa identidad, sesiones, administración, auditoría, personas, participantes y la capacidad propietaria de expedientes; archivo integrado y operaciones económicas continúan pendientes de sus specs.
 
 ## Requisitos previos
 
@@ -192,7 +192,7 @@ V4 crea `juridico.people` y sus restricciones/índices; el arranque normal no mi
 
 REST propietario ofrece `/people`, `/people/{id}`, `/people/selections` y `/people/{id}/selection`; las dos últimas proyecciones contienen solo ID, tipo y nombre para participantes/contratantes, sin documento ni contacto. Exigen token interno y contexto firmado del propietario vigente. GraphQL expone altas, actualización y consultas equivalentes, sin operación de eliminación ni argumento de cuenta.
 
-Las consultas distinguen vacío de indisponibilidad. El formulario conserva datos rechazados y errores por campo. Si una escritura no recibe confirmación, bloquea su reenvío inmediato y exige consultar el estado. Editar la ficha no consulta ni altera expedientes/participaciones; la prueba con vínculos reales Cerrados/Archivados y su selección en 008/014 siguen pendientes según [tareas de 006](specs/006-personas/tasks.md).
+Las consultas distinguen vacío de indisponibilidad. El formulario conserva datos rechazados y errores por campo. Si una escritura no recibe confirmación, bloquea su reenvío inmediato y exige consultar el estado. Editar la ficha no consulta ni altera expedientes/participaciones; 008 comprueba selección y nombres vigentes en participaciones de expedientes Cerrados/Archivados. La integración con contratantes y servicios de 014 sigue pendiente.
 
 ### Expedientes y ciclo de vida
 
@@ -205,6 +205,18 @@ REST `/cases`, `/cases/{id}`, `/cases/{id}/transitions` y `/cases/{id}/eligibili
 Cerrar lleva de Abierto a Cerrado; reabrir, de Cerrado a Abierto. Estado e historial se guardan juntos. Archivar solo se solicita desde Cerrado y exige confirmar la eliminación irreversible de conversaciones. MS-01 persiste un intento estable, bloquea elegibilidad de nuevas preguntas/reapertura y pide borrado completo a MS-04 antes de guardar Archivado. Un fallo conserva Cerrado con marca; no vence automáticamente ni se desbloquea con una reapertura. Si el borrado se confirmó pero falló la transición local, se comunica pérdida irreversible y resultado parcial. Consultar el estado antes de reintentar reutiliza el intento sin duplicar historia.
 
 **Límite actual:** el contrato `POST /cases/{id}/conversations/delete` está definido, pero el handler y la coordinación por generación/recibos de borrado pertenecen a 011 y todavía no existen. Solicitar archivo ahora informa indisponibilidad y deja Cerrado con archivo pendiente; no confirma borrado ni éxito. Desarchivar está implementado como Archivado→Cerrado, sin restaurar chats ni escribir contenido/documentos. Su aceptación completa y el comportamiento de chats existentes/nuevos requieren 008/009/010/011 según [tareas de 007](specs/007-expedientes-y-ciclo-de-vida/tasks.md). No se declara esta integración lista para producción.
+
+### Participantes
+
+Dentro de la ficha en `/abogado/expedientes`, la sección Participantes permite seleccionar una Persona propia ya registrada, vincularla con rol, cambiar ese rol y desvincular con confirmación. El selector usa las proyecciones mínimas de Personas, con búsqueda y paginación; no registra ni edita fichas. Roles cerrados: Persona defendida o representada, Contraparte, Testigo, Representante y Otro. Otro exige descripción (máximo 2000 caracteres); cambiar a otro rol elimina solo ese detalle contextual.
+
+La misma persona puede tener roles distintos entre expedientes, pero una sola participación por expediente. Se consulta en cualquier estado; las tres escrituras exigen Abierto también en MS-01. Cambiar/desvincular requiere `expectedVersion` de participación, independiente de la versión del expediente. Ante conflicto o resultado incierto, el formulario conserva los datos y exige consultar antes de repetir. La desvinculación elimina solo la relación, no Persona ni servicios.
+
+La preparación explícita de MS-01 mostrada en Personas aplica también V6: `juridico.participants` y `juridico.participant_changes`, con claves compuestas de pertenencia, unicidad y registro atómico anterior/nuevo/fecha/autor. Cada escritura bloquea primero la fila de expediente para serializarse con cierre; no mantiene transacciones SQL durante llamadas REST. El historial permanece interno tras desvincular, sin pantalla ni API de consulta del Abogado.
+
+REST `/cases/{caseId}/participants` ofrece GET/POST y `/{id}` PUT/DELETE; DELETE exige `expectedVersion` como parámetro de consulta. GraphQL publica `participants`, `linkParticipant`, `updateParticipant` y `unlinkParticipant`. Las respuestas de Persona contienen solo ID, tipo y nombre; no documento, contacto o cuenta. Administrador y otras cuentas no acceden.
+
+**Límite actual:** C01–C09 verificadas. La conservación del contratante y sus condiciones en un servicio real (C10) requiere 014; no se crearon tablas económicas ni un servicio ficticio para cerrar esa aceptación. El estado Archivado usado para verificar 008 no acredita el borrado de conversaciones todavía pendiente de 011. Ver [tareas de 008](specs/008-participantes/tasks.md).
 
 ### Puertos
 

@@ -9,6 +9,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiErrors {
+	@ExceptionHandler(bo.asistentelex.juridico.domain.Participants.Failure.class)
+	ResponseEntity<?> participants(bo.asistentelex.juridico.domain.Participants.Failure failure) {
+		int status = switch (failure.category()) {
+			case "VALIDATION" -> 400;
+			case "UNAUTHENTICATED" -> 401;
+			case "FORBIDDEN" -> 403;
+			case "NOT_FOUND" -> 404;
+			case "CONFLICT" -> 409;
+			default -> 503;
+		};
+		return ResponseEntity.status(status).body(Map.of("category", failure.category(), "message", failure.getMessage(),
+				"fields", failure.fields().entrySet().stream().map(field -> Map.of("field", field.getKey(), "message", field.getValue())).toList()));
+	}
 	@ExceptionHandler(bo.asistentelex.juridico.domain.Cases.Failure.class)
 	ResponseEntity<?> cases(bo.asistentelex.juridico.domain.Cases.Failure failure) {
 		int status = switch (failure.category()) {
@@ -54,7 +67,8 @@ public class ApiErrors {
 		return ResponseEntity.status(503).body(Map.of("category", "SERVICE_UNAVAILABLE", "message", "El servicio no está disponible."));
 	}
 
-	@ExceptionHandler({HttpMessageNotReadableException.class, org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class})
+	@ExceptionHandler({HttpMessageNotReadableException.class, org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+			org.springframework.web.bind.MissingServletRequestParameterException.class})
 	ResponseEntity<?> validation() {
 		return ResponseEntity.badRequest().body(Map.of("category", "VALIDATION", "message", "La solicitud no es válida."));
 	}
